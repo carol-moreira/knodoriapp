@@ -1,0 +1,190 @@
+<div class="space-y-7">
+  <!-- Header -->
+  <header class="flex items-start justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight">
+        Olá, {{ auth.user()?.nome }}
+        <span class="text-base font-normal text-muted-foreground">· GOM</span>
+      </h1>
+      <p class="mt-1 text-sm text-muted-foreground">
+        Aqui está o status operacional das suas CEGs.
+      </p>
+    </div>
+  </header>
+
+  <!-- ── 1. Pipeline de pedidos ───────────────────────────────────────── -->
+  <app-dashboard-section
+    title="Pipeline de pedidos"
+    [count]="pipeline().total"
+    href="/gom/fila"
+    linkLabel="Ver fila"
+  >
+    <div class="space-y-3">
+      @for (row of pipelineRows(); track row.label) {
+        <div class="flex items-center gap-3">
+          <div class="flex w-32 shrink-0 items-center gap-1.5 sm:w-44">
+            @if (row.alert && row.count > 0) {
+              <svg [appIcon]="icons.AlertCircle" class="h-3 w-3 text-blue-500"></svg>
+            }
+            <span [class]="'text-xs font-medium ' + row.textColor">{{ row.label }}</span>
+          </div>
+          <div class="flex flex-1 items-center gap-2">
+            <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+              <div
+                [class]="'h-full rounded-full transition-all ' + row.color"
+                [style.width.%]="pct(row.count)"
+              ></div>
+            </div>
+            <span [class]="'w-5 shrink-0 text-right text-xs font-bold ' + row.textColor">{{
+              row.count
+            }}</span>
+          </div>
+        </div>
+      }
+
+      <!-- Barra composta -->
+      @if (pipeline().total > 0) {
+        <div class="mt-4 flex h-2 w-full overflow-hidden rounded-full bg-muted">
+          <div class="bg-amber-400 transition-all" [style.width.%]="pct(pipeline().pendente)"></div>
+          <div
+            class="bg-blue-500 transition-all"
+            [style.width.%]="pct(pipeline().aguardandoPagamento)"
+          ></div>
+          <div
+            class="bg-emerald-500 transition-all"
+            [style.width.%]="pct(pipeline().comprado)"
+          ></div>
+        </div>
+      }
+    </div>
+  </app-dashboard-section>
+
+  <!-- ── 2. CEGs em aberto ────────────────────────────────────────────── -->
+  <app-dashboard-section
+    title="CEGs em aberto"
+    [count]="cegs.length"
+    href="/gom/cegs"
+    linkLabel="Ver CEGs"
+  >
+    <div class="divide-y divide-border/50">
+      @for (ceg of cegs; track ceg.id) {
+        <div class="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-semibold">{{ ceg.nome }}</p>
+            <div class="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <span class="flex items-center gap-1">
+                <svg [appIcon]="icons.Layers" class="h-3 w-3"></svg> {{ ceg.loja }}
+              </span>
+              <span>·</span>
+              <span class="flex items-center gap-1">
+                <svg [appIcon]="icons.Users" class="h-3 w-3"></svg> {{ ceg.qtdJoiners }} joiners
+              </span>
+              <span>·</span>
+              <span class="flex items-center gap-1">
+                <svg [appIcon]="icons.Package" class="h-3 w-3"></svg> {{ ceg.qtdItens }} itens
+              </span>
+              <span>·</span>
+              <span class="flex items-center gap-1">
+                <svg [appIcon]="icons.Clock" class="h-3 w-3"></svg> {{ fmtDate(ceg.prazo) }}
+              </span>
+            </div>
+          </div>
+          <span
+            [class]="
+              'cozy-pill shrink-0 text-[10px] font-semibold ' + CEG_STATUS_META[ceg.status].badge
+            "
+          >
+            {{ CEG_STATUS_META[ceg.status].label }}
+          </span>
+        </div>
+      }
+    </div>
+  </app-dashboard-section>
+
+  <!-- ── 3. Pagamentos a liberar ───────────────────────────────────────── -->
+  <app-dashboard-section
+    title="Pagamentos a liberar"
+    [count]="pagamentosALiberar().length"
+    href="/gom/fila"
+    linkLabel="Ver fila"
+    emptyLabel="Nenhum pagamento aguardando confirmação."
+    [alert]="pagamentosALiberar().length > 0"
+  >
+    <div class="divide-y divide-border/50">
+      @for (req of pagamentosALiberar(); track req.id) {
+        <div class="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-semibold">{{ req.joinerNome }}</p>
+            <p class="text-xs text-muted-foreground">
+              {{ req.joinerUsername }} ·
+              {{ req.formaPagamento === "pix" ? "PIX" : "Cartão " + req.parcelas + "×" }} ·
+              {{ fmtDate(req.dataSolicitacao) }}
+            </p>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <span class="text-sm font-bold">{{ brl(req.valorBrl) }}</span>
+            <button
+              type="button"
+              (click)="handleConfirmarPagamento(req.id)"
+              class="flex items-center gap-1 rounded-xl bg-emerald-600 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-emerald-700"
+            >
+              <svg [appIcon]="icons.CheckCircle2" class="h-3.5 w-3.5"></svg>
+              Confirmar
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </app-dashboard-section>
+
+  <!-- ── 4. Repasses pendentes ─────────────────────────────────────────── -->
+  <app-dashboard-section
+    title="Repasses pendentes"
+    [count]="repassesPendentes.length"
+    href="/gom/joiners"
+    linkLabel="Ver joiners"
+    emptyLabel="Nenhum repasse ou frete pendente."
+    [alert]="algumInadimplente"
+  >
+    <div class="divide-y divide-border/50">
+      @for (joiner of repassesPendentes; track joiner.id) {
+        <div class="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+          <div class="min-w-0 flex-1 space-y-0.5">
+            <div class="flex items-center gap-2">
+              <p class="text-sm font-semibold">{{ joiner.nome }}</p>
+              @if (joiner.statusConta === "INADIMPLENTE") {
+                <svg [appIcon]="icons.AlertCircle" class="h-3.5 w-3.5 shrink-0 text-red-500"></svg>
+              }
+            </div>
+            <p class="text-xs text-muted-foreground">
+              {{ joiner.username }}
+              @if (joiner.fretesPendentes > 0) {
+                · {{ joiner.fretesPendentes }} frete{{
+                  joiner.fretesPendentes > 1 ? "s" : ""
+                }}
+                pendente{{ joiner.fretesPendentes > 1 ? "s" : "" }}
+              }
+            </p>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            @if (joiner.valorFretesPendentes > 0) {
+              <span class="text-sm font-bold text-amber-700">{{
+                brl(joiner.valorFretesPendentes)
+              }}</span>
+            }
+            <span
+              [class]="
+                'cozy-pill text-[10px] font-semibold ' +
+                (joiner.statusConta === 'INADIMPLENTE'
+                  ? 'bg-red-50 text-red-700 ring-1 ring-red-200'
+                  : 'bg-amber-50 text-amber-700 ring-1 ring-amber-200')
+              "
+            >
+              {{ joiner.statusConta === "INADIMPLENTE" ? "Inadimplente" : "Pendente" }}
+            </span>
+          </div>
+        </div>
+      }
+    </div>
+  </app-dashboard-section>
+</div>

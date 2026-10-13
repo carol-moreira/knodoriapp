@@ -1,0 +1,142 @@
+<div class="space-y-6">
+  <!-- Saudação -->
+  <header class="flex items-center gap-3">
+    <div
+      class="grid h-11 w-11 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-sm"
+    >
+      <svg [appIcon]="icons.Gem" class="h-5 w-5" fill="currentColor"></svg>
+    </div>
+    <div>
+      <h1 class="text-xl font-bold tracking-tight leading-tight">
+        Olá, {{ auth.user()?.nome ?? "Joiner" }} 👋
+      </h1>
+      <p class="text-xs text-muted-foreground">{{ auth.user()?.username }}</p>
+    </div>
+  </header>
+
+  <!-- 4 cards de métricas -->
+  <section class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    @for (card of metricCards; track card.label) {
+      <a
+        [routerLink]="card.to"
+        class="cozy-card flex flex-col gap-2 p-4 transition hover:shadow-md active:scale-[0.98]"
+      >
+        <div [class]="metricIconClass(card)">
+          <svg [appIcon]="card.icon" class="h-4 w-4"></svg>
+        </div>
+        <div>
+          <p [class]="metricValueClass(card)">{{ card.value }}</p>
+          <p class="mt-0.5 text-xs text-muted-foreground">{{ card.label }}</p>
+        </div>
+        @if (card.alert) {
+          <span class="cozy-pill self-start bg-blue-100 text-[10px] font-bold text-blue-700">
+            Ação necessária
+          </span>
+        }
+      </a>
+    }
+  </section>
+
+  <!-- Pagamentos pendentes -->
+  @if (pagamentosAguardando.length > 0) {
+    <section class="cozy-card p-4 space-y-3">
+      <div class="flex items-center gap-2">
+        <div class="grid h-7 w-7 place-items-center rounded-lg bg-blue-50 text-blue-600">
+          <svg [appIcon]="icons.CreditCard" class="h-3.5 w-3.5"></svg>
+        </div>
+        <h2 class="text-sm font-semibold">Pagamento pendente</h2>
+        <span
+          class="cozy-pill ml-auto bg-blue-50 text-[10px] font-bold text-blue-700 ring-1 ring-blue-200"
+        >
+          {{ pagamentosAguardando.length }}
+        </span>
+      </div>
+      <div class="divide-y divide-border/50">
+        @for (p of pagamentosAguardando; track p.id) {
+          <div
+            class="flex flex-wrap items-center justify-between gap-2 py-2.5 first:pt-0 last:pb-0"
+          >
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium truncate">{{ p.descricao }}</p>
+              <p class="text-xs text-muted-foreground">{{ p.gomUsername }}</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="text-sm font-bold">{{ brl(p.valorBrl) }}</span>
+              <a
+                routerLink="/joiner/compras"
+                class="rounded-xl bg-primary px-3 py-1.5 text-[11px] font-bold text-primary-foreground transition hover:opacity-90"
+              >
+                Ver pedido
+              </a>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- A caminho -->
+  @if (emTransito.length > 0) {
+    <section class="cozy-card p-4 space-y-3">
+      <div class="flex items-center gap-2">
+        <div class="grid h-7 w-7 place-items-center rounded-lg bg-sky-50 text-sky-600">
+          <svg [appIcon]="icons.Truck" class="h-3.5 w-3.5"></svg>
+        </div>
+        <h2 class="text-sm font-semibold">A caminho</h2>
+        <span
+          class="cozy-pill ml-auto bg-sky-50 text-[10px] font-bold text-sky-700 ring-1 ring-sky-200"
+        >
+          {{ emTransito.length }}
+        </span>
+      </div>
+      <div class="divide-y divide-border/50">
+        @for (p of emTransito; track p.id) {
+          <div class="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium truncate">{{ p.descricao }}</p>
+              @if (p.rastreio) {
+                <p class="mt-0.5 flex items-center gap-1 font-mono text-[11px] text-sky-700">
+                  <svg [appIcon]="icons.Package" class="h-3 w-3"></svg>
+                  {{ p.rastreio }}
+                </p>
+              } @else {
+                <p class="text-xs text-muted-foreground">{{ p.gomUsername }}</p>
+              }
+            </div>
+            <span
+              class="cozy-pill shrink-0 bg-sky-50 text-[10px] font-semibold text-sky-700 ring-1 ring-sky-200"
+            >
+              Em trânsito
+            </span>
+          </div>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- Atalhos rápidos -->
+  <section class="space-y-2">
+    <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      Acesso rápido
+    </p>
+    <div class="grid gap-2 sm:grid-cols-3">
+      @for (s of shortcuts; track s.to) {
+        <a
+          [routerLink]="s.to"
+          class="cozy-card flex items-center gap-3 p-4 transition hover:shadow-md active:scale-[0.98]"
+        >
+          <div
+            class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"
+          >
+            <svg [appIcon]="s.icon" class="h-5 w-5"></svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-semibold">{{ s.label }}</p>
+            <p class="truncate text-xs text-muted-foreground">{{ s.desc }}</p>
+          </div>
+          <svg [appIcon]="icons.ChevronRight" class="h-4 w-4 shrink-0 text-muted-foreground"></svg>
+        </a>
+      }
+    </div>
+  </section>
+</div>

@@ -1,0 +1,19 @@
+<div class="space-y-5">
+  <!-- KPI summary -->
+  <div class="grid gap-3 sm:grid-cols-3">
+    @for (kpi of kpis(); track kpi.label) {
+      <div class="cozy-card flex items-center gap-4 p-4">
+        <div [class]="iconClass(kpi)">
+          <svg [appIcon]="kpi.icon" class="h-5 w-5"></svg>
+        </div>
+        <div class="min-w-0">
+          <p class="text-xs text-muted-foreground">{{ kpi.label }}</p>
+          <p class="text-lg font-bold leading-tight">{{ kpi.value }}</p>
+          <p [class]="trendClass(kpi)">{{ trendText(kpi) }}</p>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Gráficos removidos na migração (aguardando definição da biblioteca) -->
+</div>

@@ -1,0 +1,112 @@
+<div class="space-y-5">
+  <!-- Câmbio / Spread -->
+  <div class="cozy-card p-5 space-y-4">
+    <div>
+      <h3 class="text-sm font-semibold">Câmbio e Conversão</h3>
+      <p class="text-xs text-muted-foreground mt-0.5">
+        Valores ajustados diariamente conforme a taxa do dia.
+      </p>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2">
+      @for (field of cambioFields; track field.key) {
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold">{{ field.label }}</label>
+          @if (field.hint) {
+            <p class="text-[10px] text-muted-foreground">{{ field.hint }}</p>
+          }
+          <input
+            type="number"
+            [attr.min]="field.min"
+            [attr.max]="field.max"
+            [attr.step]="field.step"
+            [appNumberValue]="form()[field.key]"
+            (input)="onFieldInput(field.key, $event)"
+            (blur)="onFieldBlur(field, $event)"
+            class="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+          />
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Markup por item -->
+  <div class="cozy-card p-5 space-y-4">
+    <div>
+      <h3 class="text-sm font-semibold">Markup por Tipo de Item</h3>
+      <p class="text-xs text-muted-foreground mt-0.5">
+        Valor em BRL adicionado por unidade (oculto das joiners).
+      </p>
+    </div>
+    <div class="grid gap-3 sm:grid-cols-2">
+      @for (key of itemKeys; track key) {
+        <div
+          class="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/30 px-4 py-3"
+        >
+          <span class="text-lg leading-none">{{ ITEM_META[key].emoji }}</span>
+          <div class="min-w-0 flex-1">
+            <p class="text-xs font-semibold truncate">{{ ITEM_META[key].label }}</p>
+            <p class="text-[10px] text-muted-foreground">por unidade</p>
+          </div>
+          <div class="flex items-center gap-1 shrink-0">
+            <span class="text-xs text-muted-foreground">R$</span>
+            <input
+              type="number"
+              min="0"
+              step="0.5"
+              [appNumberValue]="form().markupItens[key]"
+              (input)="onMarkupInput(key, $event)"
+              class="w-16 rounded-lg border border-border bg-card px-2 py-1 text-right text-sm font-semibold outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Pré-visualização da fórmula -->
+  <div class="cozy-card bg-primary/5 border-primary/20 p-4">
+    <div class="flex items-start gap-2.5">
+      <svg [appIcon]="icons.Info" class="mt-0.5 h-4 w-4 shrink-0 text-primary"></svg>
+      <div class="space-y-1">
+        <p class="text-sm font-semibold">Pré-visualização</p>
+        <p class="text-xs text-muted-foreground leading-relaxed">
+          Photocard de ¥ 3.000 →
+          <span class="font-bold text-foreground">{{ brl(preview()) }}</span>
+          usando as configurações atuais.
+        </p>
+        <p class="text-[10px] text-muted-foreground/70 font-mono">
+          ((3000 + {{ form().acrescimoBaseJpy }}) × {{ form().fatorIdrJpy }} ×
+          {{ form().taxaIdrBrl }}) × (1 + {{ form().spreadWise }}%) + R$
+          {{ form().markupItens.photocard }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botões -->
+  <div class="flex items-center gap-3">
+    <button
+      type="button"
+      (click)="handleSave()"
+      [disabled]="saving()"
+      class="flex items-center gap-2 rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90 disabled:opacity-60"
+    >
+      @if (saving()) {
+        <svg [appIcon]="icons.RefreshCw" class="h-4 w-4 animate-spin"></svg>
+      } @else if (saved()) {
+        <svg [appIcon]="icons.CheckCircle2" class="h-4 w-4"></svg>
+      } @else {
+        <svg [appIcon]="icons.Save" class="h-4 w-4"></svg>
+      }
+      {{ saving() ? "Salvando…" : saved() ? "Salvo!" : "Salvar configurações" }}
+    </button>
+
+    <button
+      type="button"
+      (click)="handleReset()"
+      class="rounded-2xl border border-border px-4 py-2.5 text-sm font-medium text-muted-foreground transition hover:border-foreground/30 hover:text-foreground"
+    >
+      Restaurar padrão
+    </button>
+  </div>
+</div>

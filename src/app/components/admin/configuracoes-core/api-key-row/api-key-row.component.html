@@ -1,0 +1,48 @@
+<div class="rounded-xl border border-border/60 bg-muted/30 p-4 space-y-2">
+  <div class="flex items-center justify-between gap-2">
+    <p class="text-xs font-semibold">{{ apiKey().label }}</p>
+    @if (apiKey().ultimoUso; as ultimoUso) {
+      <p class="text-[10px] text-muted-foreground">Usado em {{ fmtDatetime(ultimoUso) }}</p>
+    }
+  </div>
+
+  <div class="flex items-center gap-2">
+    <code
+      class="min-w-0 flex-1 truncate rounded-lg border border-border bg-card px-3 py-2 font-mono text-[11px] text-muted-foreground"
+    >
+      {{ exibida() }}
+    </code>
+
+    <button
+      type="button"
+      (click)="visible.set(!visible())"
+      [title]="visible() ? 'Ocultar' : 'Revelar'"
+      class="rounded-lg border border-border p-2 text-muted-foreground transition hover:border-foreground/30 hover:text-foreground"
+    >
+      <svg [appIcon]="visible() ? icons.EyeOff : icons.Eye" class="h-3.5 w-3.5"></svg>
+    </button>
+
+    <button
+      type="button"
+      (click)="handleCopy()"
+      title="Copiar"
+      class="rounded-lg border border-border p-2 text-muted-foreground transition hover:border-foreground/30 hover:text-foreground"
+    >
+      @if (copied()) {
+        <svg [appIcon]="icons.CheckCircle2" class="h-3.5 w-3.5 text-emerald-500"></svg>
+      } @else {
+        <svg [appIcon]="icons.Copy" class="h-3.5 w-3.5"></svg>
+      }
+    </button>
+
+    <button
+      type="button"
+      (click)="regenerate.emit()"
+      title="Regenerar chave"
+      class="flex items-center gap-1.5 rounded-lg border border-destructive/30 px-3 py-2 text-[11px] font-semibold text-destructive transition hover:bg-destructive/10"
+    >
+      <svg [appIcon]="icons.RefreshCw" class="h-3 w-3"></svg>
+      Regenerar
+    </button>
+  </div>
+</div>

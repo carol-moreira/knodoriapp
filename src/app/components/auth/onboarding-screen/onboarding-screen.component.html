@@ -1,0 +1,171 @@
+<div class="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+  <div class="w-full max-w-md">
+    <!-- Header -->
+    <div class="mb-8 text-center">
+      <div
+        class="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-3xl bg-primary text-primary-foreground shadow-lg"
+      >
+        <svg [appIcon]="icons.Heart" class="h-8 w-8" fill="currentColor"></svg>
+      </div>
+      <h1 class="text-2xl font-bold tracking-tight">Bem-vinda! 🎉</h1>
+      <p class="mt-2 text-sm text-muted-foreground">
+        Configure seu perfil para começar. Você pode editar isso depois.
+      </p>
+    </div>
+
+    <form (submit)="handleSubmit($event)" class="cozy-card space-y-6 p-6">
+      <!-- Avatar picker -->
+      <div class="space-y-3">
+        <label class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Foto de perfil
+        </label>
+
+        <!-- Preview do avatar atual -->
+        <div class="flex items-center gap-4">
+          @if (effectiveAvatar()?.startsWith("data:")) {
+            <div class="h-16 w-16 shrink-0 overflow-hidden rounded-2xl ring-2 ring-primary/20">
+              <img [src]="effectiveAvatar()" alt="Avatar" class="h-full w-full object-cover" />
+            </div>
+          } @else if (previewPreset(); as preset) {
+            <div
+              [class]="
+                'grid h-16 w-16 shrink-0 place-items-center rounded-2xl ring-2 ring-primary/20 ' +
+                preset.bg
+              "
+            >
+              <span class="text-3xl">{{ preset.emoji }}</span>
+            </div>
+          } @else {
+            <!-- Fallback: iniciais do nome -->
+            <div
+              class="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-primary/10 ring-2 ring-border"
+            >
+              <span class="text-xl font-bold text-primary">{{ initials() }}</span>
+            </div>
+          }
+          <div class="space-y-1.5">
+            <button
+              type="button"
+              (click)="fileInput.click()"
+              class="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground transition hover:bg-muted"
+            >
+              <svg [appIcon]="icons.Upload" class="h-3.5 w-3.5"></svg>
+              {{ uploadedAvatar() ? "Trocar foto" : "Fazer upload" }}
+            </button>
+            <p class="text-[10px] text-muted-foreground">JPG, PNG ou WebP · máx. 4 MB</p>
+          </div>
+          <input
+            #fileInput
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            class="hidden"
+            (change)="handleFileChange($event)"
+          />
+        </div>
+
+        <!-- Grid de avatares preset -->
+        <div class="space-y-1.5">
+          <p class="text-[10px] text-muted-foreground">ou escolha um avatar</p>
+          <div class="grid grid-cols-6 gap-2">
+            @for (preset of presets; track preset.id) {
+              <button type="button" (click)="selectPreset(preset.id)" [class]="presetClass(preset)">
+                <span class="text-xl leading-none">{{ preset.emoji }}</span>
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Nome de exibição -->
+      <div class="space-y-1.5">
+        <label [class]="labelCls"> Nome de exibição <span class="text-destructive">*</span> </label>
+        <input
+          [value]="nome()"
+          (input)="nome.set(val($event))"
+          (blur)="touch('nome')"
+          placeholder="Como você quer ser chamada?"
+          maxlength="40"
+          [class]="inputCls(!!nomeError())"
+        />
+        @if (nomeError()) {
+          <p class="flex items-center gap-1 text-xs text-destructive">
+            <svg [appIcon]="icons.AlertCircle" class="h-3 w-3"></svg>
+            {{ nomeError() }}
+          </p>
+        }
+      </div>
+
+      <!-- Username -->
+      <div class="space-y-1.5">
+        <label [class]="labelCls">
+          Seu &#64; na plataforma <span class="text-destructive">*</span>
+        </label>
+        <div
+          [class]="
+            'flex items-center overflow-hidden rounded-2xl border bg-background focus-within:ring-2 transition ' +
+            (usernameError()
+              ? 'border-destructive focus-within:ring-destructive/20'
+              : 'border-border focus-within:border-primary focus-within:ring-primary/20')
+          "
+        >
+          <span
+            class="flex items-center gap-1 border-r border-border bg-muted/60 px-3 py-3.5 text-sm text-muted-foreground font-medium"
+          >
+            <svg [appIcon]="icons.AtSign" class="h-3.5 w-3.5"></svg>
+          </span>
+          <input
+            [value]="rawUsername()"
+            (input)="onUsernameInput($event)"
+            (blur)="touch('username')"
+            placeholder="seu.usuario"
+            maxlength="30"
+            autocapitalize="none"
+            spellcheck="false"
+            class="w-full bg-transparent py-3.5 pl-3 pr-4 text-sm outline-none"
+          />
+        </div>
+        @if (usernameError()) {
+          <p class="flex items-center gap-1 text-xs text-destructive">
+            <svg [appIcon]="icons.AlertCircle" class="h-3 w-3"></svg>
+            {{ usernameError() }}
+          </p>
+        }
+        @if (!usernameError() && rawUsername().length >= 3) {
+          <p class="flex items-center gap-1 text-[10px] text-emerald-600">
+            <svg [appIcon]="icons.CheckCircle2" class="h-3 w-3"></svg> Você será &#64;{{
+              rawUsername()
+            }}
+          </p>
+        }
+        <p class="text-[10px] text-muted-foreground">
+          Letras, números, _ e . · não pode mudar depois (por enquanto)
+        </p>
+      </div>
+
+      <!-- Erro global -->
+      @if (error()) {
+        <div
+          class="flex items-center gap-2 rounded-xl bg-destructive/10 px-4 py-3 text-xs font-medium text-destructive"
+        >
+          <svg [appIcon]="icons.AlertCircle" class="h-4 w-4 shrink-0"></svg>
+          {{ error() }}
+        </div>
+      }
+
+      <!-- Submit -->
+      <button
+        type="submit"
+        [disabled]="!canSubmit()"
+        class="w-full rounded-2xl bg-primary py-3.5 text-sm font-bold text-primary-foreground shadow-sm transition hover:opacity-90 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        @if (loading()) {
+          <span class="flex items-center justify-center gap-2">
+            <svg [appIcon]="icons.Loader2" class="h-4 w-4 animate-spin"></svg> Configurando…
+          </span>
+        } @else {
+          Entrar na plataforma 🍒
+        }
+      </button>
+    </form>
+  </div>
+</div>

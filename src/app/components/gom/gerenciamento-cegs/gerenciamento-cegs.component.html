@@ -1,0 +1,135 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight">CEGs</h1>
+      <p class="mt-0.5 text-sm text-muted-foreground">
+        {{ cegs().length }} grupo{{ cegs().length !== 1 ? "s" : "" }} de pedido
+      </p>
+    </div>
+    <button
+      type="button"
+      (click)="criarOpen.set(true)"
+      class="flex items-center gap-2 rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90"
+    >
+      <svg [appIcon]="icons.Plus" class="h-4 w-4"></svg>
+      Nova CEG
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+    @for (f of filtros; track f.value) {
+      <button type="button" (click)="filtro.set(f.value)" [class]="filtroClass(f.value)">
+        {{ f.label }}
+      </button>
+    }
+  </div>
+
+  <!-- Lista -->
+  @if (filtradas().length === 0) {
+    <div class="cozy-card flex flex-col items-center justify-center gap-3 py-16 text-center">
+      <svg [appIcon]="icons.Layers" class="h-8 w-8 text-muted-foreground/40"></svg>
+      <div>
+        <p class="text-sm font-semibold">Nenhuma CEG encontrada</p>
+        <p class="mt-0.5 text-xs text-muted-foreground">Tente outro filtro ou crie uma nova CEG.</p>
+      </div>
+    </div>
+  } @else {
+    <div class="space-y-3">
+      @for (ceg of filtradas(); track ceg.id) {
+        <!-- CegCard -->
+        <div class="cozy-card overflow-hidden">
+          <div class="p-5">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <!-- Info -->
+              <div class="min-w-0 flex-1 space-y-1.5">
+                <div class="flex flex-wrap items-center gap-2">
+                  <h3 class="text-sm font-bold truncate">{{ ceg.nome }}</h3>
+                  <span
+                    [class]="'cozy-pill text-[10px] font-semibold ' + STATUS_META[ceg.status].badge"
+                  >
+                    {{ STATUS_META[ceg.status].label }}
+                  </span>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <span class="flex items-center gap-1">
+                    <svg [appIcon]="icons.Layers" class="h-3 w-3"></svg>
+                    {{ ceg.loja }}
+                  </span>
+                  <span>·</span>
+                  <span class="flex items-center gap-1">
+                    <svg [appIcon]="icons.Users" class="h-3 w-3"></svg>
+                    {{ ceg.qtdJoiners }} joiners
+                  </span>
+                  <span>·</span>
+                  <span class="flex items-center gap-1">
+                    <svg [appIcon]="icons.Package" class="h-3 w-3"></svg>
+                    {{ ceg.qtdItens }} itens
+                  </span>
+                  <span>·</span>
+                  <span class="flex items-center gap-1">
+                    <svg [appIcon]="icons.Clock" class="h-3 w-3"></svg>
+                    {{ fmtDate(ceg.prazo) }}
+                  </span>
+                  <span>·</span>
+                  <span class="font-medium">{{ ceg.moeda }}</span>
+                </div>
+              </div>
+
+              <!-- Ações -->
+              <div class="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  (click)="repassesCeg.set(ceg)"
+                  class="relative flex items-center gap-1.5 rounded-xl border border-border bg-muted/50 px-3 py-2 text-xs font-medium transition hover:bg-muted"
+                >
+                  <svg [appIcon]="icons.BarChart3" class="h-3.5 w-3.5"></svg>
+                  Repasses
+                  @if (repassesPend(ceg.id) > 0) {
+                    <span
+                      class="absolute -right-1.5 -top-1.5 grid h-4 w-4 place-items-center rounded-full bg-amber-500 text-[9px] font-bold text-white"
+                    >
+                      {{ repassesPend(ceg.id) }}
+                    </span>
+                  }
+                </button>
+                <select
+                  (change)="onStatusChange(ceg.id, $event)"
+                  class="rounded-xl border border-border bg-muted/40 px-2 py-2 text-xs font-medium outline-none transition focus:border-primary"
+                >
+                  @for (s of steps; track s) {
+                    <option [value]="s" [selected]="s === ceg.status">
+                      {{ STATUS_META[s].label }}
+                    </option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <!-- Barra de progresso das etapas -->
+            <div class="mt-4 flex items-center gap-1">
+              @for (s of steps; track s) {
+                <div [class]="stepClass(ceg, s)"></div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Modais fora do container espaçado (equivalente ao portal do Radix: não ocupam o fluxo) -->
+<app-criar-ceg-modal
+  [open]="criarOpen()"
+  (closed)="criarOpen.set(false)"
+  (saved)="handleCriar($event)"
+/>
+<app-repasses-modal
+  [open]="!!repassesCeg()"
+  [ceg]="repassesCeg()"
+  [repasses]="repassesDoModal()"
+  (closed)="repassesCeg.set(null)"
+  (updated)="handleUpdateRepasse($event)"
+/>

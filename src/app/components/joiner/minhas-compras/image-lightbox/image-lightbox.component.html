@@ -1,0 +1,75 @@
+<app-dialog
+  [open]="open()"
+  (openChange)="onOpenChange($event)"
+  overlayClass="fixed inset-0 z-50 bg-black/92 backdrop-blur-md animate-in fade-in duration-200"
+  contentClass="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 p-4 outline-none"
+>
+  <h2 class="sr-only">Galeria de fotos — item {{ idx() + 1 }} de {{ images().length }}</h2>
+  <p class="sr-only">Use as setas do teclado ou os botões para navegar entre as fotos.</p>
+
+  <!-- Botão fechar -->
+  <button
+    type="button"
+    aria-label="Fechar galeria"
+    (click)="onOpenChange(false)"
+    class="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white backdrop-blur-sm transition hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+  >
+    <svg [appIcon]="icons.X" class="h-5 w-5"></svg>
+  </button>
+
+  <!-- Imagem principal + chevrons -->
+  <div class="flex items-center gap-3">
+    @if (images().length > 1) {
+      <button
+        type="button"
+        (click)="prev()"
+        aria-label="Foto anterior"
+        class="shrink-0 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white backdrop-blur-sm transition hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+      >
+        <svg [appIcon]="icons.ChevronLeft" class="h-5 w-5"></svg>
+      </button>
+    }
+
+    <!-- Recria a <img> a cada troca de índice para re-animar (como key={idx}) -->
+    @for (i of [idx()]; track i) {
+      <img
+        [src]="images()[i]"
+        [alt]="'Foto ' + (i + 1) + ' de ' + images().length"
+        draggable="false"
+        class="max-h-[70svh] max-w-[min(80vw,720px)] rounded-2xl object-contain shadow-2xl animate-in zoom-in-95 fade-in duration-150"
+      />
+    }
+
+    @if (images().length > 1) {
+      <button
+        type="button"
+        (click)="next()"
+        aria-label="Próxima foto"
+        class="shrink-0 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white backdrop-blur-sm transition hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+      >
+        <svg [appIcon]="icons.ChevronRight" class="h-5 w-5"></svg>
+      </button>
+    }
+  </div>
+
+  <!-- Contador -->
+  <p class="text-sm font-medium tabular-nums text-white/50">
+    {{ idx() + 1 }} <span class="text-white/25">/</span> {{ images().length }}
+  </p>
+
+  <!-- Tira de miniaturas (oculta se só 1 imagem) -->
+  @if (images().length > 1) {
+    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-[min(90vw,600px)] pb-1">
+      @for (src of images(); track $index; let i = $index) {
+        <button
+          type="button"
+          (click)="idx.set(i)"
+          [attr.aria-label]="'Ir para foto ' + (i + 1)"
+          [class]="thumbClass(i)"
+        >
+          <img [src]="src" alt="" draggable="false" class="h-full w-full object-cover" />
+        </button>
+      }
+    </div>
+  }
+</app-dialog>

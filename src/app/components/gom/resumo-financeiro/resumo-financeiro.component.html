@@ -1,0 +1,135 @@
+<div class="space-y-5">
+  <!-- Cards principais -->
+  <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    @for (card of cards(); track card.label) {
+      <div [class]="cardClass(card)">
+        <div [class]="cardIconClass(card)">
+          <svg [appIcon]="card.icon" class="h-4 w-4"></svg>
+        </div>
+        <div>
+          <p class="text-xl font-bold tracking-tight leading-tight">{{ card.value }}</p>
+          <p class="mt-0.5 text-xs font-medium text-muted-foreground">{{ card.label }}</p>
+        </div>
+        <p class="text-[10px] text-muted-foreground">{{ card.sub }}</p>
+      </div>
+    }
+  </div>
+
+  <!-- Pipeline de pedidos -->
+  <div class="cozy-card p-5">
+    <div class="mb-3 flex items-center justify-between">
+      <h3 class="text-sm font-semibold">Pipeline de pedidos</h3>
+      <span class="text-xs text-muted-foreground">{{ resumo().pipeline.total }} no total</span>
+    </div>
+
+    <div class="space-y-2.5">
+      @for (row of pipelineRows(); track row.label) {
+        <div class="flex items-center gap-3">
+          <span [class]="'w-32 shrink-0 text-xs font-medium ' + row.textColor">{{
+            row.label
+          }}</span>
+          <div class="flex flex-1 items-center gap-2">
+            <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+              <div
+                [class]="'h-full rounded-full transition-all ' + row.color"
+                [style.width.%]="pct(row.count)"
+              ></div>
+            </div>
+            <span
+              [class]="
+                'cozy-pill shrink-0 text-[10px] font-bold ' + row.bgColor + ' ' + row.textColor
+              "
+            >
+              {{ row.count }}
+            </span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Barra composta -->
+    <div class="mt-4 flex h-2 w-full overflow-hidden rounded-full bg-muted">
+      @if (resumo().pipeline.total > 0) {
+        <div
+          class="bg-amber-400 transition-all"
+          [style.width.%]="pct(resumo().pipeline.pendente)"
+        ></div>
+        <div
+          class="bg-blue-400 transition-all"
+          [style.width.%]="pct(resumo().pipeline.aguardandoPagamento)"
+        ></div>
+        <div
+          class="bg-emerald-500 transition-all"
+          [style.width.%]="pct(resumo().pipeline.comprado)"
+        ></div>
+      }
+    </div>
+
+    <!-- Legenda de valores -->
+    <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+      <span>Em análise: {{ brl(resumo().emAnalise) }}</span>
+      <span>A receber: {{ brl(resumo().aReceber) }}</span>
+      <span>Confirmado: {{ brl(resumo().totalCaixa) }}</span>
+    </div>
+  </div>
+
+  <!-- Pagamentos a liberar -->
+  <div class="cozy-card p-5 space-y-3">
+    <div class="flex items-center justify-between">
+      <h3 class="text-sm font-semibold">Pagamentos a liberar</h3>
+      <span
+        [class]="
+          'cozy-pill text-[10px] font-bold ' +
+          (aguardando().length > 0
+            ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200'
+            : 'bg-muted text-muted-foreground')
+        "
+      >
+        {{ aguardando().length }} {{ aguardando().length === 1 ? "pendente" : "pendentes" }}
+      </span>
+    </div>
+
+    @if (aguardando().length === 0) {
+      <div class="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
+        <svg [appIcon]="icons.CheckCircle2" class="h-4 w-4 text-emerald-500"></svg>
+        Nenhum pagamento aguardando confirmação.
+      </div>
+    } @else {
+      <div class="divide-y divide-border/50">
+        @for (s of aguardando(); track s.id) {
+          <div class="flex flex-wrap items-start justify-between gap-3 py-3 first:pt-0 last:pb-0">
+            <div class="min-w-0 flex-1 space-y-1">
+              <p class="text-sm font-semibold">{{ s.joinerNome }}</p>
+              <p class="text-xs text-muted-foreground">
+                {{ s.joinerUsername }} ·
+                {{ s.formaPagamento === "pix" ? "PIX" : "Cartão " + s.parcelas + "×" }} ·
+                {{ fmtDate(s.dataSolicitacao) }}
+              </p>
+              <!-- Resumo dos itens -->
+              <p class="text-[11px] text-muted-foreground/80">{{ resumoItens(s) }}</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="text-sm font-bold">{{ brl(s.valorBrl) }}</span>
+              @if (podeLiberar()) {
+                <button
+                  type="button"
+                  (click)="liberarPagamento.emit(s.id)"
+                  class="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-emerald-700"
+                >
+                  <svg [appIcon]="icons.Send" class="h-3 w-3"></svg>
+                  Liberar
+                </button>
+              } @else {
+                <span
+                  class="cozy-pill text-[10px] font-semibold bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                >
+                  Aguardando
+                </span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

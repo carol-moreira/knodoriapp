@@ -1,0 +1,13 @@
+<ng-template #tpl>
+  <div [class]="overlayClass()" data-state="open" (click)="requestClose()"></div>
+  <div
+    role="dialog"
+    aria-modal="true"
+    data-state="open"
+    tabindex="-1"
+    [class]="contentClass()"
+    cdkTrapFocus
+  >
+    <ng-content />
+  </div>
+</ng-template>

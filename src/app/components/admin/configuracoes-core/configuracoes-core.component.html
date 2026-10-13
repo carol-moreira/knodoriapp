@@ -1,0 +1,134 @@
+<div class="space-y-5">
+  <!-- ── Painel: Status do banco de dados ─────────────────────────────── -->
+  <div class="cozy-card p-5 space-y-4">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <svg [appIcon]="icons.Database" class="h-4 w-4 text-primary"></svg>
+        <h3 class="text-sm font-semibold">Status do Banco de Dados</h3>
+      </div>
+      <span
+        [class]="
+          'cozy-pill text-xs font-bold flex items-center gap-1 ' +
+          (dbStatus().healthy
+            ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
+            : 'bg-red-50 text-red-700 ring-1 ring-red-200')
+        "
+      >
+        <svg [appIcon]="dbStatus().healthy ? icons.Wifi : icons.WifiOff" class="h-3 w-3"></svg>
+        {{ dbStatus().healthy ? "Saudável" : "Degradado" }}
+      </span>
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-3">
+      @for (stat of stats(); track stat.label) {
+        <div class="space-y-0.5">
+          <p class="text-[10px] text-muted-foreground uppercase tracking-wider">{{ stat.label }}</p>
+          <p [class]="'text-sm font-bold ' + (stat.ok ? 'text-foreground' : 'text-destructive')">
+            {{ stat.value }}
+          </p>
+          @if (stat.sub) {
+            <p class="text-[10px] text-muted-foreground">{{ stat.sub }}</p>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Barra de uso de conexões -->
+    <div>
+      <div class="flex justify-between text-[10px] text-muted-foreground mb-1">
+        <span>Pool de conexões</span>
+        <span>{{ pctConexoes().toFixed(0) }}%</span>
+      </div>
+      <div class="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+        <div [class]="poolBarClass()" [style.width.%]="pctConexoes()"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Painel: Logs de erro ─────────────────────────────────────────── -->
+  <div class="cozy-card p-5 space-y-4">
+    <div class="flex items-center justify-between flex-wrap gap-2">
+      <div class="flex items-center gap-2">
+        <svg [appIcon]="icons.AlertTriangle" class="h-4 w-4 text-primary"></svg>
+        <h3 class="text-sm font-semibold">Logs do Sistema</h3>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- Filtro nível -->
+        <div class="flex items-center gap-1 rounded-xl border border-border bg-muted/60 p-0.5">
+          @for (l of levels; track l) {
+            <button type="button" (click)="filtroLevel.set(l)" [class]="levelClass(l)">
+              {{ l }}
+              @if (counts()[l] > 0) {
+                <span class="ml-1 opacity-70">{{ counts()[l] }}</span>
+              }
+            </button>
+          }
+        </div>
+
+        <!-- Limite -->
+        <select
+          (change)="onLimiteChange($event)"
+          class="rounded-lg border border-border bg-card px-2 py-1 text-xs outline-none"
+        >
+          @for (n of limitOptions; track n) {
+            <option [value]="n" [selected]="n === limite()">Últimos {{ n }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="overflow-hidden rounded-xl border border-border/60 divide-y divide-border/40">
+      @if (filtrados().length === 0) {
+        <p class="py-8 text-center text-sm text-muted-foreground">Nenhum log encontrado.</p>
+      } @else {
+        @for (log of filtrados(); track log.id) {
+          <div [class]="'px-4 py-3 ' + LOG_META[log.level].row">
+            <div class="flex items-start gap-3">
+              <span
+                [class]="
+                  'mt-0.5 rounded-md px-1.5 py-0.5 text-[9px] ' +
+                  LOG_META[log.level].badge +
+                  ' shrink-0'
+                "
+              >
+                {{ log.level }}
+              </span>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2">
+                  <svg
+                    [appIcon]="LOG_META[log.level].icon"
+                    class="h-3 w-3 shrink-0 text-current opacity-60"
+                  ></svg>
+                  <p class="text-xs font-medium truncate">{{ log.mensagem }}</p>
+                </div>
+                @if (log.detalhes) {
+                  <p class="mt-0.5 font-mono text-[10px] text-muted-foreground truncate">
+                    {{ log.detalhes }}
+                  </p>
+                }
+              </div>
+              <time class="shrink-0 text-[10px] text-muted-foreground">{{
+                fmtDatetime(log.timestamp)
+              }}</time>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <!-- ── Painel: Chaves de API ────────────────────────────────────────── -->
+  <div class="cozy-card p-5 space-y-4">
+    <div class="flex items-center gap-2">
+      <svg [appIcon]="icons.RefreshCw" class="h-4 w-4 text-primary"></svg>
+      <h3 class="text-sm font-semibold">Chaves de API Globais</h3>
+    </div>
+
+    <div class="space-y-3">
+      @for (k of chaves(); track k.id) {
+        <app-api-key-row [apiKey]="k" (regenerate)="regenerar(k.id)" />
+      }
+    </div>
+  </div>
+</div>

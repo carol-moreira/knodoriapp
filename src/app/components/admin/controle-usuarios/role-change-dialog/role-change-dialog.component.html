@@ -1,0 +1,61 @@
+<app-dialog
+  [open]="open()"
+  (openChange)="onOpenChange($event)"
+  [overlayClass]="overlayCls"
+  [contentClass]="contentCls"
+>
+  <div class="mb-4 flex items-start justify-between">
+    <div>
+      <h2 class="text-base font-bold">Confirmar alteração de cargo</h2>
+      <p class="mt-0.5 text-xs text-muted-foreground">
+        {{ pending()?.userName }} →
+        <strong>{{ pending() ? ROLE_META[pending()!.newRole].label : "" }}</strong>
+      </p>
+    </div>
+    <button
+      type="button"
+      (click)="onOpenChange(false)"
+      class="rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted"
+    >
+      <svg [appIcon]="icons.X" class="h-4 w-4"></svg>
+    </button>
+  </div>
+
+  <p class="mb-4 text-sm text-muted-foreground">
+    Alteração de cargo é uma ação sensível. Confirme sua senha de administrador para prosseguir.
+  </p>
+
+  <div class="space-y-1.5">
+    <label class="text-xs font-semibold">Senha de administrador</label>
+    <input
+      type="password"
+      [value]="senha()"
+      (input)="onSenhaInput($event)"
+      (keydown.enter)="handleConfirm()"
+      placeholder="••••••••"
+      autocomplete="current-password"
+      class="w-full rounded-xl border border-border bg-muted/40 px-3 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+    />
+    @if (erro()) {
+      <p class="text-xs text-destructive">{{ erro() }}</p>
+    }
+  </div>
+
+  <div class="mt-6 flex justify-end gap-2">
+    <button
+      type="button"
+      (click)="onOpenChange(false)"
+      class="rounded-xl border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition hover:text-foreground"
+    >
+      Cancelar
+    </button>
+    <button
+      type="button"
+      (click)="handleConfirm()"
+      class="flex items-center gap-2 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+    >
+      <svg [appIcon]="icons.CheckCircle2" class="h-4 w-4"></svg>
+      Confirmar
+    </button>
+  </div>
+</app-dialog>

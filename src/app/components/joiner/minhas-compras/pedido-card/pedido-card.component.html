@@ -1,0 +1,212 @@
+<div [class]="cardClass()">
+  <!-- Barra de cor no topo -->
+  <div [class]="barClass()"></div>
+
+  <div class="space-y-4 p-5">
+    <!-- Cabeçalho -->
+    <div class="flex items-start justify-between gap-3">
+      <div class="min-w-0 space-y-0.5">
+        <p class="truncate text-sm font-semibold">{{ resumoItens() }}</p>
+        <p class="text-xs text-muted-foreground">
+          {{ pedido().cegNome }} · {{ pedido().gomUsername }} ·
+          {{ fmtDate(pedido().dataSolicitacao) }}
+        </p>
+      </div>
+      <div class="flex shrink-0 flex-col items-end gap-1.5">
+        <span [class]="'cozy-pill text-[11px] font-semibold ' + STATUS_BADGE[pedido().status]">
+          {{ STATUS_LABEL[pedido().status] }}
+        </span>
+        @if (hasImages()) {
+          <span class="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+            <svg [appIcon]="icons.Images" class="h-3 w-3"></svg>
+            {{ imagens().length }} foto{{ imagens().length !== 1 ? "s" : "" }}
+          </span>
+        }
+      </div>
+    </div>
+
+    <!-- Valores -->
+    <div class="flex items-baseline gap-3">
+      <span class="text-2xl font-bold tracking-tight">{{ brl(pedido().valorBrl) }}</span>
+      <span class="text-sm text-muted-foreground">¥{{ jpy(pedido().valorJpy) }}</span>
+      <span class="ml-auto text-xs text-muted-foreground">
+        {{ pedido().formaPagamento === "pix" ? "PIX" : "Cartão " + pedido().parcelas + "×" }}
+      </span>
+    </div>
+
+    <!-- Step bar -->
+    <div class="flex items-start">
+      @for (step of steps; track step.key; let i = $index, last = $last) {
+        <div class="flex flex-1 items-start last:flex-none">
+          <div class="flex flex-col items-center gap-1">
+            <div [class]="stepCircleClass(i)">
+              @if (i < currentStep()) {
+                <svg
+                  viewBox="0 0 10 10"
+                  class="h-3 w-3 text-primary-foreground"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                >
+                  <path d="M2 5l2.5 2.5L8 3" />
+                </svg>
+              } @else if (i === currentStep()) {
+                <svg [appIcon]="step.icon" class="h-3 w-3 text-primary"></svg>
+              } @else {
+                <svg [appIcon]="step.icon" class="h-3 w-3 text-muted-foreground/40"></svg>
+              }
+            </div>
+            <span [class]="stepLabelClass(i)">{{ step.label }}</span>
+          </div>
+          @if (!last) {
+            <div [class]="stepLineClass(i)"></div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Detalhes expandíveis -->
+    <div>
+      <button
+        type="button"
+        (click)="detalhesOpen.set(!detalhesOpen())"
+        class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
+      >
+        @if (detalhesOpen()) {
+          <svg [appIcon]="icons.ChevronUp" class="h-3.5 w-3.5"></svg> Ocultar detalhes
+        } @else {
+          <svg [appIcon]="icons.ChevronDown" class="h-3.5 w-3.5"></svg> Ver detalhes{{
+            hasImages() ? " e fotos" : ""
+          }}
+        }
+      </button>
+
+      @if (detalhesOpen()) {
+        <div
+          class="mt-3 space-y-3 rounded-xl border border-border/60 bg-muted/30 p-3 text-xs animate-in fade-in slide-in-from-top-1 duration-150"
+        >
+          <!-- Itens detalhados -->
+          <div>
+            <p class="mb-1.5 font-semibold text-foreground/80">Itens do pedido</p>
+            <div class="space-y-1">
+              @for (item of itens(); track item[0]) {
+                <div class="flex items-center justify-between">
+                  <span class="text-muted-foreground">{{ itemLabel(item[0]) }}</span>
+                  <span class="font-semibold">{{ item[1] }}×</span>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Link Mercari -->
+          <div class="border-t border-border/60 pt-2.5">
+            <a
+              [href]="pedido().linkMercari"
+              target="_blank"
+              rel="noreferrer"
+              class="inline-flex items-center gap-1.5 font-medium text-primary hover:underline underline-offset-2"
+            >
+              <svg [appIcon]="icons.ExternalLink" class="h-3 w-3"></svg>
+              Ver anúncio no Mercari
+            </a>
+          </div>
+
+          <!-- Rastreio -->
+          @if (pedido().rastreio) {
+            <div
+              class="border-t border-border/60 pt-2.5 flex items-center gap-1.5 text-sky-600 dark:text-sky-400"
+            >
+              <svg [appIcon]="icons.Truck" class="h-3 w-3"></svg>
+              <span class="font-mono font-semibold">{{ pedido().rastreio }}</span>
+            </div>
+          }
+
+          <!-- Mini galeria -->
+          @if (hasImages()) {
+            <div class="border-t border-border/60 pt-2.5">
+              <div class="space-y-2">
+                <p class="font-semibold text-foreground/80">
+                  Fotos da GOM
+                  <span class="ml-1.5 font-normal text-muted-foreground"
+                    >({{ imagens().length }})</span
+                  >
+                </p>
+                <div class="grid grid-cols-3 gap-1.5">
+                  @for (src of imagens(); track $index; let i = $index) {
+                    <button
+                      type="button"
+                      (click)="lightboxIndex.set(i)"
+                      [attr.aria-label]="'Ampliar foto ' + (i + 1) + ' de ' + imagens().length"
+                      class="group relative aspect-square overflow-hidden rounded-xl border border-border/60 bg-muted transition-all hover:border-primary/40 hover:shadow-md hover:shadow-primary/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    >
+                      <img
+                        [src]="src"
+                        alt=""
+                        loading="lazy"
+                        draggable="false"
+                        class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                      />
+                      <!-- Hover overlay com ícone de zoom -->
+                      <div
+                        class="absolute inset-0 grid place-items-center bg-black/0 transition-colors duration-150 group-hover:bg-black/25"
+                      >
+                        <svg
+                          [appIcon]="icons.ZoomIn"
+                          class="h-5 w-5 text-white opacity-0 drop-shadow-md transition-opacity duration-150 group-hover:opacity-100"
+                        ></svg>
+                      </div>
+                    </button>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Alertas e ações -->
+    <div class="flex flex-wrap gap-2 pt-0.5">
+      @if (pedido().status === "AGUARDANDO_PIX") {
+        <div
+          class="flex items-center gap-1.5 rounded-xl bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 ring-1 ring-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:ring-blue-800"
+        >
+          <svg [appIcon]="icons.AlertCircle" class="h-3.5 w-3.5"></svg>
+          Aguardando seu PIX — confirme com a GOM
+        </div>
+      }
+
+      @if (pedido().pagamentoConfirmado) {
+        <button
+          type="button"
+          (click)="solicitarRepasse.emit()"
+          class="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
+        >
+          <svg [appIcon]="icons.PackageCheck" class="h-3.5 w-3.5"></svg>
+          Solicitar Repasse
+        </button>
+      }
+
+      @if (pedido().envioLiberado) {
+        <button
+          type="button"
+          (click)="solicitarEnvio.emit()"
+          class="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
+        >
+          <svg [appIcon]="icons.Home" class="h-3.5 w-3.5"></svg>
+          Solicitar Envio Nacional
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Lightbox — renderizado via portal, independe da posição no DOM -->
+  @if (hasImages()) {
+    <app-image-lightbox
+      [open]="lightboxIndex() !== null"
+      [images]="imagens()"
+      [initialIndex]="lightboxIndex() ?? 0"
+      (closed)="lightboxIndex.set(null)"
+    />
+  }
+</div>

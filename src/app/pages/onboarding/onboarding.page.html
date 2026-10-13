@@ -1,0 +1,5 @@
+@if (auth.status() === "loading" || !auth.user()) {
+  <app-spinner variant="screen" />
+} @else {
+  <app-onboarding-screen (complete)="handleComplete()" />
+}

@@ -1,0 +1,171 @@
+<div class="space-y-4">
+  <!-- Toolbar -->
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div class="relative max-w-xs w-full">
+      <svg
+        [appIcon]="icons.Search"
+        class="absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
+      ></svg>
+      <input
+        [value]="search()"
+        (input)="search.set(val($event))"
+        placeholder="Buscar por nome, @ ou e-mail…"
+        class="w-full rounded-2xl border border-border bg-card py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+      />
+    </div>
+
+    <div
+      class="flex items-center gap-1 rounded-2xl border border-border bg-muted/60 p-1 overflow-x-auto no-scrollbar"
+    >
+      @for (r of roleFilters; track r) {
+        <button type="button" (click)="filtroRole.set(r)" [class]="filterClass(r)">
+          {{ r === "TODOS" ? "Todos" : r }}
+          <span [class]="filterCountClass(r)">{{ contadores()[r] }}</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Tabela -->
+  @if (filtrados().length === 0) {
+    <div class="cozy-card flex flex-col items-center gap-2 py-14 text-center">
+      <svg [appIcon]="icons.Users" class="h-8 w-8 text-muted-foreground/40"></svg>
+      <p class="text-sm text-muted-foreground">Nenhum usuário encontrado.</p>
+    </div>
+  } @else {
+    <div class="cozy-card overflow-hidden p-0">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
+            <tr>
+              <th class="px-5 py-3.5 text-left font-semibold">Usuário</th>
+              <th class="px-4 py-3.5 text-left font-semibold hidden sm:table-cell">E-mail</th>
+              <th class="px-4 py-3.5 text-left font-semibold">Cargo</th>
+              <th class="px-4 py-3.5 text-left font-semibold">Status</th>
+              <th class="px-4 py-3.5 text-left font-semibold hidden md:table-cell">Ativo em</th>
+              <th class="px-5 py-3.5 text-right font-semibold">Ações</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-border/60">
+            @for (u of filtrados(); track u.id) {
+              <tr class="transition hover:bg-muted/20">
+                <!-- Usuário -->
+                <td class="px-5 py-3.5">
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-primary/10 text-xs font-bold text-primary"
+                    >
+                      {{ iniciais(u.nome) }}
+                    </div>
+                    <div>
+                      <p class="font-semibold">{{ u.nome }}</p>
+                      <p class="text-xs text-muted-foreground">{{ u.username }}</p>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- E-mail -->
+                <td class="px-4 py-3.5 hidden sm:table-cell text-xs text-muted-foreground">
+                  {{ u.email }}
+                </td>
+
+                <!-- Cargo (dropdown com confirmação) -->
+                <td class="px-4 py-3.5">
+                  <div class="flex items-center gap-1.5">
+                    <select
+                      (change)="onRoleSelect(u, $event)"
+                      [disabled]="isSelf(u)"
+                      [class]="
+                        'rounded-xl border border-border bg-card px-2 py-1 text-xs font-semibold outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60 ' +
+                        ROLE_META[u.role].badge
+                      "
+                    >
+                      @for (r of roleOptions; track r) {
+                        <option [value]="r" [selected]="r === u.role">
+                          {{ ROLE_META[r].label }}
+                        </option>
+                      }
+                    </select>
+                    @if (!isSelf(u)) {
+                      <svg
+                        [appIcon]="icons.Lock"
+                        class="h-3 w-3 text-muted-foreground/50"
+                        aria-label="Requer senha"
+                      ></svg>
+                    }
+                  </div>
+                </td>
+
+                <!-- Status -->
+                <td class="px-4 py-3.5">
+                  <span
+                    [class]="'cozy-pill text-[10px] font-semibold ' + STATUS_META[u.status].badge"
+                  >
+                    {{ STATUS_META[u.status].label }}
+                  </span>
+                </td>
+
+                <!-- Última atividade -->
+                <td class="px-4 py-3.5 hidden md:table-cell text-xs text-muted-foreground">
+                  {{ fmtDate(u.ultimaAtividade) }}
+                </td>
+
+                <!-- Ações -->
+                <td class="px-5 py-3.5">
+                  <div class="flex items-center justify-end gap-1">
+                    <button
+                      type="button"
+                      (click)="editTarget.set(u)"
+                      title="Editar usuário"
+                      class="rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                    >
+                      <svg [appIcon]="icons.Pencil" class="h-3.5 w-3.5"></svg>
+                    </button>
+
+                    @if (!isSelf(u)) {
+                      <button
+                        type="button"
+                        (click)="toggleStatus(u.id)"
+                        [title]="u.status === 'ATIVO' ? 'Banir usuário' : 'Reativar usuário'"
+                        [class]="
+                          'rounded-lg p-1.5 transition ' +
+                          (u.status === 'ATIVO'
+                            ? 'text-muted-foreground hover:bg-destructive/10 hover:text-destructive'
+                            : 'text-emerald-600 hover:bg-emerald-50')
+                        "
+                      >
+                        <svg
+                          [appIcon]="u.status === 'ATIVO' ? icons.ShieldOff : icons.Shield"
+                          class="h-3.5 w-3.5"
+                        ></svg>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <p class="text-xs text-muted-foreground">
+    {{ filtrados().length }} de {{ lista().length }} usuários
+  </p>
+</div>
+
+<!-- Modais fora do container espaçado (equivalente ao portal do Radix: não ocupam o fluxo) -->
+<!-- Modal de edição -->
+<app-edit-user-dialog
+  [user]="editTarget()"
+  (closed)="editTarget.set(null)"
+  (saved)="saveEdit($event)"
+/>
+
+<!-- Modal de confirmação de cargo -->
+<app-role-change-dialog
+  [pending]="pendingRoleChange()"
+  (confirmed)="confirmRoleChange($event)"
+  (cancelled)="pendingRoleChange.set(null)"
+/>

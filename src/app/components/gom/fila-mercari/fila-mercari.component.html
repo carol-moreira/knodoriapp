@@ -1,0 +1,245 @@
+<div class="cozy-card overflow-hidden">
+  <!-- ── Toolbar ────────────────────────────────────────────────────────── -->
+  <div class="flex flex-col gap-3 border-b border-border/60 px-5 py-4 sm:flex-row sm:items-center">
+    <!-- Busca -->
+    <div class="relative w-full sm:w-64 sm:shrink-0">
+      <svg
+        [appIcon]="icons.Search"
+        class="absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none"
+      ></svg>
+      <input
+        [value]="search()"
+        (input)="search.set(val($event))"
+        placeholder="Buscar por nome ou @..."
+        class="w-full rounded-2xl border border-border bg-background py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground/60"
+      />
+    </div>
+
+    <!-- Filter tabs — scroll horizontal em telas pequenas -->
+    <div
+      class="flex items-center gap-1 overflow-x-auto rounded-2xl border border-border bg-muted/60 p-1 no-scrollbar sm:ml-auto"
+    >
+      @for (tab of filterTabs; track tab.id) {
+        <button type="button" (click)="filtroStatus.set(tab.id)" [class]="tabClass(tab.id)">
+          {{ tab.label }}
+          <span [class]="tabCountClass(tab.id)">{{ counters()[tab.id] }}</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- ── Conteúdo ───────────────────────────────────────────────────────── -->
+  @if (filtradas().length === 0) {
+    <div class="flex flex-col items-center gap-3 py-16 text-center">
+      <div class="grid h-12 w-12 place-items-center rounded-2xl bg-muted text-muted-foreground">
+        <svg [appIcon]="icons.Package" class="h-6 w-6"></svg>
+      </div>
+      <p class="text-sm font-medium text-muted-foreground">
+        {{
+          filtroStatus() !== "TODOS" || search() !== ""
+            ? "Nenhum pedido corresponde ao filtro."
+            : "Nenhum pedido na fila ainda."
+        }}
+      </p>
+    </div>
+  } @else {
+    <!-- Desktop: tabela com larguras fixas via colgroup -->
+    <div class="hidden overflow-x-auto md:block">
+      <table class="w-full table-fixed text-sm">
+        <colgroup>
+          <!-- Joiner | Itens | Valores | Pgto | Status | Ações -->
+          <col class="w-[22%]" />
+          <col class="w-[26%]" />
+          <col class="w-[14%]" />
+          <col class="w-[11%]" />
+          <col class="w-[16%]" />
+          <col class="w-[11%]" />
+        </colgroup>
+        <thead class="bg-muted/50">
+          <tr
+            class="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+          >
+            <th class="py-3 pl-5 pr-3">Joiner</th>
+            <th class="px-3 py-3">Itens</th>
+            <th class="px-3 py-3">Valores</th>
+            <th class="px-3 py-3">Pgto</th>
+            <th class="px-3 py-3">Status</th>
+            <th class="py-3 pl-3 pr-5 text-right">Ações</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-border/50">
+          @for (req of filtradas(); track req.id) {
+            <tr class="transition-colors hover:bg-muted/20">
+              <!-- Joiner -->
+              <td class="py-4 pl-5 pr-3">
+                <p class="truncate font-semibold leading-tight">{{ req.joinerNome }}</p>
+                <p class="truncate text-xs text-muted-foreground">{{ req.joinerUsername }}</p>
+                <p class="text-[10px] text-muted-foreground/70">
+                  {{ fmtDate(req.dataSolicitacao) }}
+                </p>
+              </td>
+
+              <!-- Itens + link -->
+              <td class="px-3 py-4">
+                <p
+                  class="truncate text-xs leading-relaxed text-muted-foreground"
+                  [title]="resumoItens(req)"
+                >
+                  {{ resumoItens(req) }}
+                </p>
+                <a
+                  [href]="req.linkMercari"
+                  target="_blank"
+                  rel="noreferrer"
+                  class="mt-1 inline-flex items-center gap-0.5 text-[10px] font-medium text-primary hover:underline underline-offset-2"
+                >
+                  Mercari <svg [appIcon]="icons.ExternalLink" class="h-2.5 w-2.5"></svg>
+                </a>
+              </td>
+
+              <!-- Valores -->
+              <td class="px-3 py-4">
+                <p class="font-bold tabular-nums">{{ brl(req.valorBrl) }}</p>
+                <p class="text-xs text-muted-foreground tabular-nums">¥{{ jpy(req.valorJpy) }}</p>
+              </td>
+
+              <!-- Pagamento -->
+              <td class="px-3 py-4 text-xs font-medium">
+                @if (req.formaPagamento === "pix") {
+                  PIX
+                } @else {
+                  <span class="text-primary font-semibold">Cartão {{ req.parcelas }}×</span>
+                }
+              </td>
+
+              <!-- Status -->
+              <td class="px-3 py-4">
+                <span
+                  [class]="
+                    'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ' +
+                    STATUS_META[req.status].badge
+                  "
+                >
+                  <svg [appIcon]="STATUS_META[req.status].icon" class="h-3 w-3 shrink-0"></svg>
+                  {{ STATUS_META[req.status].label }}
+                </span>
+                @if (req.status === "COMPRADO" && req.rastreio) {
+                  <p
+                    class="mt-1.5 flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400"
+                  >
+                    <svg [appIcon]="icons.Package" class="h-2.5 w-2.5 shrink-0"></svg>
+                    <span class="truncate font-mono">{{ req.rastreio }}</span>
+                  </p>
+                }
+              </td>
+
+              <!-- Ações -->
+              <td class="py-4 pl-3 pr-5">
+                <div class="flex flex-col items-end gap-1.5">
+                  @for (next of NEXT_STATUS[req.status]; track next) {
+                    <button
+                      type="button"
+                      (click)="change(req.id, next)"
+                      [class]="
+                        'w-full rounded-lg px-2.5 py-1.5 text-center text-[11px] font-semibold transition-colors ' +
+                        STATUS_META[next].btn
+                      "
+                    >
+                      {{ STATUS_META[next].label }}
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mobile: cards separados por divisor -->
+    <div class="divide-y divide-border/60 md:hidden">
+      @for (req of filtradas(); track req.id) {
+        <div>
+          <!-- Cabeçalho do card (sempre visível) -->
+          <button
+            type="button"
+            (click)="toggle(req.id)"
+            class="flex w-full items-start justify-between gap-3 px-5 py-4 text-left transition hover:bg-muted/20"
+          >
+            <div class="min-w-0 space-y-1">
+              <div class="flex items-baseline gap-2">
+                <p class="truncate font-semibold">{{ req.joinerNome }}</p>
+                <span class="shrink-0 text-[11px] text-muted-foreground">{{
+                  req.joinerUsername
+                }}</span>
+              </div>
+              <p class="text-sm font-bold tabular-nums">{{ brl(req.valorBrl) }}</p>
+              <p class="truncate text-xs text-muted-foreground">{{ resumoItens(req) }}</p>
+            </div>
+            <div class="flex shrink-0 flex-col items-end gap-2 pt-0.5">
+              <span
+                [class]="
+                  'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold ' +
+                  STATUS_META[req.status].badge
+                "
+              >
+                <svg [appIcon]="STATUS_META[req.status].icon" class="h-2.5 w-2.5 shrink-0"></svg>
+                {{ STATUS_META[req.status].label }}
+              </span>
+              <svg
+                [appIcon]="expandedId() === req.id ? icons.ChevronUp : icons.ChevronDown"
+                class="h-4 w-4 text-muted-foreground"
+              ></svg>
+            </div>
+          </button>
+
+          <!-- Detalhes expandidos -->
+          @if (expandedId() === req.id) {
+            <div
+              class="border-t border-border/40 bg-muted/20 px-5 pb-4 pt-3 space-y-3 animate-in fade-in slide-in-from-top-1 duration-150"
+            >
+              <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                <span class="tabular-nums">¥{{ jpy(req.valorJpy) }}</span>
+                <span>·</span>
+                <span>{{
+                  req.formaPagamento === "pix" ? "PIX" : "Cartão " + req.parcelas + "×"
+                }}</span>
+                <span>·</span>
+                <span>{{ fmtDate(req.dataSolicitacao) }}</span>
+              </div>
+
+              <a
+                [href]="req.linkMercari"
+                target="_blank"
+                rel="noreferrer"
+                class="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline underline-offset-2"
+              >
+                Ver no Mercari <svg [appIcon]="icons.ExternalLink" class="h-3 w-3"></svg>
+              </a>
+
+              <div class="flex flex-wrap gap-2">
+                @for (next of NEXT_STATUS[req.status]; track next) {
+                  <button
+                    type="button"
+                    (click)="change(req.id, next)"
+                    [class]="
+                      'rounded-xl px-3 py-1.5 text-xs font-semibold transition ' +
+                      STATUS_META[next].btn
+                    "
+                  >
+                    → {{ STATUS_META[next].label }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ── Rodapé ─────────────────────────────────────────────────────────── -->
+  <div class="border-t border-border/60 px-5 py-3">
+    <p class="text-xs text-muted-foreground">{{ rodape() }}</p>
+  </div>
+</div>

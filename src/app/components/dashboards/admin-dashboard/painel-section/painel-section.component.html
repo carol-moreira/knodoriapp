@@ -1,0 +1,43 @@
+<div [class]="'cozy-card overflow-hidden ' + (alert() && count() > 0 ? 'border-amber-200' : '')">
+  <!-- Header -->
+  <div class="flex items-center justify-between gap-3 border-b border-border/60 px-5 py-4">
+    <div class="flex items-center gap-3">
+      <div [class]="'grid h-9 w-9 place-items-center rounded-xl ' + iconBg() + ' ' + iconColor()">
+        <svg [appIcon]="icon()" class="h-5 w-5"></svg>
+      </div>
+      <div class="flex items-center gap-2">
+        <h2 class="text-sm font-semibold">{{ title() }}</h2>
+        <span
+          [class]="
+            'cozy-pill text-[11px] font-bold ' +
+            (alert() && count() > 0
+              ? 'bg-amber-100 text-amber-800'
+              : 'bg-muted text-muted-foreground')
+          "
+        >
+          {{ count() }} {{ countLabel() }}
+        </span>
+      </div>
+    </div>
+    <a
+      [routerLink]="href()"
+      class="flex items-center gap-1 text-xs font-semibold text-primary hover:underline underline-offset-2"
+    >
+      {{ linkLabel() }} <svg [appIcon]="icons.ArrowRight" class="h-3.5 w-3.5"></svg>
+    </a>
+  </div>
+
+  <!-- Body -->
+  <div class="px-5 py-4">
+    @if (count() === 0 && emptyLabel()) {
+      <div
+        class="flex items-center justify-center gap-2 rounded-xl border border-dashed border-border py-8"
+      >
+        <svg [appIcon]="icons.CheckCircle2" class="h-4 w-4 text-emerald-500"></svg>
+        <p class="text-sm text-muted-foreground">{{ emptyLabel() }}</p>
+      </div>
+    } @else {
+      <ng-content />
+    }
+  </div>
+</div>

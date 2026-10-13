@@ -1,0 +1,259 @@
+<app-dialog
+  [open]="open()"
+  (openChange)="onOpenChange($event)"
+  contentClass="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 cozy-card shadow-2xl animate-in zoom-in-95 fade-in duration-150 max-h-[90vh] overflow-y-auto no-scrollbar"
+>
+  <!-- Header -->
+  <div
+    class="sticky top-0 flex items-center justify-between border-b border-border/60 bg-card px-6 py-4"
+  >
+    <div>
+      <h2 class="text-base font-bold">Configurações de Perfil</h2>
+      <p class="text-[11px] text-muted-foreground mt-0.5">Edite suas informações pessoais</p>
+    </div>
+    <button
+      type="button"
+      (click)="closed.emit()"
+      class="rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted"
+    >
+      <svg [appIcon]="icons.X" class="h-4 w-4"></svg>
+    </button>
+  </div>
+
+  <div class="space-y-6 px-6 py-5">
+    <!-- ── Foto de perfil ─────────────────────────────────────────── -->
+    <div class="flex flex-col items-center gap-3">
+      <div class="relative">
+        @if (avatarPreview()?.startsWith("data:")) {
+          <img
+            [src]="avatarPreview()"
+            alt="Foto de perfil"
+            class="h-20 w-20 rounded-2xl object-cover ring-2 ring-primary/20"
+          />
+        } @else {
+          <div
+            class="grid h-20 w-20 place-items-center rounded-2xl bg-primary text-xl font-bold text-primary-foreground ring-2 ring-primary/20"
+          >
+            {{ initials() }}
+          </div>
+        }
+        <button
+          type="button"
+          (click)="avatarInput.click()"
+          class="absolute -bottom-2 -right-2 grid h-7 w-7 place-items-center rounded-full border-2 border-card bg-primary text-primary-foreground shadow transition hover:opacity-90"
+        >
+          <svg [appIcon]="icons.Camera" class="h-3.5 w-3.5"></svg>
+        </button>
+        <input
+          #avatarInput
+          type="file"
+          accept="image/*"
+          class="hidden"
+          (change)="handleAvatarChange($event)"
+        />
+      </div>
+      <p class="text-xs text-muted-foreground">Clique no ícone para trocar a foto</p>
+    </div>
+
+    <!-- ── Campos ─────────────────────────────────────────────────── -->
+    <div class="space-y-4">
+      <!-- Nome -->
+      <div class="space-y-1.5">
+        <label class="flex items-center gap-1.5 text-xs font-semibold">
+          <svg [appIcon]="icons.User" class="h-3.5 w-3.5 text-muted-foreground"></svg>
+          Nome
+        </label>
+        <input
+          type="text"
+          [value]="nome()"
+          (input)="nome.set(val($event))"
+          placeholder="Seu nome completo"
+          [class]="INPUT_CLS"
+        />
+      </div>
+
+      <!-- @usuario -->
+      <div class="space-y-1.5">
+        <label class="flex items-center gap-1.5 text-xs font-semibold">
+          <svg [appIcon]="icons.AtSign" class="h-3.5 w-3.5 text-muted-foreground"></svg>
+          &#64;usuário
+        </label>
+        <input
+          type="text"
+          [value]="username()"
+          (input)="username.set(val($event))"
+          placeholder="@seuperfil"
+          [class]="INPUT_CLS"
+        />
+      </div>
+
+      <!-- Telefone -->
+      <div class="space-y-1.5">
+        <label class="flex items-center gap-1.5 text-xs font-semibold">
+          <svg [appIcon]="icons.Phone" class="h-3.5 w-3.5 text-muted-foreground"></svg>
+          Número de telefone
+        </label>
+        <input
+          type="tel"
+          [value]="telefone()"
+          (input)="telefone.set(val($event))"
+          placeholder="+55 (11) 90000-0000"
+          [class]="INPUT_CLS"
+        />
+      </div>
+
+      <!-- Faves -->
+      <div class="space-y-1.5">
+        <label class="flex items-center gap-1.5 text-xs font-semibold">
+          <svg [appIcon]="icons.Heart" class="h-3.5 w-3.5 text-muted-foreground"></svg>
+          Faves (grupos &amp; idols)
+        </label>
+        <textarea
+          [value]="faves()"
+          (input)="faves.set(val($event))"
+          placeholder="Ex: TWICE, aespa, ITZY&#10;Bias: Nayeon, Karina, Ryujin"
+          rows="3"
+          [class]="INPUT_CLS + ' resize-none'"
+        ></textarea>
+      </div>
+
+      <!-- Wishlist -->
+      <div class="space-y-1.5">
+        <label class="flex items-center gap-1.5 text-xs font-semibold">
+          <svg [appIcon]="icons.Link2" class="h-3.5 w-3.5 text-muted-foreground"></svg>
+          Wishlist
+        </label>
+        <div class="space-y-2">
+          <input
+            type="url"
+            [value]="wishlistUrl()"
+            (input)="wishlistUrl.set(val($event))"
+            placeholder="https://link-da-sua-wishlist.com"
+            [class]="INPUT_CLS"
+          />
+          <button
+            type="button"
+            (click)="wishInput.click()"
+            class="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border py-2 text-xs font-medium text-muted-foreground transition hover:border-primary/40 hover:text-primary"
+          >
+            <svg [appIcon]="icons.Upload" class="h-3.5 w-3.5"></svg>
+            Ou envie um arquivo
+          </button>
+          <input
+            #wishInput
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png,.xlsx,.csv"
+            class="hidden"
+            (change)="handleWishlistFile($event)"
+          />
+          @if (wishlistUrl() && !wishlistUrl().startsWith("http")) {
+            <p class="text-[11px] text-emerald-600 flex items-center gap-1">
+              <svg [appIcon]="icons.CheckCircle2" class="h-3 w-3"></svg> {{ wishlistUrl() }}
+            </p>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Aparência ──────────────────────────────────────────────── -->
+    <div class="space-y-5 rounded-2xl border border-border bg-muted/20 p-4">
+      <!-- Header -->
+      <div class="flex items-center gap-2">
+        <div class="grid h-7 w-7 place-items-center rounded-lg bg-primary/10">
+          <svg [appIcon]="icons.Palette" class="h-3.5 w-3.5 text-primary"></svg>
+        </div>
+        <span class="text-sm font-semibold">Aparência</span>
+      </div>
+
+      <!-- ── Modo de exibição ─────────────────────────────────────── -->
+      <div class="space-y-2">
+        <p class="text-xs font-medium text-muted-foreground">Modo de exibição</p>
+        <div class="grid grid-cols-2 gap-1.5 rounded-xl border border-border bg-muted/40 p-1">
+          @for (m of modes; track m.value) {
+            <button
+              type="button"
+              (click)="theme.setMode(m.value)"
+              [class]="
+                'flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-all ' +
+                (theme.mode() === m.value
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground')
+              "
+            >
+              <svg
+                [appIcon]="m.icon"
+                [class]="'h-3.5 w-3.5 ' + (theme.mode() === m.value ? 'text-primary' : '')"
+              ></svg>
+              {{ m.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- ── Tema de cores ────────────────────────────────────────── -->
+      <div class="space-y-3">
+        <p class="text-xs font-medium text-muted-foreground">Tema de cores</p>
+
+        <div class="grid grid-cols-3 gap-2">
+          @for (t of themes; track t) {
+            <ng-container
+              [ngTemplateOutlet]="swatchTpl"
+              [ngTemplateOutletContext]="{ $implicit: t, compact: false }"
+            />
+          }
+        </div>
+      </div>
+
+      <!-- Live preview pill -->
+      <div class="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">
+        <span class="h-2.5 w-2.5 rounded-full bg-primary transition-colors"></span>
+        <span class="text-xs text-muted-foreground">Prévia —</span>
+        <span class="text-xs font-semibold text-primary transition-colors">
+          {{ THEME_META[theme.colorTheme()].label }} ·
+          {{ theme.mode() === "dark" ? "Escuro" : "Claro" }}
+        </span>
+      </div>
+    </div>
+
+    <!-- ── Botões ─────────────────────────────────────────────────── -->
+    <div class="flex gap-2">
+      <button
+        type="button"
+        (click)="closed.emit()"
+        class="flex-1 rounded-2xl border border-border py-2.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        (click)="handleSave()"
+        [disabled]="saving()"
+        class="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
+      >
+        @if (saved()) {
+          <svg [appIcon]="icons.CheckCircle2" class="h-4 w-4"></svg>
+        }
+        {{ saving() ? "Salvando…" : saved() ? "Salvo!" : "Salvar perfil" }}
+      </button>
+    </div>
+  </div>
+</app-dialog>
+
+<!-- ColorSwatch — card de seleção de tema -->
+<ng-template #swatchTpl let-t let-compact="compact">
+  <button type="button" (click)="theme.setColorTheme(t)" [class]="swatchClass(t, compact)">
+    <!-- Barra de cor -->
+    <div
+      [class]="'w-full rounded-lg shadow-sm transition-all ' + (compact ? 'h-6' : 'h-7')"
+      [style.background]="swatch(t)"
+    ></div>
+    <!-- Label -->
+    <span [class]="swatchLabelClass(t, compact)">{{ themeLabel(t) }}</span>
+    <!-- Indicador ativo -->
+    @if (theme.colorTheme() === t) {
+      <span
+        class="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-card bg-primary"
+      ></span>
+    }
+  </button>
+</ng-template>

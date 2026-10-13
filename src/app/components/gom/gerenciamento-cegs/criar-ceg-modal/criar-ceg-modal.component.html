@@ -1,0 +1,82 @@
+<app-dialog
+  [open]="open()"
+  (openChange)="onOpenChange($event)"
+  contentClass="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 cozy-card shadow-2xl animate-in zoom-in-95 fade-in duration-150"
+>
+  <div class="flex items-center justify-between border-b border-border/60 px-6 py-4">
+    <div>
+      <h2 class="text-sm font-bold">Nova CEG</h2>
+      <p class="text-[11px] text-muted-foreground">Crie um novo grupo de pedido</p>
+    </div>
+    <button
+      type="button"
+      [disabled]="saving()"
+      (click)="onOpenChange(false)"
+      class="rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted"
+    >
+      <svg [appIcon]="icons.X" class="h-4 w-4"></svg>
+    </button>
+  </div>
+
+  <div class="space-y-4 px-6 py-5">
+    <div class="space-y-1.5">
+      <label class="text-xs font-semibold">Nome da CEG</label>
+      <input
+        type="text"
+        [value]="nome()"
+        (input)="nome.set(val($event))"
+        placeholder="Ex: Summer Haul Jul/26"
+        [class]="INPUT_CLS"
+      />
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      <div class="space-y-1.5">
+        <label class="text-xs font-semibold">Loja</label>
+        <select (change)="loja.set(val($event))" [class]="INPUT_CLS">
+          @for (l of lojas; track l) {
+            <option [selected]="l === loja()">{{ l }}</option>
+          }
+        </select>
+      </div>
+      <div class="space-y-1.5">
+        <label class="text-xs font-semibold">Moeda</label>
+        <select (change)="moeda.set($any(val($event)))" [class]="INPUT_CLS">
+          @for (m of moedas; track m) {
+            <option [selected]="m === moeda()">{{ m }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="space-y-1.5">
+      <label class="text-xs font-semibold">Prazo de encerramento</label>
+      <input
+        type="date"
+        [value]="prazo()"
+        (input)="prazo.set(val($event))"
+        [min]="hoje"
+        [class]="INPUT_CLS"
+      />
+    </div>
+
+    <div class="flex gap-2 pt-1">
+      <button
+        type="button"
+        [disabled]="saving()"
+        (click)="onOpenChange(false)"
+        class="flex-1 rounded-2xl border border-border py-2.5 text-sm font-medium text-muted-foreground transition hover:text-foreground disabled:opacity-50"
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        (click)="handleSave()"
+        [disabled]="!canSave() || saving()"
+        class="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
+      >
+        {{ saving() ? "Criando…" : "Criar CEG" }}
+      </button>
+    </div>
+  </div>
+</app-dialog>

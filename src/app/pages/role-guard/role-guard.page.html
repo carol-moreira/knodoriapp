@@ -1,0 +1,5 @@
+@if (auth.status() === "loading") {
+  <app-spinner />
+} @else if (allowed()) {
+  <router-outlet />
+}

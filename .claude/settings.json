@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__claude_ai_Claude_Docs__batch",
+      "mcp__claude_ai_Claude_Docs__guide",
+      "mcp__claude_ai_Claude_Docs__update",
+      "mcp__claude_ai_Claude_Docs__create",
+      "PowerShell(Get-ChildItem -Recurse -File -Path src, public -ErrorAction SilentlyContinue | Where-Object { $_.FullName -notmatch 'node_modules' } | ForEach-Object { \"{0}`t{1}\" -f $_.Length, \\($_.FullName.Replace\\(\\(Get-Location\\).Path + '\\\\',''\\)\\) }; Get-ChildItem -File | Select-Object Name, Length)",
+      "PowerShell(git checkout -b migracao-angular)",
+      "PowerShell(npm view @angular/core@20 version --json)",
+      "PowerShell(npm view lucide-angular version)",
+      "PowerShell(npm view @angular/cdk@20 version --json)",
+      "PowerShell(npm view lucide-angular@1.0.0 peerDependencies time.modified)",
+      "PowerShell(npm view lucide-angular versions --json)",
+      "PowerShell(npm view @angular/ssr@20 version --json)",
+      "PowerShell(npm view @angular/build@20 version --json)",
+      "PowerShell(npm view @angular/cli@20 version --json)",
+      "PowerShell(npm view @tailwindcss/postcss version)",
+      "PowerShell(Get-ChildItem -Recurse src\\\\routes -File | Where-Object Name -ne '__root.tsx' | Where-Object Name -ne 'financeiro.tsx' | ForEach-Object { \"=== \" + $_.FullName.Replace\\(\\(Get-Location\\).Path + '\\\\',''\\); Get-Content $_.FullName -Raw -Encoding utf8 })"
+    ]
+  }
+}

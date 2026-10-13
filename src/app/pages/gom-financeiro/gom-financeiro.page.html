@@ -1,0 +1,32 @@
+<div class="grid gap-6 xl:grid-cols-[1fr_340px] xl:items-start">
+  <!-- ── Coluna principal: pagamentos ─────────────────────────────────── -->
+  <div class="min-w-0 space-y-0">
+    <app-resumo-financeiro
+      [solicitacoes]="solicitacoes()"
+      [cegsAbertas]="3"
+      (liberarPagamento)="comunicandoId.set($event)"
+    />
+    <app-comunicado-modal
+      [open]="!!comunicandoId()"
+      [solicitacao]="comunicandoSol()"
+      (closed)="comunicandoId.set(null)"
+      (confirmed)="handleConfirmar($event)"
+    />
+  </div>
+
+  <!-- ── Calculadora lateral ───────────────────────────────────────────── -->
+  <div class="cozy-card overflow-hidden xl:sticky xl:top-4">
+    <div class="flex items-center gap-2.5 border-b border-border/60 px-5 py-4">
+      <div class="grid h-8 w-8 place-items-center rounded-xl bg-primary/10 text-primary">
+        <svg [appIcon]="icons.Calculator" class="h-4 w-4"></svg>
+      </div>
+      <div>
+        <p class="text-sm font-semibold">Calculadora de Cotação</p>
+        <p class="text-[11px] text-muted-foreground">Simule o valor em BRL antes de comprar</p>
+      </div>
+    </div>
+    <div class="p-5">
+      <app-simulador-cotacao />
+    </div>
+  </div>
+</div>

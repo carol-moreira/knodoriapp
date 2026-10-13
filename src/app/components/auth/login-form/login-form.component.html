@@ -1,0 +1,85 @@
+<form (submit)="handleSubmit($event)" class="space-y-4" novalidate>
+  <!-- E-mail -->
+  <div class="space-y-1.5">
+    <label [class]="labelCls">E-mail</label>
+    <input
+      type="email"
+      [value]="email()"
+      (input)="email.set(val($event))"
+      (blur)="touch('email')"
+      placeholder="sua@conta.com"
+      autocomplete="email"
+      [class]="inputCls(!!emailError())"
+    />
+    @if (emailError()) {
+      <p class="flex items-center gap-1 text-xs text-destructive">
+        <svg [appIcon]="icons.AlertCircle" class="h-3 w-3"></svg>
+        {{ emailError() }}
+      </p>
+    }
+  </div>
+
+  <!-- Senha -->
+  <div class="space-y-1.5">
+    <div class="flex items-center justify-between">
+      <label [class]="labelCls">Senha</label>
+      <button
+        type="button"
+        class="text-xs text-primary hover:underline underline-offset-2"
+        tabindex="-1"
+        (click)="forgotPassword()"
+      >
+        Esqueceu a senha?
+      </button>
+    </div>
+    <div class="relative">
+      <input
+        [type]="showPassword() ? 'text' : 'password'"
+        [value]="password()"
+        (input)="password.set(val($event))"
+        (blur)="touch('password')"
+        placeholder="••••••••"
+        autocomplete="current-password"
+        [class]="inputCls(!!passwordError()) + ' pr-11'"
+      />
+      <button
+        type="button"
+        tabindex="-1"
+        (click)="showPassword.set(!showPassword())"
+        class="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+      >
+        <svg [appIcon]="showPassword() ? icons.EyeOff : icons.Eye" class="h-4 w-4"></svg>
+      </button>
+    </div>
+    @if (passwordError()) {
+      <p class="flex items-center gap-1 text-xs text-destructive">
+        <svg [appIcon]="icons.AlertCircle" class="h-3 w-3"></svg>
+        {{ passwordError() }}
+      </p>
+    }
+  </div>
+
+  <!-- Erro global -->
+  @if (error()) {
+    <div
+      class="flex items-center gap-2 rounded-xl bg-destructive/10 px-4 py-3 text-xs font-medium text-destructive"
+    >
+      <svg [appIcon]="icons.AlertCircle" class="h-4 w-4 shrink-0"></svg>
+      {{ error() }}
+    </div>
+  }
+
+  <button
+    type="submit"
+    [disabled]="!canSubmit()"
+    class="w-full rounded-2xl bg-primary py-3.5 text-sm font-bold text-primary-foreground shadow-sm transition hover:opacity-90 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+  >
+    @if (loading()) {
+      <span class="flex items-center justify-center gap-2">
+        <svg [appIcon]="icons.Loader2" class="h-4 w-4 animate-spin"></svg> Entrando…
+      </span>
+    } @else {
+      Entrar
+    }
+  </button>
+</form>

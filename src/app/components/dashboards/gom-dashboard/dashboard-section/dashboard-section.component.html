@@ -1,0 +1,34 @@
+<div [class]="'cozy-card p-5 ' + (alert() ? 'border-amber-200' : '')">
+  <div class="mb-4 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-2">
+      <h2 class="text-sm font-semibold">{{ title() }}</h2>
+      <span
+        [class]="
+          'cozy-pill text-[11px] font-bold ' +
+          (alert() && count() > 0
+            ? 'bg-amber-100 text-amber-800'
+            : 'bg-muted text-muted-foreground')
+        "
+      >
+        {{ count() }}
+      </span>
+    </div>
+    <a
+      [routerLink]="href()"
+      class="flex items-center gap-1 text-xs font-semibold text-primary hover:underline underline-offset-2"
+    >
+      {{ linkLabel() }} <svg [appIcon]="icons.ArrowRight" class="h-3.5 w-3.5"></svg>
+    </a>
+  </div>
+
+  @if (count() === 0 && emptyLabel()) {
+    <div
+      class="flex items-center gap-2 rounded-xl border border-dashed border-border py-6 justify-center"
+    >
+      <svg [appIcon]="icons.ShoppingCart" class="h-4 w-4 text-muted-foreground/40"></svg>
+      <p class="text-sm text-muted-foreground">{{ emptyLabel() }}</p>
+    </div>
+  } @else {
+    <ng-content />
+  }
+</div>

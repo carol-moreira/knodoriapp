@@ -1,0 +1,140 @@
+<app-dialog
+  [open]="open()"
+  (openChange)="onOpenChange($event)"
+  overlayClass="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm animate-in fade-in duration-150"
+  contentClass="fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 cozy-card shadow-2xl animate-in zoom-in-95 fade-in duration-150 max-h-[92vh] overflow-y-auto no-scrollbar"
+>
+  <div
+    class="sticky top-0 flex items-center justify-between border-b border-border/60 bg-card px-6 py-4"
+  >
+    <div class="flex items-center gap-2.5">
+      <div class="grid h-8 w-8 place-items-center rounded-xl bg-emerald-100 dark:bg-emerald-950/40">
+        <svg [appIcon]="icons.Home" class="h-4 w-4 text-emerald-600"></svg>
+      </div>
+      <div>
+        <h2 class="text-sm font-bold">Solicitar Envio Nacional</h2>
+        <p class="text-[11px] text-muted-foreground">
+          {{ pedido()?.cegNome }} · {{ pedido() ? brl(pedido()!.valorBrl) : "" }}
+        </p>
+      </div>
+    </div>
+    <button
+      type="button"
+      [disabled]="sending()"
+      (click)="onOpenChange(false)"
+      class="rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted"
+    >
+      <svg [appIcon]="icons.X" class="h-4 w-4"></svg>
+    </button>
+  </div>
+
+  <div class="space-y-4 px-6 py-5">
+    <div
+      class="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400"
+    >
+      <svg [appIcon]="icons.MapPin" class="h-3.5 w-3.5 shrink-0"></svg>
+      Informe o endereço para recebimento dos seus itens no Brasil.
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      <div class="space-y-1.5">
+        <label class="text-xs font-semibold">CEP</label>
+        <input
+          type="text"
+          [value]="end().cep"
+          (input)="onCepInput($event)"
+          placeholder="00000-000"
+          maxlength="9"
+          [class]="INPUT_CLS"
+        />
+      </div>
+      <div class="space-y-1.5">
+        <label class="text-xs font-semibold">Estado</label>
+        <select (change)="field('estado', $event)" [class]="INPUT_CLS">
+          @for (uf of estados; track uf) {
+            <option [selected]="uf === end().estado">{{ uf }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="space-y-1.5">
+      <label class="text-xs font-semibold">Cidade</label>
+      <input
+        type="text"
+        [value]="end().cidade"
+        (input)="field('cidade', $event)"
+        placeholder="São Paulo"
+        [class]="INPUT_CLS"
+      />
+    </div>
+    <div class="space-y-1.5">
+      <label class="text-xs font-semibold">Bairro</label>
+      <input
+        type="text"
+        [value]="end().bairro"
+        (input)="field('bairro', $event)"
+        placeholder="Centro"
+        [class]="INPUT_CLS"
+      />
+    </div>
+    <div class="space-y-1.5">
+      <label class="text-xs font-semibold">Rua / Endereço</label>
+      <input
+        type="text"
+        [value]="end().rua"
+        (input)="field('rua', $event)"
+        placeholder="Av. Paulista"
+        [class]="INPUT_CLS"
+      />
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      <div class="space-y-1.5">
+        <label class="text-xs font-semibold">Número</label>
+        <input
+          type="text"
+          [value]="end().numero"
+          (input)="field('numero', $event)"
+          placeholder="1234"
+          [class]="INPUT_CLS"
+        />
+      </div>
+      <div class="space-y-1.5">
+        <label class="text-xs font-semibold">Complemento</label>
+        <input
+          type="text"
+          [value]="end().complemento"
+          (input)="field('complemento', $event)"
+          placeholder="Apto 12 (opcional)"
+          [class]="INPUT_CLS"
+        />
+      </div>
+    </div>
+
+    <div class="flex gap-2 pt-1">
+      <button
+        type="button"
+        [disabled]="sending()"
+        (click)="onOpenChange(false)"
+        class="flex-1 rounded-2xl border border-border py-2.5 text-sm font-medium text-muted-foreground transition hover:text-foreground disabled:opacity-50"
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        (click)="handleSend()"
+        [disabled]="!canSend() || sending() || sent()"
+        class="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
+      >
+        @if (sent()) {
+          <svg [appIcon]="icons.CheckCircle2" class="h-4 w-4"></svg> Solicitado!
+        } @else if (sending()) {
+          Enviando…
+        } @else {
+          <svg [appIcon]="icons.Send" class="h-4 w-4"></svg> Solicitar envio
+        }
+      </button>
+    </div>
+  </div>
+</app-dialog>

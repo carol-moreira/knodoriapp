@@ -1,0 +1,188 @@
+@if (enviado()) {
+  <div class="mx-auto max-w-xl text-center cozy-card p-8 space-y-4">
+    <div
+      class="grid h-16 w-16 place-items-center rounded-full bg-emerald-100 text-emerald-600 mx-auto"
+    >
+      <svg [appIcon]="icons.CheckCircle2" class="h-10 w-10"></svg>
+    </div>
+    <h2 class="text-2xl font-bold">Solicitação Enviada!</h2>
+    <p class="text-sm text-muted-foreground">
+      Seu pedido foi para a fila de análise da GOM. Você receberá uma notificação assim que o status
+      mudar ♡
+    </p>
+    <button
+      (click)="novaSolicitacao()"
+      class="mt-4 cozy-pill bg-primary text-primary-foreground px-4 py-2"
+    >
+      Fazer outra solicitação
+    </button>
+  </div>
+} @else {
+  <div class="mx-auto max-w-2xl">
+    <header class="mb-6 text-center">
+      <p class="cozy-pill bg-primary/10 text-primary inline-block">✿ portal joiner</p>
+      <h1 class="mt-3 text-3xl font-bold">solicitar compra mercari</h1>
+      <p class="mt-2 text-sm text-muted-foreground">
+        Cole o link e informe os itens que compõem o anúncio para calcularmos tudo.
+      </p>
+    </header>
+
+    <form (submit)="handleSubmit($event)" class="cozy-card silver-surface p-8 space-y-8">
+      <!-- Bloco 1: Links e Valores -->
+      <div class="space-y-4">
+        <div>
+          <label
+            class="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1"
+          >
+            <svg [appIcon]="icons.Link2" class="h-3.5 w-3.5"></svg> Link do Anúncio (Mercari)
+          </label>
+          <input
+            type="url"
+            required
+            [value]="linkMercari()"
+            (input)="linkMercari.set(val($event))"
+            placeholder="https://jp.mercari.com/item/..."
+            class="mt-2 w-full rounded-2xl border border-border bg-card py-4 px-4 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+          />
+        </div>
+
+        <div>
+          <label class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Valor Total do Anúncio em Iene (JPY)
+          </label>
+          <div class="relative mt-2">
+            <span
+              class="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-muted-foreground"
+              >¥</span
+            >
+            <input
+              required
+              [value]="valorJpy()"
+              (input)="onValorInput($event)"
+              inputmode="numeric"
+              placeholder="Ex: 3800"
+              class="w-full rounded-2xl border border-border bg-card py-4 pl-10 pr-4 text-xl font-semibold outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Bloco 2: Seleção de Itens (Sem exibir os valores) -->
+      <div class="space-y-3">
+        <label class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          O que vem nesse anúncio? (Selecione as quantidades)
+        </label>
+        <div class="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
+          @for (entry of itemEntries; track entry[0]; let index = $index) {
+            <div [class]="itemRowClass(entry[0], index)">
+              <span [class]="itemLabelClass(entry[0])">{{ entry[1].label }}</span>
+
+              <div
+                class="flex items-center gap-3 bg-background rounded-xl border border-border p-1 shadow-sm"
+              >
+                <button
+                  type="button"
+                  (click)="handleQuantidade(entry[0], -1)"
+                  [disabled]="quantidades()[entry[0]] === 0"
+                  class="grid h-8 w-8 place-items-center rounded-lg bg-transparent text-muted-foreground transition hover:bg-muted disabled:opacity-30"
+                >
+                  <svg [appIcon]="icons.Minus" class="h-4 w-4"></svg>
+                </button>
+                <span class="w-5 text-center text-sm font-bold text-foreground">
+                  {{ quantidades()[entry[0]] }}
+                </span>
+                <button
+                  type="button"
+                  (click)="handleQuantidade(entry[0], 1)"
+                  class="grid h-8 w-8 place-items-center rounded-lg bg-transparent text-foreground transition hover:bg-muted"
+                >
+                  <svg [appIcon]="icons.Plus" class="h-4 w-4"></svg>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Bloco 3: Pagamento -->
+      <div class="space-y-3">
+        <label
+          class="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1"
+        >
+          <svg [appIcon]="icons.CreditCard" class="h-3.5 w-3.5"></svg> Forma de Pagamento
+        </label>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <button type="button" (click)="selecionarPix()" [class]="formaClass('pix')">
+            PIX (À vista)
+          </button>
+          <button type="button" (click)="selecionarCartao()" [class]="formaClass('cartao')">
+            Cartão de Crédito
+          </button>
+        </div>
+
+        @if (formaPagamento() === "cartao") {
+          <div class="animate-in fade-in zoom-in-95 duration-200 mt-2">
+            <select
+              (change)="onParcelasChange($event)"
+              class="w-full rounded-2xl border border-border bg-card py-4 px-4 text-sm font-medium outline-none cursor-pointer"
+            >
+              @for (op of parcelasOpcoes; track op.value) {
+                <option [value]="op.value" [selected]="op.value === parcelas()">
+                  {{ op.label }}
+                </option>
+              }
+            </select>
+          </div>
+        }
+      </div>
+
+      <!-- Botão de Simular -->
+      <div class="pt-2">
+        <button
+          type="button"
+          (click)="handleSimularCotacao()"
+          class="w-full inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-primary/40 bg-card py-3.5 text-sm font-bold text-primary transition hover:bg-primary/5 active:scale-[0.99]"
+        >
+          <svg [appIcon]="icons.Calculator" class="h-4 w-4"></svg> Simular Cotação
+        </button>
+      </div>
+
+      <!-- Bloco 4: Resultado -->
+      @if (simulado()) {
+        <div class="space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div class="rounded-3xl bg-primary p-6 text-primary-foreground shadow-lg">
+            <div
+              class="flex items-center gap-3 text-xs font-semibold uppercase tracking-widest opacity-90"
+            >
+              <svg [appIcon]="icons.ShoppingBag" class="h-4 w-4"></svg> Total do seu pedido
+            </div>
+            <div class="mt-3 flex items-baseline gap-2">
+              <span class="text-5xl font-bold">{{ brl(calculo().valorFinalBrl) }}</span>
+            </div>
+            @if (formaPagamento() === "cartao") {
+              <p class="mt-2 text-xs opacity-90 font-medium">
+                Ou em {{ parcelas() }}x de {{ brl(calculo().valorParcela) }}
+              </p>
+            }
+          </div>
+
+          <div
+            class="flex items-start gap-2.5 p-4 rounded-xl bg-card border border-border text-xs text-muted-foreground"
+          >
+            <svg [appIcon]="icons.AlertCircle" class="h-4 w-4 text-primary shrink-0 mt-0.5"></svg>
+            <p class="leading-relaxed">
+              <span class="font-bold text-foreground">Nota Importante:</span> Este valor em reais é
+              apenas uma estimativa baseada nas taxas atuais. O total exato cobrado será enviado
+              formalmente pela GOM após o pedido ser recebido e verificado na fila de compras.
+            </p>
+          </div>
+        </div>
+      }
+
+      <!-- Botão de Envio -->
+      <button type="submit" [disabled]="!simulado()" [class]="submitClass()">
+        Enviar Solicitação de Compra <svg [appIcon]="icons.ArrowRight" class="h-4 w-4"></svg>
+      </button>
+    </form>
+  </div>
+}

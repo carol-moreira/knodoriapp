@@ -1,0 +1,194 @@
+// =====================================================================
+// PASSO 1 — Estrutura sugerida do Banco de Dados (Prisma + PostgreSQL)
+// Reflete: CEG Geral (ADM), CEG Unidade (Claim), Joiners, Mercari.
+// =====================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ------------------ USUÁRIOS ------------------
+enum Role {
+  ADMIN     // GOM / organizador
+  JOINER    // participante de claims
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  name      String
+  email     String   @unique
+  passwordHash String
+  role      Role     @default(JOINER)
+  createdAt DateTime @default(now())
+
+  claims         CegUnidade[]
+  mercariRequests MercariRequest[]
+  mercariWishlist MercariWishlistItem[]
+  paymentProofs   PaymentProof[]
+}
+
+// ------------------ CEG GERAL (administrativo) ------------------
+enum CegStatus {
+  ABERTA
+  FECHADA
+  EM_COMPRA
+  EM_TRANSITO_INTER
+  EM_TRANSITO_BR
+  RECEBIDA
+  FINALIZADA
+  CANCELADA
+}
+
+enum LogisticStatus {
+  AGUARDANDO
+  PROXY_RECEBEU
+  ENVIADO_INTER
+  CHEGOU_BR
+  EM_SEPARACAO
+  ENVIADO_JOINERS
+}
+
+enum Currency {
+  KRW  // Won
+  JPY  // Iene
+  USD  // Dolar
+  IDR  // Rupia
+  BRL
+}
+
+model CegGeral {
+  id              String   @id @default(cuid())
+  nome            String
+  organizador     String   // GOM
+  lojaProxy       String
+  endereco        String   // addy
+
+  status          CegStatus      @default(ABERTA)
+  statusLogistico LogisticStatus @default(AGUARDANDO)
+  prazo           DateTime?
+  qtdItens        Int            @default(0)
+
+  // Financeiro internacional
+  moedaOriginal   Currency
+  valorOriginal   Decimal   @db.Decimal(14, 2)
+  cotacaoFechada  Decimal   @db.Decimal(14, 6)
+  taxaProxy       Decimal   @db.Decimal(14, 2) @default(0)
+  freteInterTotal Decimal   @db.Decimal(14, 2) @default(0)
+
+  // Importação
+  pesoCaixaKg     Decimal?  @db.Decimal(8, 3)
+  valorFreteBR    Decimal?  @db.Decimal(14, 2)  // EMS/DHL
+  impostoRF       Decimal?  @db.Decimal(14, 2)
+  custoEmbalagem  Decimal?  @db.Decimal(14, 2)
+
+  // Rastreio e datas
+  dataCompra      DateTime?
+  dataEnvioBR     DateTime?
+  dataChegadaBR   DateTime?
+  dataRecebimento DateTime?
+  rastreioAddy    String?
+  rastreioInter   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  unidades CegUnidade[]
+}
+
+// ------------------ CEG UNIDADE (claim individual) ------------------
+enum PagamentoStatus {
+  PENDENTE
+  PAGO_PARCIAL
+  PAGO
+  ATRASADO
+  REEMBOLSADO
+}
+
+enum EnvioStatus {
+  AGUARDANDO
+  PRONTO_ENVIO
+  ENVIADO
+  ENTREGUE
+  EXTRAVIADO
+}
+
+model CegUnidade {
+  id           String   @id @default(cuid())
+  cegId        String
+  ceg          CegGeral @relation(fields: [cegId], references: [id], onDelete: Cascade)
+
+  joinerId     String
+  joiner       User     @relation(fields: [joinerId], references: [id])
+
+  // Claim
+  item            String
+  valor           Decimal  @db.Decimal(14, 2)
+  pagamentoStatus PagamentoStatus @default(PENDENTE)
+  taxaAtraso      Decimal  @db.Decimal(14, 2) @default(0)
+  prazoPagamento  DateTime?
+
+  // Fretes e taxas (por unidade)
+  freteInterUnidade   Decimal  @db.Decimal(14, 2) @default(0)
+  fretePagoStatus     PagamentoStatus @default(PENDENTE)
+  taxaRFUnidade       Decimal  @db.Decimal(14, 2) @default(0)
+  taxaRFPagoStatus    PagamentoStatus @default(PENDENTE)
+  prazoFretePagamento DateTime?
+
+  // Envio nacional
+  cep             String?
+  endereco        String?
+  envioStatus     EnvioStatus @default(AGUARDANDO)
+  rastreioNacional String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ------------------ MERCARI ------------------
+enum MercariStatus {
+  WISHLIST
+  SOLICITADO
+  COMPRADO
+  ENTREGUE
+}
+
+model MercariWishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  titulo    String
+  url       String?
+  imagemUrl String?
+  precoJpy  Decimal? @db.Decimal(14, 2)
+  createdAt DateTime @default(now())
+}
+
+model MercariRequest {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  nomeItem    String
+  valorJpy    Decimal  @db.Decimal(14, 2)
+  valorBrl    Decimal? @db.Decimal(14, 2)
+  status      MercariStatus @default(SOLICITADO)
+  comprovante String?
+  imagemUrl   String?
+  createdAt   DateTime @default(now())
+}
+
+// ------------------ COMPROVANTES ------------------
+model PaymentProof {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  contexto  String   // ex: "ceg:<id>", "mercari:<id>"
+  arquivoUrl String
+  valor     Decimal? @db.Decimal(14, 2)
+  createdAt DateTime @default(now())
+}

@@ -1,0 +1,87 @@
+<app-dialog
+  [open]="open()"
+  (openChange)="onOpenChange($event)"
+  contentClass="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 cozy-card shadow-2xl animate-in zoom-in-95 fade-in duration-150 max-h-[90vh] overflow-y-auto no-scrollbar"
+>
+  <!-- Header -->
+  <div class="flex items-center justify-between border-b border-border/60 px-6 py-4">
+    <div class="flex items-center gap-2.5">
+      <div class="grid h-8 w-8 place-items-center rounded-xl bg-emerald-100">
+        <svg [appIcon]="icons.MessageSquare" class="h-4 w-4 text-emerald-600"></svg>
+      </div>
+      <div>
+        <h2 class="text-sm font-bold">Liberar pagamento</h2>
+        <p class="text-[11px] text-muted-foreground">
+          {{ solicitacao() ? "Comunicado para " + solicitacao()!.joinerNome : "" }}
+        </p>
+      </div>
+    </div>
+    <button
+      type="button"
+      [disabled]="sending()"
+      (click)="onOpenChange(false)"
+      class="rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted disabled:opacity-40"
+    >
+      <svg [appIcon]="icons.X" class="h-4 w-4"></svg>
+    </button>
+  </div>
+
+  <div class="space-y-5 px-6 py-5">
+    <!-- Resumo do pedido -->
+    @if (solicitacao(); as s) {
+      <div class="rounded-2xl border border-border bg-muted/40 p-4 space-y-1">
+        <p class="text-xs font-semibold">
+          {{ s.joinerNome }}
+          <span class="font-normal text-muted-foreground">{{ s.joinerUsername }}</span>
+        </p>
+        <p class="text-xs text-muted-foreground">
+          {{ brl(s.valorBrl) }} ·
+          {{ s.formaPagamento === "pix" ? "PIX" : "Cartão " + s.parcelas + "×" }}
+        </p>
+      </div>
+    }
+
+    <!-- Textarea da mensagem -->
+    <div class="space-y-1.5">
+      <label class="text-xs font-semibold">Comunicado para a joiner</label>
+      <textarea
+        [value]="mensagem()"
+        (input)="mensagem.set(val($event))"
+        rows="7"
+        [disabled]="sending() || sent()"
+        class="w-full rounded-xl border border-border bg-muted/40 px-3 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none disabled:opacity-60 placeholder:text-muted-foreground/60"
+      ></textarea>
+      <p class="text-[11px] text-muted-foreground">
+        Este comunicado será enviado diretamente para a joiner via plataforma.
+      </p>
+    </div>
+
+    <!-- Ações -->
+    <div class="flex gap-2">
+      <button
+        type="button"
+        [disabled]="sending()"
+        (click)="onOpenChange(false)"
+        class="flex-1 rounded-2xl border border-border py-2.5 text-sm font-medium text-muted-foreground transition hover:text-foreground disabled:opacity-50"
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        (click)="handleSend()"
+        [disabled]="sending() || sent() || !mensagem().trim()"
+        class="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
+      >
+        @if (sent()) {
+          <svg [appIcon]="icons.CheckCircle2" class="h-4 w-4"></svg>
+          Enviado!
+        } @else if (sending()) {
+          Enviando…
+        } @else {
+          <svg [appIcon]="icons.Send" class="h-4 w-4"></svg>
+          Liberar e enviar
+        }
+      </button>
+    </div>
+  </div>
+</app-dialog>

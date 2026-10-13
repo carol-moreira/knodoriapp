@@ -1,0 +1,167 @@
+<div class="space-y-4">
+  <!-- Resumo financeiro -->
+  <div class="grid gap-3 sm:grid-cols-2">
+    <div
+      class="rounded-3xl border border-primary/30 bg-primary p-5 text-primary-foreground shadow-sm"
+    >
+      <p class="text-xs font-semibold uppercase tracking-widest opacity-80">Total movimentado</p>
+      <p class="mt-1.5 text-3xl font-bold tracking-tight">{{ brl(totalGasto) }}</p>
+      <p class="mt-1 text-xs opacity-70">
+        {{ historico.length }} compra{{ historico.length !== 1 ? "s" : "" }} concluída{{
+          historico.length !== 1 ? "s" : ""
+        }}
+      </p>
+    </div>
+
+    <div
+      [class]="
+        'rounded-3xl border p-5 shadow-sm ' +
+        (totalPendente > 0 ? 'border-amber-200 bg-amber-50' : 'border-border bg-card')
+      "
+    >
+      <p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+        Pendências
+      </p>
+      <p
+        [class]="
+          'mt-1.5 text-3xl font-bold tracking-tight ' +
+          (totalPendente > 0 ? 'text-amber-700' : 'text-emerald-600')
+        "
+      >
+        {{ totalPendente > 0 ? brl(totalPendente) : "Em dia ✓" }}
+      </p>
+      <p class="mt-1 text-xs text-muted-foreground">
+        {{ totalPendente > 0 ? "parcelas + fretes pendentes" : "Nenhuma pendência financeira" }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Histórico de transações -->
+  <app-extrato-section
+    [icon]="icons.TrendingUp"
+    titulo="Histórico de compras"
+    [badge]="historico.length + ' entregues'"
+    [defaultOpen]="true"
+  >
+    @if (historico.length === 0) {
+      <p class="py-2 text-xs text-muted-foreground">Nenhuma compra concluída ainda.</p>
+    } @else {
+      <div class="divide-y divide-border/50">
+        @for (t of historico; track t.id) {
+          <div class="flex items-start justify-between gap-3 py-3">
+            <div class="min-w-0 flex-1 space-y-0.5">
+              <p class="text-sm font-medium truncate">{{ t.descricao }}</p>
+              <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <span>{{ fmtDate(t.data) }}</span>
+                <span>·</span>
+                <span>{{ t.formaPagamento === "pix" ? "PIX" : "Cartão " + t.parcelas + "×" }}</span>
+                <span>·</span>
+                <span>{{ t.gomUsername }}</span>
+              </div>
+              @if (t.rastreio) {
+                <div class="flex items-center gap-1 text-[10px] font-medium text-emerald-600">
+                  <svg [appIcon]="icons.Package" class="h-2.5 w-2.5"></svg>
+                  {{ t.rastreio }}
+                </div>
+              }
+            </div>
+            <div class="flex flex-col items-end gap-1 shrink-0">
+              <span class="text-sm font-bold">{{ brl(t.valorBrl) }}</span>
+              <span
+                class="cozy-pill bg-emerald-50 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200"
+              >
+                <svg [appIcon]="icons.CheckCircle2" class="mr-0.5 inline h-2.5 w-2.5"></svg>Entregue
+              </span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </app-extrato-section>
+
+  <!-- Parcelas do cartão -->
+  <app-extrato-section
+    [icon]="icons.CreditCard"
+    titulo="Parcelas pendentes"
+    [badge]="parcelasPend > 0 ? brl(parcelasPend) : 'Em dia ✓'"
+    [defaultOpen]="parcelasPend > 0"
+  >
+    @if (parcelas.length === 0) {
+      <p class="py-2 text-xs text-muted-foreground">Sem parcelas pendentes.</p>
+    } @else {
+      <div class="divide-y divide-border/50">
+        @for (p of parcelas; track p.id) {
+          <div class="py-3">
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0 flex-1 space-y-0.5">
+                <p class="text-sm font-medium truncate">{{ p.descricao }}</p>
+                <p class="text-xs text-muted-foreground">
+                  Parcela {{ p.parcelaAtual }}/{{ p.totalParcelas }} · vence
+                  {{ fmtDate(p.dataVencimento) }}
+                </p>
+              </div>
+              <span class="shrink-0 text-sm font-bold">{{ brl(p.valorParcela) }}</span>
+            </div>
+            <!-- Progresso -->
+            <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                class="h-full rounded-full bg-primary/60 transition-all"
+                [style.width.%]="(p.parcelaAtual / p.totalParcelas) * 100"
+              ></div>
+            </div>
+            <p class="mt-1 text-right text-[10px] text-muted-foreground">
+              {{ p.parcelaAtual }} de {{ p.totalParcelas }} pagas
+            </p>
+          </div>
+        }
+      </div>
+    }
+  </app-extrato-section>
+
+  <!-- Fretes internacionais -->
+  <app-extrato-section
+    [icon]="icons.Truck"
+    titulo="Fretes internacionais"
+    [badge]="fretesPend > 0 ? brl(fretesPend) + ' pendente' : 'Em dia ✓'"
+    [defaultOpen]="false"
+  >
+    @if (fretes.length === 0) {
+      <p class="py-2 text-xs text-muted-foreground">Sem fretes registrados.</p>
+    } @else {
+      <div class="divide-y divide-border/50">
+        @for (f of fretes; track f.id) {
+          <div class="flex items-start justify-between gap-3 py-3">
+            <div class="min-w-0 flex-1 space-y-1">
+              <p class="text-sm font-medium truncate">{{ f.descricao }}</p>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-muted-foreground">{{ fmtDate(f.data) }}</span>
+                <span
+                  [class]="
+                    'cozy-pill text-[10px] font-semibold ' +
+                    (f.status === 'PENDENTE'
+                      ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-200'
+                      : 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200')
+                  "
+                >
+                  @if (f.status === "PENDENTE") {
+                    <svg [appIcon]="icons.Clock" class="mr-0.5 inline h-2.5 w-2.5"></svg>Pendente
+                  } @else {
+                    <svg [appIcon]="icons.CheckCircle2" class="mr-0.5 inline h-2.5 w-2.5"></svg>Pago
+                  }
+                </span>
+              </div>
+            </div>
+            <span
+              [class]="
+                'shrink-0 text-sm font-bold ' +
+                (f.status === 'PAGO' ? 'text-muted-foreground line-through' : '')
+              "
+            >
+              {{ brl(f.valorBrl) }}
+            </span>
+          </div>
+        }
+      </div>
+    }
+  </app-extrato-section>
+</div>

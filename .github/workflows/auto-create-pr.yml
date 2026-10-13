@@ -1,0 +1,43 @@
+name: Auto Create PR
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+      - 'bugfix/**'
+      - 'develop'
+
+# Dá permissão para o bot do GitHub Actions criar o PR
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Definir Branch de Destino
+        id: target
+        run: |
+          # Se o push foi na develop, o PR vai para a main
+          if [[ "${{ github.ref_name }}" == "develop" ]]; then
+            echo "branch=main" >> $GITHUB_OUTPUT
+          # Caso contrário (feature ou bugfix), o PR vai para a develop
+          else
+            echo "branch=develop" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Criar Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Tenta criar o PR. O "|| true" no final garante que o workflow 
+          # não dê erro vermelho caso o PR já exista para esta branch.
+          gh pr create \
+            --base ${{ steps.target.outputs.branch }} \
+            --head ${{ github.ref_name }} \
+            --title "Automated PR: ${{ github.ref_name }} -> ${{ steps.target.outputs.branch }}" \
+            --body "Pull Request criado automaticamente pelo GitHub Actions." || true

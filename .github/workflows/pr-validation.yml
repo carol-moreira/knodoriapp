@@ -1,0 +1,33 @@
+name: PR Validation Workflow
+
+# Este workflow roda sempre que um PR for aberto para a develop ou main
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+  validate-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+ 
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # ou a versão do Node que você utiliza no projeto
+          cache: 'npm'
+
+      - name: Instalar Dependências
+        run: npm ci
+
+      # Valida se o código está seguindo os padrões do seu eslint.config.js e prettier
+      - name: Checar Linting / Formatação
+        run: npm run lint --if-present
+
+      # Tenta buildar a aplicação Angular para garantir que não há erros de compilação
+      - name: Build da Aplicação
+        run: npm run build

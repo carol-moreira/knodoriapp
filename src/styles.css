@@ -1,0 +1,256 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design system — KNODORI
+ *
+ * Arquitetura de cores em 3 camadas:
+ *
+ *   1. Tema  — [data-theme="x"] e [data-theme="x"].dark definem SÓ as
+ *      variáveis base: --bg-color, --text-color, --primary-color,
+ *      --on-primary-color, --secondary-color, --on-secondary-color.
+ *   2. Tokens — :root/[data-theme] derivam desses valores os tokens
+ *      semânticos (--background, --card, --muted, --border…) com color-mix.
+ *   3. Tailwind — @theme inline expõe os tokens como utilities
+ *      (bg-primary, text-muted-foreground, border-border…).
+ *
+ * Para criar um tema novo basta repetir o bloco de variáveis base (claro +
+ * escuro) e registrá-lo em ThemeService (THEME_META).
+ */
+
+@theme inline {
+  --radius-sm:  calc(var(--radius) - 4px);
+  --radius-md:  calc(var(--radius) - 2px);
+  --radius-lg:  var(--radius);
+  --radius-xl:  calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background:          var(--background);
+  --color-foreground:          var(--foreground);
+  --color-card:                var(--card);
+  --color-card-foreground:     var(--card-foreground);
+  --color-popover:             var(--popover);
+  --color-popover-foreground:  var(--popover-foreground);
+  --color-primary:             var(--primary);
+  --color-primary-foreground:  var(--primary-foreground);
+  --color-secondary:           var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted:               var(--muted);
+  --color-muted-foreground:    var(--muted-foreground);
+  --color-accent:              var(--accent);
+  --color-accent-foreground:   var(--accent-foreground);
+  --color-destructive:         var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border:              var(--border);
+  --color-input:               var(--input);
+  --color-ring:                var(--ring);
+  --color-ring-offset-background: var(--background);
+}
+
+/* ── 1. Temas — variáveis base ──────────────────────────────────────────── */
+
+/* Classic Elegance (padrão) — Aquamarine · Concrete · Burgundy */
+:root,
+[data-theme="classic-elegance"] {
+  --bg-color:           #ece6df;
+  --text-color:         #0f3f49;
+  --primary-color:      #7f0508;
+  --on-primary-color:   #ece6df;
+  --secondary-color:    #0f3f49;
+  --on-secondary-color: #ece6df;
+}
+
+[data-theme="classic-elegance"].dark,
+.dark [data-theme="classic-elegance"] {
+  --bg-color:           oklch(0.17 0.03 215);
+  --text-color:         #ece6df;
+  --primary-color:      oklch(0.62 0.17 27);
+  --on-primary-color:   oklch(0.14 0.03 27);
+  --secondary-color:    oklch(0.68 0.08 205);
+  --on-secondary-color: oklch(0.14 0.03 215);
+}
+
+/* Winter Frost — #D9E7F8 · #6371A2 · #56021E */
+[data-theme="winter-frost"] {
+  --bg-color:           #d9e7f8;
+  --text-color:         #56021e;
+  --primary-color:      #6371a2;
+  --on-primary-color:   #ffffff;
+  --secondary-color:    #56021e;
+  --on-secondary-color: #d9e7f8;
+}
+
+[data-theme="winter-frost"].dark,
+.dark [data-theme="winter-frost"] {
+  --bg-color:           oklch(0.18 0.035 271);
+  --text-color:         #d9e7f8;
+  --primary-color:      oklch(0.70 0.09 271);
+  --on-primary-color:   oklch(0.15 0.04 271);
+  --secondary-color:    oklch(0.62 0.16 10);
+  --on-secondary-color: oklch(0.14 0.04 10);
+}
+
+/* Matcha Latte — #F7CF89 · #83965F · #4F5139 */
+[data-theme="matcha-latte"] {
+  --bg-color:           #f7cf89;
+  --text-color:         #4f5139;
+  --primary-color:      #4f5139;
+  --on-primary-color:   #f7cf89;
+  --secondary-color:    #83965f;
+  --on-secondary-color: oklch(0.22 0.03 112);
+}
+
+[data-theme="matcha-latte"].dark,
+.dark [data-theme="matcha-latte"] {
+  --bg-color:           oklch(0.19 0.02 112);
+  --text-color:         #f7cf89;
+  --primary-color:      oklch(0.70 0.09 124);
+  --on-primary-color:   oklch(0.17 0.02 112);
+  --secondary-color:    #f7cf89;
+  --on-secondary-color: oklch(0.19 0.02 112);
+}
+
+/* Spring Blossom — #D1F985 · #FFE1E7 · #FC97B7
+ * Paleta só com tons claros: o texto é um ameixa profundo derivado do rosa. */
+[data-theme="spring-blossom"] {
+  --bg-color:           #ffe1e7;
+  --text-color:         oklch(0.32 0.09 0);
+  --primary-color:      #fc97b7;
+  --on-primary-color:   oklch(0.25 0.08 0);
+  --secondary-color:    #d1f985;
+  --on-secondary-color: oklch(0.28 0.07 125);
+}
+
+[data-theme="spring-blossom"].dark,
+.dark [data-theme="spring-blossom"] {
+  --bg-color:           oklch(0.19 0.04 355);
+  --text-color:         #ffe1e7;
+  --primary-color:      #fc97b7;
+  --on-primary-color:   oklch(0.22 0.07 0);
+  --secondary-color:    #d1f985;
+  --on-secondary-color: oklch(0.24 0.06 125);
+}
+
+/* Berry Vanilla — #da6c81 · #f5e9d0 · #bf2b54
+ * Texto em berry profundo (derivado de #bf2b54) para contraste AA de corpo. */
+[data-theme="berry-vanilla"] {
+  --bg-color:           #f5e9d0;
+  --text-color:         oklch(0.30 0.08 10);
+  --primary-color:      #bf2b54;
+  --on-primary-color:   #f5e9d0;
+  --secondary-color:    #da6c81;
+  --on-secondary-color: oklch(0.22 0.06 10);
+}
+
+[data-theme="berry-vanilla"].dark,
+.dark [data-theme="berry-vanilla"] {
+  --bg-color:           oklch(0.18 0.03 10);
+  --text-color:         #f5e9d0;
+  --primary-color:      #da6c81;
+  --on-primary-color:   oklch(0.16 0.04 10);
+  --secondary-color:    #f5e9d0;
+  --on-secondary-color: oklch(0.20 0.04 10);
+}
+
+/* ── 2. Tokens semânticos — derivados das variáveis base ────────────────── */
+/*
+ * Declarados em :root e em todo [data-theme] para que um tema aninhado
+ * recalcule os tokens no próprio escopo.
+ */
+:root,
+[data-theme] {
+  --radius: 1.25rem;
+
+  --background:           var(--bg-color);
+  --foreground:           var(--text-color);
+  --card:                 color-mix(in oklch, var(--bg-color), white 60%);
+  --card-foreground:      var(--text-color);
+  --popover:              var(--card);
+  --popover-foreground:   var(--text-color);
+  --primary:              var(--primary-color);
+  --primary-foreground:   var(--on-primary-color);
+  --secondary:            var(--secondary-color);
+  --secondary-foreground: var(--on-secondary-color);
+  --muted:                color-mix(in oklch, var(--bg-color), var(--text-color) 7%);
+  --muted-foreground:     color-mix(in oklch, var(--text-color), var(--bg-color) 30%);
+  --accent:               color-mix(in oklch, var(--bg-color), var(--secondary-color) 20%);
+  --accent-foreground:    var(--text-color);
+  --destructive:          oklch(0.53 0.21 27);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border:               color-mix(in oklch, var(--bg-color), var(--text-color) 14%);
+  --input:                color-mix(in oklch, var(--bg-color), var(--text-color) 18%);
+  --ring:                 var(--primary-color);
+}
+
+/* Modo escuro: superfícies sobem levemente em vez de clarear para o branco */
+.dark,
+.dark [data-theme] {
+  --card:                   color-mix(in oklch, var(--bg-color), white 6%);
+  --muted:                  color-mix(in oklch, var(--bg-color), white 10%);
+  --destructive:            oklch(0.65 0.20 25);
+  --destructive-foreground: oklch(0.15 0.03 25);
+}
+
+/* ── Base layer ─────────────────────────────────────────────────────────── */
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: ui-rounded, "SF Pro Rounded", "Nunito", "Quicksand", system-ui, sans-serif;
+  }
+
+  /* Global cursor rules */
+  button:not(:disabled),
+  a,
+  select:not(:disabled),
+  [role="button"],
+  [role="tab"],
+  [role="checkbox"],
+  [role="radio"],
+  label[for] {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  select:disabled {
+    cursor: not-allowed;
+  }
+}
+
+/* ── Utility layer ──────────────────────────────────────────────────────── */
+@layer utilities {
+  .cozy-card {
+    background-color: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 20px -8px oklch(0 0 0 / 0.14), 0 2px 6px -2px oklch(0 0 0 / 0.06);
+  }
+
+  .cozy-pill {
+    border-radius: 9999px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  /* Adapts to dark/light mode via CSS variables */
+  .silver-surface {
+    background: linear-gradient(135deg, var(--color-card), var(--color-muted));
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}

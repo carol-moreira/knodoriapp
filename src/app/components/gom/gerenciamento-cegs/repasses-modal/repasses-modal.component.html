@@ -1,0 +1,140 @@
+<app-dialog
+  [open]="open()"
+  (openChange)="onOpenChange($event)"
+  contentClass="fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 cozy-card shadow-2xl animate-in zoom-in-95 fade-in duration-150 max-h-[90vh] overflow-y-auto no-scrollbar"
+>
+  <!-- Header -->
+  <div
+    class="sticky top-0 flex items-center justify-between border-b border-border/60 bg-card px-6 py-4"
+  >
+    <div>
+      <h2 class="text-sm font-bold">Repasses — {{ ceg()?.nome }}</h2>
+      <p class="text-[11px] text-muted-foreground">{{ descricao() }}</p>
+    </div>
+    <button
+      type="button"
+      (click)="onOpenChange(false)"
+      class="rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted"
+    >
+      <svg [appIcon]="icons.X" class="h-4 w-4"></svg>
+    </button>
+  </div>
+
+  <div class="px-6 py-5">
+    @if (repasses().length === 0) {
+      <div class="flex flex-col items-center justify-center gap-3 py-12 text-center">
+        <svg [appIcon]="icons.CreditCard" class="h-8 w-8 text-muted-foreground/40"></svg>
+        <div>
+          <p class="text-sm font-semibold">Sem repasses</p>
+          <p class="text-xs text-muted-foreground">
+            Os repasses aparecerão quando as joiners entrarem nesta CEG.
+          </p>
+        </div>
+      </div>
+    } @else {
+      <!-- Progresso geral -->
+      @if (totalGeral() > 0) {
+        <div class="mb-5 space-y-1.5">
+          <div class="flex justify-between text-xs text-muted-foreground">
+            <span>Progresso total</span>
+            <span>{{ percentTotal() }}%</span>
+          </div>
+          <div class="h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              class="h-full rounded-full bg-emerald-500 transition-all"
+              [style.width.%]="(totalPago() / totalGeral()) * 100"
+            ></div>
+          </div>
+          <div class="flex justify-between text-[11px] text-muted-foreground">
+            <span>Recebido: {{ brl(totalPago()) }}</span>
+            <span>Total: {{ brl(totalGeral()) }}</span>
+          </div>
+        </div>
+      }
+
+      <!-- Lista de repasses -->
+      <div class="divide-y divide-border/50">
+        @for (rep of repasses(); track rep.id) {
+          <div class="space-y-2.5 py-4 first:pt-0 last:pb-0">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-semibold">{{ rep.joinerNome }}</p>
+                <p class="text-xs text-muted-foreground">
+                  {{ rep.joinerUsername }} · vence {{ fmtDate(rep.dataVencimento) }}
+                </p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <div class="text-right">
+                  <p class="text-sm font-bold">{{ brl(rep.valorPago) }}</p>
+                  <p class="text-[10px] text-muted-foreground">de {{ brl(rep.valorTotal) }}</p>
+                </div>
+                <span
+                  [class]="'cozy-pill text-[10px] font-semibold ' + REPASSE_META[rep.status].cls"
+                >
+                  {{ REPASSE_META[rep.status].label }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Barra individual -->
+            <div class="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                [class]="
+                  'h-full rounded-full transition-all ' +
+                  (rep.status === 'PAGO' ? 'bg-emerald-500' : 'bg-blue-400')
+                "
+                [style.width.%]="progresso(rep)"
+              ></div>
+            </div>
+
+            <!-- Inline registro de pagamento -->
+            @if (registrandoId() === rep.id) {
+              <div class="flex items-center gap-2">
+                <div class="relative flex-1">
+                  <span
+                    class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground"
+                  >
+                    R$
+                  </span>
+                  <input
+                    type="number"
+                    [value]="valor()"
+                    (input)="valor.set(val($event))"
+                    min="0.01"
+                    step="0.01"
+                    appAutofocus
+                    class="w-full rounded-xl border border-border bg-muted/40 py-2 pl-8 pr-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+                <button
+                  type="button"
+                  (click)="handleConfirmar()"
+                  class="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-emerald-700"
+                >
+                  <svg [appIcon]="icons.CheckCircle2" class="h-3.5 w-3.5"></svg>
+                  Confirmar
+                </button>
+                <button
+                  type="button"
+                  (click)="registrandoId.set(null)"
+                  class="rounded-xl border border-border p-2 text-muted-foreground transition hover:text-foreground"
+                >
+                  <svg [appIcon]="icons.X" class="h-3.5 w-3.5"></svg>
+                </button>
+              </div>
+            } @else if (rep.status !== "PAGO") {
+              <button
+                type="button"
+                (click)="handleRegistrar(rep)"
+                class="flex items-center gap-1.5 rounded-xl border border-dashed border-primary/40 px-3 py-1.5 text-[11px] font-medium text-primary transition hover:bg-primary/5"
+              >
+                <svg [appIcon]="icons.Plus" class="h-3 w-3"></svg>
+                Registrar pagamento
+              </button>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+</app-dialog>

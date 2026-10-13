@@ -1,0 +1,29 @@
+<div class="cozy-card overflow-hidden">
+  <button
+    type="button"
+    (click)="open.set(!open())"
+    class="flex w-full items-center justify-between gap-3 p-5 text-left transition hover:bg-muted/30"
+  >
+    <div class="flex items-center gap-3">
+      <div class="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
+        <svg [appIcon]="icon()" class="h-5 w-5"></svg>
+      </div>
+      <div>
+        <p class="text-sm font-semibold">{{ titulo() }}</p>
+        <p class="text-xs text-muted-foreground">{{ badge() }}</p>
+      </div>
+    </div>
+    <svg
+      [appIcon]="open() ? icons.ChevronUp : icons.ChevronDown"
+      class="h-4 w-4 text-muted-foreground"
+    ></svg>
+  </button>
+
+  @if (open()) {
+    <div
+      class="border-t border-border/60 px-5 pb-4 pt-2 animate-in fade-in slide-in-from-top-1 duration-150"
+    >
+      <ng-content />
+    </div>
+  }
+</div>
