@@ -5,7 +5,7 @@
       class="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
     >
       <svg [appIcon]="icons.Link2" class="h-3.5 w-3.5"></svg>
-      Link do anúncio (opcional)
+      link do anúncio (opcional)
     </label>
     <input
       type="url"
@@ -19,7 +19,7 @@
   <!-- Valor em Iene -->
   <div class="space-y-1.5">
     <label class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-      Valor em Iene
+      valor em iene
     </label>
     <div class="relative">
       <span
@@ -31,7 +31,7 @@
         [value]="valorJpy()"
         (input)="valorJpy.set(val($event))"
         inputmode="numeric"
-        placeholder="Ex: 3.800"
+        placeholder="ex: 3.800"
         class="w-full rounded-2xl border border-border bg-background py-3.5 pl-10 pr-4 text-lg font-semibold outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
       />
     </div>
@@ -40,7 +40,7 @@
   <!-- Tipo de item (acréscimo fixo por categoria) -->
   <div class="space-y-1.5">
     <label class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-      Tipo de item
+      tipo de item
       <span class="normal-case font-normal text-muted-foreground/60">
         — influencia o valor final
       </span>
@@ -50,7 +50,7 @@
         (change)="tipoItem.set($any(val($event)))"
         class="flex-1 rounded-2xl border border-border bg-card px-4 py-3 text-sm font-medium outline-none focus:border-primary"
       >
-        <option value="" [selected]="tipoItem() === ''">Sem tipo específico</option>
+        <option value="" [selected]="tipoItem() === ''">sem tipo específico</option>
         @for (entry of itemEntries; track entry[0]) {
           <option [value]="entry[0]" [selected]="tipoItem() === entry[0]">
             {{ entry[1].emoji }} {{ entry[1].label }}
@@ -61,7 +61,7 @@
       <!-- Quantidade — só aparece quando um tipo foi selecionado -->
       @if (tipoItem()) {
         <div class="flex flex-col items-center">
-          <label class="text-[10px] text-muted-foreground mb-0.5">Qtd</label>
+          <label class="text-[10px] text-muted-foreground mb-0.5">qtd</label>
           <input
             type="number"
             min="1"
@@ -78,12 +78,12 @@
   <!-- Forma de pagamento -->
   <div class="space-y-2">
     <label class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-      Pagamento
+      pagamento
     </label>
     <div class="grid grid-cols-2 gap-2">
       @for (tipo of tiposPagamento; track tipo) {
         <button type="button" (click)="selecionarForma(tipo)" [class]="formaClass(tipo)">
-          {{ tipo === "pix" ? "PIX (à vista)" : "Cartão" }}
+          {{ tipo === "pix" ? "PIX (à vista)" : "cartão" }}
         </button>
       }
     </div>
@@ -111,7 +111,7 @@
       class="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-border py-8 text-sm text-muted-foreground"
     >
       <svg [appIcon]="icons.Loader2" class="h-4 w-4 animate-spin"></svg>
-      Calculando…
+      calculando…
     </div>
   }
 
@@ -138,7 +138,7 @@
         >
           <div class="flex items-center gap-2">
             <p class="text-xs font-semibold uppercase tracking-widest opacity-80">
-              Estimativa em Real
+              estimativa em real
             </p>
             @if (pricing.loading()) {
               <svg [appIcon]="icons.Loader2" class="h-3 w-3 animate-spin opacity-70"></svg>
@@ -166,7 +166,7 @@
             class="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700"
           >
             <svg [appIcon]="icons.AlertCircle" class="mt-0.5 h-3.5 w-3.5 shrink-0"></svg>
-            No PIX você pagaria
+            no PIX você pagaria
             <strong>{{ centsToDisplay(optionPix()!.totalCents) }}</strong>
             — {{ centsToDisplay(-atual.economiaVsPix) }} a menos.
           </div>
@@ -179,7 +179,7 @@
               <summary
                 class="flex cursor-pointer items-center justify-between px-4 py-3 text-xs font-semibold text-muted-foreground hover:text-foreground list-none"
               >
-                <span>Ver todas as opções de parcelamento</span>
+                <span>ver todas as opções de parcelamento</span>
                 <span class="transition group-open:rotate-180">▾</span>
               </summary>
               <div class="divide-y divide-border/60 px-1 pb-1">
@@ -188,7 +188,7 @@
                     type="button"
                     (click)="selecionarOpcao(o)"
                     [class]="
-                      'flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-xs transition hover:bg-muted/60 ' +
+                      'flex w-full items-center justify-between rounded-pill px-3 py-2.5 text-xs transition hover:bg-muted/60 ' +
                       (isAtual(o) ? 'bg-primary/10 font-semibold text-primary' : '')
                     "
                   >
@@ -196,7 +196,7 @@
                       {{
                         o.formaPagamento === "pix"
                           ? "PIX · à vista"
-                          : "Cartão " + o.parcelas + "× · " + taxa(o) + "%"
+                          : "cartão " + o.parcelas + "× · " + taxa(o) + "%"
                       }}
                     </span>
                     <div class="flex items-center gap-2">
@@ -204,7 +204,7 @@
                         <span
                           [class]="
                             'text-[10px] font-medium ' +
-                            (o.economiaVsPix < 0 ? 'text-red-500' : 'text-emerald-600')
+                            (o.economiaVsPix < 0 ? 'text-red-500' : 'text-lime-600')
                           "
                         >
                           {{ label }} vs. PIX
@@ -225,7 +225,7 @@
         >
           <svg [appIcon]="icons.AlertCircle" class="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary"></svg>
           <span>
-            Estimativa baseada nas taxas atuais. O valor exato será confirmado pela GOM após análise
+            estimativa baseada nas taxas atuais. o valor exato será confirmado pela GOM após análise
             do pedido.
           </span>
         </div>
@@ -238,7 +238,7 @@
             rel="noreferrer"
             class="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-sm font-bold text-primary-foreground transition hover:opacity-90 active:scale-[0.99]"
           >
-            Solicitar esta compra <svg [appIcon]="icons.ArrowRight" class="h-4 w-4"></svg>
+            solicitar esta compra <svg [appIcon]="icons.ArrowRight" class="h-4 w-4"></svg>
           </a>
         }
 
@@ -247,7 +247,7 @@
           (click)="handleReset()"
           class="flex w-full items-center justify-center gap-1.5 rounded-2xl border border-border py-2.5 text-sm text-muted-foreground transition hover:bg-muted"
         >
-          <svg [appIcon]="icons.RefreshCw" class="h-3.5 w-3.5"></svg> Limpar
+          <svg [appIcon]="icons.RefreshCw" class="h-3.5 w-3.5"></svg> limpar
         </button>
       </div>
     }
@@ -259,7 +259,7 @@
       class="flex items-center justify-center rounded-2xl border border-dashed border-border py-8 text-sm text-muted-foreground"
     >
       <svg [appIcon]="icons.Calculator" class="mr-2 h-4 w-4 opacity-50"></svg>
-      Digite um valor em ¥ para simular
+      digite um valor em ¥ para simular
     </div>
   }
 </div>

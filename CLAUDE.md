@@ -57,6 +57,8 @@ Auth lives in [src/app/services/auth.service.ts](src/app/services/auth.service.t
 | `gom@…` | `GOM` |
 | anything else | `JOINER` |
 
+The mock JOINER signs in as Bia Costa (`id: "j1"`), the same id used by the mock Mercari orders, so the joiner screens have data.
+
 `AuthService` exposes read-only signals `user`, `status`, `needsOnboarding` and methods `signInWithEmail`, `signUpWithEmail`, `signInWithGoogle`, `completeOnboarding`, `updateUser`, `signOut`.
 
 All auth functions are mocked for development. Integration points are marked with `// 🔌`. Provider adapters (Firebase, Cognito, OAuth2) and the integration guide are in [src/app/lib/auth-providers.ts](src/app/lib/auth-providers.ts).
@@ -74,7 +76,7 @@ Routes are declared in [src/app/app.routes.ts](src/app/app.routes.ts) (Angular R
 |---|---|---|
 | `/admin` | ADMIN | Dashboard, Métricas, Usuários, Configurações |
 | `/gom` | GOM | Dashboard, CEGs, Financeiro, Fila Mercari, Joiners, Taxas |
-| `/joiner` | JOINER | Dashboard, Minhas Compras, Extrato |
+| `/joiner` | JOINER | Dashboard, Minhas Compras, Minhas CEGs, Extrato |
 | `/calculadora`, `/mercari`, `/sistema` | any | Calculadora, vitrine Mercari, Super Admin |
 
 ### State Management
@@ -154,7 +156,7 @@ Font stack: `SF Pro Rounded`, `Nunito`, `Quicksand`.
 
 ### App Logo
 
-The logo lives at `public/logo.png` (served at `/logo.png`). It renders in the header and auth screen. If it fails to load, a Heart icon fallback is shown automatically.
+The official icon/logo lives at `public/images/init/icon.png` (served at `/images/init/icon.png`); it is also the favicon, apple-touch-icon and og:image. It renders in the header and auth screen. If it fails to load, a Heart icon fallback is shown automatically.
 
 ### Profile Settings
 
@@ -171,6 +173,20 @@ BRL = ((JPY + acrescimoBaseJpy) × fatorIdrJpy × taxaIdrBrl) × (1 + spreadWise
 `ConfigTaxasGOM` holds all configurable parameters. `calcularValorBrl()` (client-side preview) is exported from [painel-taxas.component.ts](src/app/components/gom/painel-taxas/painel-taxas.component.ts).
 
 Note: the `/calculadora` page (`CurrencyCalculator`) still computes prices client-side with its own hardcoded table — inherited from the original app.
+
+### Fila Mercari & caixas mercari
+
+`MercariStatus` ([gom-types.ts](src/app/lib/gom-types.ts), `MERCARI_ETAPAS`) follows the flow: na fila → aguard. pgto → pago → pedido feito → compra confirmada → na warehouse → caixa fechada → chegou na GOM → envio liberado. State lives in `PedidosMercariService` ([pedidos-mercari.service.ts](src/app/services/pedidos-mercari.service.ts)), shared by the fila, GOM dashboard and financeiro. On `/gom/fila` the GOM changes the first six stages in the status column (a `<select>`); "compra confirmada" opens `ConfirmarCompraModal` (proof images + which caixa). A caixa mercari is a CEG with `tipo: "CAIXA_MERCARI"` (`CegsService`, [cegs.service.ts](src/app/services/cegs.service.ts), also backs the CEGs page); confirmed orders go to an open caixa ("caixa mercari N", created on demand). The last stages are caixa-wide actions in `CaixasMercari`: fechar (all orders must be na warehouse) → cobrar fretes e taxas (freight split equally per joiner + fee) → chegou na GOM → liberar envio nacional. Each step notifies the joiners via `NotificacoesService`. The joiner side reads the same service: Minhas Compras maps the logged-in joiner's orders with `toPedidoJoiner()` ([minhas-compras.model.ts](src/app/components/joiner/minhas-compras/minhas-compras.model.ts)), the `/calculadora` submit calls `PedidosMercariService.criar()`, and a confirmed repasse calls `transferir()` to change the order's owner.
+
+### Minhas CEGs & novidades
+
+`/joiner/cegs` ([minhas-cegs](src/app/components/joiner/minhas-cegs/minhas-cegs.component.ts)) lists every CEG where the logged-in joiner has orders (via `cegId` in `PedidosMercariService`): her items, the CEG status bar, her freight/fee charge and the CEG feed. The feed lives in `CegPostsService` ([ceg-posts.service.ts](src/app/services/ceg-posts.service.ts)): the GOM publishes `COMUNICADO` / `AVISO` posts from the "novidades" button on each CEG card (`NovidadesModal`), and every joiner with items in that CEG is notified.
+
+### Repasses de claim (joiner → joiner)
+
+State lives in `RepassesService` ([repasses.service.ts](src/app/services/repasses.service.ts)); types/mocks in [repasse-types.ts](src/app/lib/repasse-types.ts). The joiner opens `SolicitarRepasseModal` from Minhas Compras (CEG → item → destination joiner's registration code → payment confirmation); only paid items (`pagamentoConfirmado`) without a pending request can be chosen. The GOM gets a notification and reviews requests in the "fila de repasses" section of the CEGs page ([fila-repasses](src/app/components/gom/gerenciamento-cegs/fila-repasses/fila-repasses.component.ts), consolidated or per CEG). Confirming changes the item's owner (the pedido leaves the sender's list) and notifies the destination joiner. The per-CEG "pagamentos" modal (`RepassesModal`, payment collection) is a different thing.
+
+In-app notifications: `NotificacoesService` ([notificacoes.service.ts](src/app/services/notificacoes.service.ts)), addressed to a user id or a whole role (`"GOM"`), shown by the bell in the header.
 
 ### Admin: Role Change Requires Password
 

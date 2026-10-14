@@ -25,7 +25,7 @@ export class GoogleButtonComponent {
       await this.auth.signInWithGoogle();
       this.success.emit();
     } catch (err) {
-      this.error.set(err instanceof Error ? err.message : "Erro desconhecido.");
+      this.error.set(err instanceof Error ? err.message : "erro desconhecido.");
     } finally {
       this.loading.set(false);
     }

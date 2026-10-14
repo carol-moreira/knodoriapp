@@ -8,11 +8,11 @@
     class="sticky top-0 flex items-center justify-between border-b border-border/60 bg-card px-6 py-4"
   >
     <div class="flex items-center gap-2.5">
-      <div class="grid h-8 w-8 place-items-center rounded-xl bg-emerald-100 dark:bg-emerald-950/40">
-        <svg [appIcon]="icons.Home" class="h-4 w-4 text-emerald-600"></svg>
+      <div class="grid h-8 w-8 place-items-center rounded-xl bg-lime-100 dark:bg-lime-950/40">
+        <svg [appIcon]="icons.Home" class="h-4 w-4 text-lime-600"></svg>
       </div>
       <div>
-        <h2 class="text-sm font-bold">Solicitar Envio Nacional</h2>
+        <h2 class="text-sm font-bold">solicitar envio nacional</h2>
         <p class="text-[11px] text-muted-foreground">
           {{ pedido()?.cegNome }} · {{ pedido() ? brl(pedido()!.valorBrl) : "" }}
         </p>
@@ -30,10 +30,10 @@
 
   <div class="space-y-4 px-6 py-5">
     <div
-      class="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400"
+      class="flex items-center gap-2 rounded-2xl border border-lime-200 bg-lime-50 p-3 text-xs text-lime-700 dark:border-lime-800 dark:bg-lime-950/30 dark:text-lime-400"
     >
       <svg [appIcon]="icons.MapPin" class="h-3.5 w-3.5 shrink-0"></svg>
-      Informe o endereço para recebimento dos seus itens no Brasil.
+      informe o endereço para recebimento dos seus itens no brasil.
     </div>
 
     <div class="grid grid-cols-2 gap-3">
@@ -49,7 +49,7 @@
         />
       </div>
       <div class="space-y-1.5">
-        <label class="text-xs font-semibold">Estado</label>
+        <label class="text-xs font-semibold">estado</label>
         <select (change)="field('estado', $event)" [class]="INPUT_CLS">
           @for (uf of estados; track uf) {
             <option [selected]="uf === end().estado">{{ uf }}</option>
@@ -59,39 +59,39 @@
     </div>
 
     <div class="space-y-1.5">
-      <label class="text-xs font-semibold">Cidade</label>
+      <label class="text-xs font-semibold">cidade</label>
       <input
         type="text"
         [value]="end().cidade"
         (input)="field('cidade', $event)"
-        placeholder="São Paulo"
+        placeholder="são paulo"
         [class]="INPUT_CLS"
       />
     </div>
     <div class="space-y-1.5">
-      <label class="text-xs font-semibold">Bairro</label>
+      <label class="text-xs font-semibold">bairro</label>
       <input
         type="text"
         [value]="end().bairro"
         (input)="field('bairro', $event)"
-        placeholder="Centro"
+        placeholder="centro"
         [class]="INPUT_CLS"
       />
     </div>
     <div class="space-y-1.5">
-      <label class="text-xs font-semibold">Rua / Endereço</label>
+      <label class="text-xs font-semibold">rua / endereço</label>
       <input
         type="text"
         [value]="end().rua"
         (input)="field('rua', $event)"
-        placeholder="Av. Paulista"
+        placeholder="av. paulista"
         [class]="INPUT_CLS"
       />
     </div>
 
     <div class="grid grid-cols-2 gap-3">
       <div class="space-y-1.5">
-        <label class="text-xs font-semibold">Número</label>
+        <label class="text-xs font-semibold">número</label>
         <input
           type="text"
           [value]="end().numero"
@@ -101,12 +101,12 @@
         />
       </div>
       <div class="space-y-1.5">
-        <label class="text-xs font-semibold">Complemento</label>
+        <label class="text-xs font-semibold">complemento</label>
         <input
           type="text"
           [value]="end().complemento"
           (input)="field('complemento', $event)"
-          placeholder="Apto 12 (opcional)"
+          placeholder="apto 12 (opcional)"
           [class]="INPUT_CLS"
         />
       </div>
@@ -119,20 +119,20 @@
         (click)="onOpenChange(false)"
         class="flex-1 rounded-2xl border border-border py-2.5 text-sm font-medium text-muted-foreground transition hover:text-foreground disabled:opacity-50"
       >
-        Cancelar
+        cancelar
       </button>
       <button
         type="button"
         (click)="handleSend()"
         [disabled]="!canSend() || sending() || sent()"
-        class="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
+        class="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-lime-600 py-2.5 text-sm font-semibold text-white transition hover:bg-lime-700 disabled:opacity-60"
       >
         @if (sent()) {
-          <svg [appIcon]="icons.CheckCircle2" class="h-4 w-4"></svg> Solicitado!
+          <svg [appIcon]="icons.CheckCircle2" class="h-4 w-4"></svg> solicitado!
         } @else if (sending()) {
-          Enviando…
+          enviando…
         } @else {
-          <svg [appIcon]="icons.Send" class="h-4 w-4"></svg> Solicitar envio
+          <svg [appIcon]="icons.Send" class="h-4 w-4"></svg> solicitar envio
         }
       </button>
     </div>

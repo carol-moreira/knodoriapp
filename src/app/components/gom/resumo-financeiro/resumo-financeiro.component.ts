@@ -8,7 +8,7 @@ import {
   Wallet,
   type LucideIconData,
 } from "lucide-angular";
-import { ITEM_META, type ItemKey, type SolicitacaoGOM } from "@/lib/gom-types";
+import { ITEM_META, etapaMercari, type ItemKey, type SolicitacaoGOM } from "@/lib/gom-types";
 import { IconDirective } from "@/shared/icon.directive";
 
 // ---------------------------------------------------------------------------
@@ -17,7 +17,8 @@ import { IconDirective } from "@/shared/icon.directive";
 // ---------------------------------------------------------------------------
 
 function calcularResumo(sols: SolicitacaoGOM[]) {
-  const comprados = sols.filter((s) => s.status === "COMPRADO");
+  // Pagos = qualquer pedido que já passou do pagamento
+  const comprados = sols.filter((s) => etapaMercari(s.status) >= etapaMercari("PAGO"));
   const aguardando = sols.filter((s) => s.status === "AGUARDANDO_PAGAMENTO");
   const pendentes = sols.filter((s) => s.status === "PENDENTE");
 
@@ -43,8 +44,8 @@ type Accent = "emerald" | "blue" | "primary" | "neutral";
 
 const ACCENT_MAP: Record<Accent, { icon: string; badge: string; ring: string }> = {
   emerald: {
-    icon: "text-emerald-600",
-    badge: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
+    icon: "text-lime-600",
+    badge: "bg-lime-50 text-lime-700 ring-1 ring-lime-200",
     ring: "",
   },
   blue: { icon: "text-blue-500", badge: "bg-blue-50 text-blue-700 ring-1 ring-blue-200", ring: "" },
@@ -104,7 +105,7 @@ export class ResumoFinanceiroComponent {
     return [
       {
         icon: Wallet,
-        label: "Total em Caixa",
+        label: "total em caixa",
         value: brl(totalCaixa),
         sub: "pedidos confirmados",
         accent: "emerald",
@@ -112,7 +113,7 @@ export class ResumoFinanceiroComponent {
       },
       {
         icon: CreditCard,
-        label: "A Receber",
+        label: "a receber",
         value: brl(aReceber),
         sub: "aguardando pagamento",
         accent: "blue",
@@ -120,7 +121,7 @@ export class ResumoFinanceiroComponent {
       },
       {
         icon: TrendingUp,
-        label: "Lucro Estimado",
+        label: "lucro estimado",
         value: brl(lucroEstimado),
         sub: "markup sobre confirmados",
         accent: "primary",
@@ -128,7 +129,7 @@ export class ResumoFinanceiroComponent {
       },
       {
         icon: PackageSearch,
-        label: "CEGs Abertas",
+        label: "CEGs abertas",
         value: String(this.cegsAbertas()),
         sub: "grupos em andamento",
         accent: "neutral",
@@ -141,25 +142,25 @@ export class ResumoFinanceiroComponent {
     const p = this.resumo().pipeline;
     return [
       {
-        label: "Pendentes",
+        label: "pendentes",
         count: p.pendente,
         color: "bg-amber-400",
         textColor: "text-amber-700",
         bgColor: "bg-amber-50",
       },
       {
-        label: "Aguardando pagamento",
+        label: "aguardando pagamento",
         count: p.aguardandoPagamento,
         color: "bg-blue-400",
         textColor: "text-blue-700",
         bgColor: "bg-blue-50",
       },
       {
-        label: "Comprados",
+        label: "pagos",
         count: p.comprado,
-        color: "bg-emerald-500",
-        textColor: "text-emerald-700",
-        bgColor: "bg-emerald-50",
+        color: "bg-lime-500",
+        textColor: "text-lime-700",
+        bgColor: "bg-lime-50",
       },
     ];
   });

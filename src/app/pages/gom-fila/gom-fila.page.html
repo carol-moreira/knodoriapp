@@ -1,1 +1,24 @@
-<app-fila-mercari [solicitacoes]="solicitacoes()" (statusChange)="handleStatusChange($event)" />
+<div class="space-y-8">
+  <app-fila-mercari
+    [solicitacoes]="solicitacoes()"
+    (statusChange)="handleStatusChange($event)"
+    (verProof)="proofPedido.set($event)"
+  />
+  <app-caixas-mercari />
+</div>
+
+<!-- Modais fora do container espaçado -->
+<app-confirmar-compra-modal
+  [open]="!!confirmandoSol()"
+  [solicitacao]="confirmandoSol()"
+  [caixas]="cegs.caixasAbertas()"
+  [proximaCaixa]="proximaCaixa()"
+  (closed)="confirmandoId.set(null)"
+  (confirmed)="handleConfirmarCompra($event)"
+/>
+<app-image-lightbox
+  [open]="!!proofPedido()"
+  [images]="proofPedido()?.proofs ?? []"
+  [initialIndex]="0"
+  (closed)="proofPedido.set(null)"
+/>

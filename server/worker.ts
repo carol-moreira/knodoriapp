@@ -28,7 +28,7 @@ export default {
     try {
       // POST /api/pricing — antes era a server function calcularPrecoFn
       if (url.pathname === "/api/pricing") {
-        if (request.method !== "POST") return json({ message: "Método não permitido." }, 405);
+        if (request.method !== "POST") return json({ message: "método não permitido." }, 405);
 
         let body: unknown;
         try {
@@ -39,19 +39,19 @@ export default {
 
         const parsed = PricingInputSchema.safeParse(body);
         if (!parsed.success) {
-          return json({ message: parsed.error.issues[0]?.message ?? "Entrada inválida." }, 400);
+          return json({ message: parsed.error.issues[0]?.message ?? "entrada inválida." }, 400);
         }
 
         return json(await calcularPreco(parsed.data));
       }
 
-      if (url.pathname.startsWith("/api/")) return json({ message: "Não encontrado." }, 404);
+      if (url.pathname.startsWith("/api/")) return json({ message: "não encontrado." }, 404);
 
       // Qualquer outra rota: arquivos estáticos do Angular (SPA fallback no wrangler.jsonc)
       return env.ASSETS.fetch(request);
     } catch (error) {
       console.error(error);
-      return json({ message: "Erro interno no servidor." }, 500);
+      return json({ message: "erro interno no servidor." }, 500);
     }
   },
 };

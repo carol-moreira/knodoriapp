@@ -53,14 +53,14 @@ export class OnboardingScreenComponent {
 
   // Validações
   protected readonly nomeError = computed(() =>
-    this.touched().nome && this.nome().trim().length < 2 ? "Mínimo de 2 caracteres." : "",
+    this.touched().nome && this.nome().trim().length < 2 ? "mínimo de 2 caracteres." : "",
   );
   protected readonly rawUsername = computed(() => this.username().replace(/^@/, ""));
   protected readonly usernameError = computed(() => {
     const raw = this.rawUsername();
-    if (this.touched().username && raw.length < 3) return "Mínimo de 3 caracteres.";
+    if (this.touched().username && raw.length < 3) return "mínimo de 3 caracteres.";
     if (this.touched().username && /[^a-z0-9_.]/i.test(raw))
-      return "Use apenas letras, números, _ e .";
+      return "use apenas letras, números, _ e .";
     return "";
   });
 
@@ -118,11 +118,11 @@ export class OnboardingScreenComponent {
     const file = (e.target as HTMLInputElement).files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      this.error.set("Selecione uma imagem (JPG, PNG, WebP).");
+      this.error.set("selecione uma imagem (JPG, PNG, WebP).");
       return;
     }
     if (file.size > 4 * 1024 * 1024) {
-      this.error.set("Imagem muito grande. Máximo 4 MB.");
+      this.error.set("imagem muito grande. máximo 4 MB.");
       return;
     }
     this.error.set("");
@@ -153,7 +153,7 @@ export class OnboardingScreenComponent {
       await this.auth.completeOnboarding(data);
       this.complete.emit();
     } catch (err) {
-      this.error.set(err instanceof Error ? err.message : "Erro ao salvar perfil.");
+      this.error.set(err instanceof Error ? err.message : "erro ao salvar perfil.");
     } finally {
       this.loading.set(false);
     }

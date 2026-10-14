@@ -8,8 +8,8 @@
     class="sticky top-0 flex items-center justify-between border-b border-border/60 bg-card px-6 py-4"
   >
     <div>
-      <h2 class="text-base font-bold">Configurações de Perfil</h2>
-      <p class="text-[11px] text-muted-foreground mt-0.5">Edite suas informações pessoais</p>
+      <h2 class="text-base font-bold">configurações de perfil</h2>
+      <p class="text-[11px] text-muted-foreground mt-0.5">edite suas informações pessoais</p>
     </div>
     <button
       type="button"
@@ -27,7 +27,7 @@
         @if (avatarPreview()?.startsWith("data:")) {
           <img
             [src]="avatarPreview()"
-            alt="Foto de perfil"
+            alt="foto de perfil"
             class="h-20 w-20 rounded-2xl object-cover ring-2 ring-primary/20"
           />
         } @else {
@@ -52,7 +52,7 @@
           (change)="handleAvatarChange($event)"
         />
       </div>
-      <p class="text-xs text-muted-foreground">Clique no ícone para trocar a foto</p>
+      <p class="text-xs text-muted-foreground">clique no ícone para trocar a foto</p>
     </div>
 
     <!-- ── Campos ─────────────────────────────────────────────────── -->
@@ -61,13 +61,13 @@
       <div class="space-y-1.5">
         <label class="flex items-center gap-1.5 text-xs font-semibold">
           <svg [appIcon]="icons.User" class="h-3.5 w-3.5 text-muted-foreground"></svg>
-          Nome
+          nome
         </label>
         <input
           type="text"
           [value]="nome()"
           (input)="nome.set(val($event))"
-          placeholder="Seu nome completo"
+          placeholder="seu nome completo"
           [class]="INPUT_CLS"
         />
       </div>
@@ -91,7 +91,7 @@
       <div class="space-y-1.5">
         <label class="flex items-center gap-1.5 text-xs font-semibold">
           <svg [appIcon]="icons.Phone" class="h-3.5 w-3.5 text-muted-foreground"></svg>
-          Número de telefone
+          número de telefone
         </label>
         <input
           type="tel"
@@ -106,12 +106,12 @@
       <div class="space-y-1.5">
         <label class="flex items-center gap-1.5 text-xs font-semibold">
           <svg [appIcon]="icons.Heart" class="h-3.5 w-3.5 text-muted-foreground"></svg>
-          Faves (grupos &amp; idols)
+          faves (grupos &amp; idols)
         </label>
         <textarea
           [value]="faves()"
           (input)="faves.set(val($event))"
-          placeholder="Ex: TWICE, aespa, ITZY&#10;Bias: Nayeon, Karina, Ryujin"
+          placeholder="me conta, quais são seus faves? idols, grupos, artistas, etc."
           rows="3"
           [class]="INPUT_CLS + ' resize-none'"
         ></textarea>
@@ -121,7 +121,7 @@
       <div class="space-y-1.5">
         <label class="flex items-center gap-1.5 text-xs font-semibold">
           <svg [appIcon]="icons.Link2" class="h-3.5 w-3.5 text-muted-foreground"></svg>
-          Wishlist
+          wishlist
         </label>
         <div class="space-y-2">
           <input
@@ -134,10 +134,10 @@
           <button
             type="button"
             (click)="wishInput.click()"
-            class="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border py-2 text-xs font-medium text-muted-foreground transition hover:border-primary/40 hover:text-primary"
+            class="flex w-full items-center justify-center gap-2 rounded-pill border border-dashed border-border py-2 text-xs font-medium text-muted-foreground transition hover:border-primary/40 hover:text-primary"
           >
             <svg [appIcon]="icons.Upload" class="h-3.5 w-3.5"></svg>
-            Ou envie um arquivo
+            ou envie um arquivo
           </button>
           <input
             #wishInput
@@ -147,7 +147,7 @@
             (change)="handleWishlistFile($event)"
           />
           @if (wishlistUrl() && !wishlistUrl().startsWith("http")) {
-            <p class="text-[11px] text-emerald-600 flex items-center gap-1">
+            <p class="text-[11px] text-lime-600 flex items-center gap-1">
               <svg [appIcon]="icons.CheckCircle2" class="h-3 w-3"></svg> {{ wishlistUrl() }}
             </p>
           }
@@ -162,12 +162,12 @@
         <div class="grid h-7 w-7 place-items-center rounded-lg bg-primary/10">
           <svg [appIcon]="icons.Palette" class="h-3.5 w-3.5 text-primary"></svg>
         </div>
-        <span class="text-sm font-semibold">Aparência</span>
+        <span class="text-sm font-semibold">aparência</span>
       </div>
 
       <!-- ── Modo de exibição ─────────────────────────────────────── -->
       <div class="space-y-2">
-        <p class="text-xs font-medium text-muted-foreground">Modo de exibição</p>
+        <p class="text-xs font-medium text-muted-foreground">modo de exibição</p>
         <div class="grid grid-cols-2 gap-1.5 rounded-xl border border-border bg-muted/40 p-1">
           @for (m of modes; track m.value) {
             <button
@@ -192,7 +192,7 @@
 
       <!-- ── Tema de cores ────────────────────────────────────────── -->
       <div class="space-y-3">
-        <p class="text-xs font-medium text-muted-foreground">Tema de cores</p>
+        <p class="text-xs font-medium text-muted-foreground">tema de cores</p>
 
         <div class="grid grid-cols-3 gap-2">
           @for (t of themes; track t) {
@@ -207,10 +207,10 @@
       <!-- Live preview pill -->
       <div class="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">
         <span class="h-2.5 w-2.5 rounded-full bg-primary transition-colors"></span>
-        <span class="text-xs text-muted-foreground">Prévia —</span>
+        <span class="text-xs text-muted-foreground">prévia —</span>
         <span class="text-xs font-semibold text-primary transition-colors">
           {{ THEME_META[theme.colorTheme()].label }} ·
-          {{ theme.mode() === "dark" ? "Escuro" : "Claro" }}
+          {{ theme.mode() === "dark" ? "escuro" : "claro" }}
         </span>
       </div>
     </div>
@@ -222,7 +222,7 @@
         (click)="closed.emit()"
         class="flex-1 rounded-2xl border border-border py-2.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
       >
-        Cancelar
+        cancelar
       </button>
       <button
         type="button"
@@ -233,7 +233,7 @@
         @if (saved()) {
           <svg [appIcon]="icons.CheckCircle2" class="h-4 w-4"></svg>
         }
-        {{ saving() ? "Salvando…" : saved() ? "Salvo!" : "Salvar perfil" }}
+        {{ saving() ? "salvando…" : saved() ? "salvo!" : "salvar perfil" }}
       </button>
     </div>
   </div>

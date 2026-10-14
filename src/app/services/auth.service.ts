@@ -21,6 +21,16 @@ const MOCK_EXISTING_USER: AuthUser = {
   avatarUrl: undefined,
 };
 
+/** Joiner de teste: mesma id ("j1") dos pedidos mock da fila Mercari. */
+const MOCK_JOINER_USER: AuthUser = {
+  id: "j1",
+  email: "bia@knodori.app",
+  username: "@miniheart",
+  nome: "Bia Costa",
+  role: "JOINER",
+  avatarUrl: undefined,
+};
+
 const MOCK_GOOGLE_USER: AuthUser = {
   id: "usr_google_01",
   email: "user@gmail.com",
@@ -56,12 +66,13 @@ export class AuthService {
         : email.startsWith("gom@")
           ? "GOM"
           : "JOINER";
-      this._user.set({ ...MOCK_EXISTING_USER, email, role });
+      const base = role === "JOINER" ? MOCK_JOINER_USER : MOCK_EXISTING_USER;
+      this._user.set({ ...base, email, role });
       this._needsOnboarding.set(false);
       this._status.set("authenticated");
     } catch {
       this._status.set("unauthenticated");
-      throw new Error("Credenciais inválidas. Verifique e-mail e senha.");
+      throw new Error("credenciais inválidas. verifique e-mail e senha.");
     }
   }
 
@@ -86,7 +97,7 @@ export class AuthService {
       this._status.set("authenticated");
     } catch {
       this._status.set("unauthenticated");
-      throw new Error("Não foi possível criar a conta. Tente novamente.");
+      throw new Error("não foi possível criar a conta. tente novamente.");
     }
   }
 
@@ -103,7 +114,7 @@ export class AuthService {
       this._status.set("authenticated");
     } catch {
       this._status.set("unauthenticated");
-      throw new Error("Login com Google falhou. Tente novamente.");
+      throw new Error("login com google falhou. tente novamente.");
     }
   }
 
@@ -120,7 +131,7 @@ export class AuthService {
       this._status.set("authenticated");
     } catch {
       this._status.set("authenticated");
-      throw new Error("Erro ao salvar perfil. Tente novamente.");
+      throw new Error("erro ao salvar perfil. tente novamente.");
     }
   }
 

@@ -67,15 +67,15 @@ export class ConfiguracoesCoreComponent {
   protected readonly stats = computed(() => {
     const s = this.dbStatus();
     return [
-      { label: "Latência", value: `${s.latenciaMs} ms`, ok: s.latenciaMs < 50, sub: undefined },
+      { label: "latência", value: `${s.latenciaMs} ms`, ok: s.latenciaMs < 50, sub: undefined },
       {
-        label: "Conexões ativas",
+        label: "conexões ativas",
         value: `${s.conexoesAtivas} / ${s.conexoesMax}`,
         ok: this.pctConexoes() < 80,
         sub: undefined,
       },
       {
-        label: "Última migração",
+        label: "última migração",
         value: s.versaoMigracao,
         ok: true,
         sub: fmtDatetime(s.ultimaMigracao),
@@ -86,7 +86,7 @@ export class ConfiguracoesCoreComponent {
   protected poolBarClass(): string {
     const p = this.pctConexoes();
     return `h-full rounded-full transition-all ${
-      p > 80 ? "bg-red-500" : p > 60 ? "bg-amber-400" : "bg-emerald-500"
+      p > 80 ? "bg-red-500" : p > 60 ? "bg-amber-400" : "bg-lime-500"
     }`;
   }
 
@@ -111,7 +111,7 @@ export class ConfiguracoesCoreComponent {
   });
 
   protected levelClass(l: LevelFilter): string {
-    return `rounded-lg px-2.5 py-1 text-[10px] font-bold transition-all ${
+    return `rounded-pill px-2.5 py-1 text-[10px] font-bold transition-all ${
       this.filtroLevel() === l
         ? "bg-primary text-primary-foreground"
         : "text-muted-foreground hover:text-foreground"

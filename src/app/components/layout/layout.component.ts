@@ -5,6 +5,7 @@ import { toSignal } from "@angular/core/rxjs-interop";
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from "@angular/router";
 import {
   BarChart2,
+  Bell,
   Calculator,
   FileText,
   Heart,
@@ -20,6 +21,7 @@ import {
 import { filter, map } from "rxjs";
 import type { UserRole } from "@/lib/auth";
 import { AuthService } from "@/services/auth.service";
+import { NotificacoesService } from "@/services/notificacoes.service";
 import { IconDirective } from "@/shared/icon.directive";
 import { ProfileSettingsModalComponent } from "../auth/profile-settings-modal/profile-settings-modal.component";
 
@@ -37,24 +39,25 @@ type NavItem = { to: string; label: string; icon: LucideIconData; exact?: boolea
 
 export const NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
   ADMIN: [
-    { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-    { to: "/admin/metricas", label: "Métricas", icon: BarChart2 },
-    { to: "/admin/usuarios", label: "Usuários", icon: Users },
-    { to: "/admin/configuracoes", label: "Configurações", icon: Settings2 },
+    { to: "/admin", label: "dashboard", icon: LayoutDashboard, exact: true },
+    { to: "/admin/metricas", label: "métricas", icon: BarChart2 },
+    { to: "/admin/usuarios", label: "usuários", icon: Users },
+    { to: "/admin/configuracoes", label: "configurações", icon: Settings2 },
   ],
   GOM: [
-    { to: "/gom", label: "Dashboard", icon: LayoutDashboard, exact: true },
+    { to: "/gom", label: "dashboard", icon: LayoutDashboard, exact: true },
     { to: "/gom/cegs", label: "CEGs", icon: Layers },
-    { to: "/gom/financeiro", label: "Financeiro", icon: BarChart2 },
-    { to: "/gom/fila", label: "Fila Mercari", icon: ShoppingBag },
-    { to: "/gom/joiners", label: "Joiners", icon: Users },
-    { to: "/gom/taxas", label: "Taxas", icon: Settings2 },
+    { to: "/gom/financeiro", label: "financeiro", icon: BarChart2 },
+    { to: "/gom/fila", label: "fila mercari", icon: ShoppingBag },
+    { to: "/gom/joiners", label: "joiners", icon: Users },
+    { to: "/gom/taxas", label: "taxas", icon: Settings2 },
   ],
   JOINER: [
-    { to: "/joiner", label: "Dashboard", icon: LayoutDashboard, exact: true },
-    { to: "/joiner/compras", label: "Minhas Compras", icon: ShoppingBag },
-    { to: "/calculadora", label: "Calculadora", icon: Calculator },
-    { to: "/joiner/extrato", label: "Extrato", icon: FileText },
+    { to: "/joiner", label: "dashboard", icon: LayoutDashboard, exact: true },
+    { to: "/joiner/compras", label: "minhas compras", icon: ShoppingBag },
+    { to: "/joiner/cegs", label: "minhas CEGs", icon: Layers },
+    { to: "/calculadora", label: "calculadora", icon: Calculator },
+    { to: "/joiner/extrato", label: "extrato", icon: FileText },
   ],
 };
 
@@ -91,7 +94,9 @@ export class LayoutComponent {
   protected readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
-  protected readonly icons = { Heart, Settings, LogOut };
+  protected readonly notificacoes = inject(NotificacoesService);
+
+  protected readonly icons = { Bell, Heart, Settings, LogOut };
   protected readonly menuPosition = MENU_POSITION;
 
   protected readonly profileOpen = signal(false);
@@ -127,6 +132,15 @@ export class LayoutComponent {
     if (presetEmoji) return { kind: "emoji" as const, emoji: presetEmoji };
     return { kind: "initials" as const, initials: user.nome.slice(0, 2).toUpperCase() };
   });
+
+  protected fmtNotificacao(iso: string): string {
+    return new Date(iso).toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
 
   protected isActive(item: NavItem): boolean {
     const path = this.path();

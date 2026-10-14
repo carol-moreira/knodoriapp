@@ -1,4 +1,4 @@
-import { Component, computed, signal } from "@angular/core";
+import { Component, computed, inject, signal } from "@angular/core";
 import { Calculator } from "lucide-angular";
 import {
   ComunicadoModalComponent,
@@ -6,7 +6,7 @@ import {
 } from "@/components/gom/comunicado-modal/comunicado-modal.component";
 import { ResumoFinanceiroComponent } from "@/components/gom/resumo-financeiro/resumo-financeiro.component";
 import { SimuladorCotacaoComponent } from "@/components/joiner/simulador-cotacao/simulador-cotacao.component";
-import { MOCK_SOLICITACOES, type SolicitacaoGOM } from "@/lib/gom-types";
+import { PedidosMercariService } from "@/services/pedidos-mercari.service";
 import { IconDirective } from "@/shared/icon.directive";
 
 /** Rota "/gom/financeiro". */
@@ -24,8 +24,8 @@ import { IconDirective } from "@/shared/icon.directive";
 export class GomFinanceiroPage {
   protected readonly icons = { Calculator };
 
-  // 🔌 substituir por HttpClient.get(`/api/gom/${gomId}/solicitacoes`)
-  protected readonly solicitacoes = signal<SolicitacaoGOM[]>(MOCK_SOLICITACOES);
+  private readonly pedidos = inject(PedidosMercariService);
+  protected readonly solicitacoes = this.pedidos.solicitacoes;
   protected readonly comunicandoId = signal<string | null>(null);
 
   protected readonly comunicandoSol = computed(
@@ -33,10 +33,7 @@ export class GomFinanceiroPage {
   );
 
   protected handleConfirmar({ id }: ComunicadoConfirm): void {
-    // 🔌 await fetch(`/api/gom/${gomId}/solicitacoes/${id}`, { method: "PATCH", body: JSON.stringify({ status: "COMPRADO" }) })
-    this.solicitacoes.update((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, status: "COMPRADO" as const } : s)),
-    );
+    this.pedidos.alterarStatus(id, "PAGO");
     this.comunicandoId.set(null);
   }
 }

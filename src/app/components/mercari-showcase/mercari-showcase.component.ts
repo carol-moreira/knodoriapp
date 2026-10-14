@@ -30,11 +30,11 @@ type SolicitacaoMercari = {
 
 // Dicionário para traduzir as chaves do carrinho para labels legíveis
 const ITEM_LABELS: Record<string, string> = {
-  photocard: "Photocard",
-  pequeno: "Merch Peq.",
-  pelucia_pequena: "Pelúcia Peq.",
-  album: "Álbum",
-  grande: "Item Grande",
+  photocard: "photocard",
+  pequeno: "merch peq.",
+  pelucia_pequena: "pelúcia peq.",
+  album: "álbum",
+  grande: "item grande",
 };
 
 // Mock atualizado simulando os pedidos com múltiplos itens enviados pelos Joiners
@@ -78,15 +78,15 @@ const MOCK_SOLICITACOES: SolicitacaoMercari[] = [
 ];
 
 const STATUS_CONFIG: Record<RequestStatus, { label: string; cls: string; icon: LucideIconData }> = {
-  PENDENTE: { label: "Pendente", cls: "bg-amber-50 text-amber-700 ring-amber-200", icon: Clock },
+  PENDENTE: { label: "pendente", cls: "bg-amber-50 text-amber-700 ring-amber-200", icon: Clock },
   AGUARDANDO_PAGAMENTO: {
-    label: "Aguardando Pgto",
+    label: "aguardando pgto",
     cls: "bg-blue-50 text-blue-700 ring-blue-200",
     icon: DollarSign,
   },
   COMPRADO: {
-    label: "Comprado ✓",
-    cls: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+    label: "comprado ✓",
+    cls: "bg-lime-50 text-lime-700 ring-lime-200",
     icon: CheckCircle,
   },
 };

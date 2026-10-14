@@ -1,7 +1,7 @@
 <form (submit)="handleSubmit($event)" class="space-y-4" novalidate>
   <!-- E-mail -->
   <div class="space-y-1.5">
-    <label [class]="labelCls">E-mail</label>
+    <label [class]="labelCls">e-mail</label>
     <input
       type="email"
       [value]="email()"
@@ -21,14 +21,14 @@
 
   <!-- Senha -->
   <div class="space-y-1.5">
-    <label [class]="labelCls">Senha</label>
+    <label [class]="labelCls">senha</label>
     <div class="relative">
       <input
         [type]="showPassword() ? 'text' : 'password'"
         [value]="password()"
         (input)="password.set(val($event))"
         (blur)="touch('password')"
-        placeholder="Mín. 8 caracteres"
+        placeholder="mín. 8 caracteres"
         autocomplete="new-password"
         [class]="inputCls(!!passwordError()) + ' pr-11'"
       />
@@ -72,7 +72,7 @@
           <li
             [class]="
               'flex items-center gap-1 text-[10px] ' +
-              (req.ok ? 'text-emerald-600' : 'text-muted-foreground')
+              (req.ok ? 'text-lime-600' : 'text-muted-foreground')
             "
           >
             @if (req.ok) {
@@ -89,13 +89,13 @@
 
   <!-- Confirmar senha -->
   <div class="space-y-1.5">
-    <label [class]="labelCls">Confirmar senha</label>
+    <label [class]="labelCls">confirmar senha</label>
     <input
       [type]="showPassword() ? 'text' : 'password'"
       [value]="confirm()"
       (input)="confirm.set(val($event))"
       (blur)="touch('confirm')"
-      placeholder="Repita a senha"
+      placeholder="repita a senha"
       autocomplete="new-password"
       [class]="inputCls(!!confirmError())"
     />
@@ -106,8 +106,8 @@
       </p>
     }
     @if (touched().confirm && !confirmError() && confirm().length > 0) {
-      <p class="flex items-center gap-1 text-[10px] text-emerald-600">
-        <svg [appIcon]="icons.CheckCircle2" class="h-3 w-3"></svg> Senhas coincidem!
+      <p class="flex items-center gap-1 text-[10px] text-lime-600">
+        <svg [appIcon]="icons.CheckCircle2" class="h-3 w-3"></svg> senhas coincidem!
       </p>
     }
   </div>
@@ -129,14 +129,14 @@
   >
     @if (loading()) {
       <span class="flex items-center justify-center gap-2">
-        <svg [appIcon]="icons.Loader2" class="h-4 w-4 animate-spin"></svg> Criando conta…
+        <svg [appIcon]="icons.Loader2" class="h-4 w-4 animate-spin"></svg> criando conta…
       </span>
     } @else {
-      Criar conta
+      criar conta
     }
   </button>
 
   <p class="text-center text-[10px] text-muted-foreground">
-    Ao criar uma conta, você concorda com os termos de uso da plataforma.
+    ao criar uma conta, você concorda com os termos de uso da plataforma.
   </p>
 </form>

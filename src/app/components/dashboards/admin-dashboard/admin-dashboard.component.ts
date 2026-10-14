@@ -133,26 +133,26 @@ const TICKET_STATUS_META: Record<
   { label: string; badge: string; icon: LucideIconData }
 > = {
   ABERTO: {
-    label: "Aberto",
+    label: "aberto",
     badge: "bg-red-50 text-red-700 ring-1 ring-red-200",
     icon: AlertCircle,
   },
   EM_ATENDIMENTO: {
-    label: "Em atendimento",
+    label: "em atendimento",
     badge: "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
     icon: Loader2,
   },
   RESOLVIDO: {
-    label: "Resolvido",
-    badge: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
+    label: "resolvido",
+    badge: "bg-lime-50 text-lime-700 ring-1 ring-lime-200",
     icon: CheckCircle2,
   },
 };
 
 const PRIORIDADE_META: Record<TicketPrioridade, { label: string; badge: string }> = {
-  ALTA: { label: "Alta", badge: "bg-red-100 text-red-700 font-bold" },
-  MEDIA: { label: "Média", badge: "bg-amber-100 text-amber-700 font-semibold" },
-  BAIXA: { label: "Baixa", badge: "bg-muted text-muted-foreground" },
+  ALTA: { label: "alta", badge: "bg-red-100 text-red-700 font-bold" },
+  MEDIA: { label: "média", badge: "bg-amber-100 text-amber-700 font-semibold" },
+  BAIXA: { label: "baixa", badge: "bg-muted text-muted-foreground" },
 };
 
 @Component({

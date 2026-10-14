@@ -22,11 +22,11 @@ export const DEFAULT_THEME: ColorTheme = "classic-elegance";
 /** Nome exibido + as 3 cores da paleta original (prévia no seletor de tema). */
 export const THEME_META: Record<ColorTheme, { label: string; palette: [string, string, string] }> =
   {
-    "classic-elegance": { label: "Classic Elegance", palette: ["#0f3f49", "#ece6df", "#7f0508"] },
-    "winter-frost": { label: "Winter Frost", palette: ["#d9e7f8", "#6371a2", "#56021e"] },
-    "matcha-latte": { label: "Matcha Latte", palette: ["#f7cf89", "#83965f", "#4f5139"] },
-    "spring-blossom": { label: "Spring Blossom", palette: ["#d1f985", "#ffe1e7", "#fc97b7"] },
-    "berry-vanilla": { label: "Berry Vanilla", palette: ["#da6c81", "#f5e9d0", "#bf2b54"] },
+    "classic-elegance": { label: "classic elegance", palette: ["#06141b", "#b4c6d7", "#043a51"] },
+    "winter-frost": { label: "winter frost", palette: ["#d9e7f8", "#6371a2", "#56021e"] },
+    "matcha-latte": { label: "matcha latte", palette: ["#f7cf89", "#83965f", "#4f5139"] },
+    "spring-blossom": { label: "spring blossom", palette: ["#d1f985", "#ffe1e7", "#fc97b7"] },
+    "berry-vanilla": { label: "berry vanilla", palette: ["#da6c81", "#f5e9d0", "#bf2b54"] },
   };
 
 function readStorage(key: string): string | null {

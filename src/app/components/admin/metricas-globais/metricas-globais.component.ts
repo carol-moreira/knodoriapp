@@ -24,7 +24,7 @@ interface Kpi {
 const ICON_CLS: Record<KpiColor, string> = {
   cherry: "text-primary",
   blue: "text-blue-500",
-  emerald: "text-emerald-500",
+  emerald: "text-lime-500",
 };
 
 function brl(v: number) {
@@ -59,21 +59,21 @@ export class MetricasGlobaisComponent {
     return [
       {
         icon: TrendingUp,
-        label: "Faturamento global",
+        label: "faturamento global",
         value: brl(totalFaturamento),
         trend: tendFat,
         color: "cherry",
       },
       {
         icon: ShoppingBag,
-        label: "Volume de vendas",
+        label: "volume de vendas",
         value: `${totalVendas} pedidos`,
         trend: tendVend,
         color: "blue",
       },
       {
         icon: Activity,
-        label: "Tráfego total",
+        label: "tráfego total",
         value: `${totalSolicits} solicit.`,
         trend: tendSol,
         color: "emerald",
@@ -86,7 +86,7 @@ export class MetricasGlobaisComponent {
   }
 
   protected trendClass(kpi: Kpi): string {
-    return `text-[10px] font-semibold ${kpi.trend >= 0 ? "text-emerald-600" : "text-red-500"}`;
+    return `text-[10px] font-semibold ${kpi.trend >= 0 ? "text-lime-600" : "text-red-500"}`;
   }
 
   protected trendText(kpi: Kpi): string {

@@ -8,7 +8,7 @@
     </div>
     <div>
       <h1 class="text-xl font-bold tracking-tight leading-tight">
-        Olá, {{ auth.user()?.nome ?? "Joiner" }} 👋
+        olá, {{ auth.user()?.nome ?? "joiner" }} ── .✦
       </h1>
       <p class="text-xs text-muted-foreground">{{ auth.user()?.username }}</p>
     </div>
@@ -30,7 +30,7 @@
         </div>
         @if (card.alert) {
           <span class="cozy-pill self-start bg-blue-100 text-[10px] font-bold text-blue-700">
-            Ação necessária
+            ação necessária
           </span>
         }
       </a>
@@ -44,7 +44,7 @@
         <div class="grid h-7 w-7 place-items-center rounded-lg bg-blue-50 text-blue-600">
           <svg [appIcon]="icons.CreditCard" class="h-3.5 w-3.5"></svg>
         </div>
-        <h2 class="text-sm font-semibold">Pagamento pendente</h2>
+        <h2 class="text-sm font-semibold">pagamento pendente</h2>
         <span
           class="cozy-pill ml-auto bg-blue-50 text-[10px] font-bold text-blue-700 ring-1 ring-blue-200"
         >
@@ -64,9 +64,9 @@
               <span class="text-sm font-bold">{{ brl(p.valorBrl) }}</span>
               <a
                 routerLink="/joiner/compras"
-                class="rounded-xl bg-primary px-3 py-1.5 text-[11px] font-bold text-primary-foreground transition hover:opacity-90"
+                class="rounded-pill bg-primary px-3 py-1.5 text-[11px] font-bold text-primary-foreground transition hover:opacity-90"
               >
-                Ver pedido
+                ver pedido
               </a>
             </div>
           </div>
@@ -82,7 +82,7 @@
         <div class="grid h-7 w-7 place-items-center rounded-lg bg-sky-50 text-sky-600">
           <svg [appIcon]="icons.Truck" class="h-3.5 w-3.5"></svg>
         </div>
-        <h2 class="text-sm font-semibold">A caminho</h2>
+        <h2 class="text-sm font-semibold">a caminho</h2>
         <span
           class="cozy-pill ml-auto bg-sky-50 text-[10px] font-bold text-sky-700 ring-1 ring-sky-200"
         >
@@ -106,7 +106,7 @@
             <span
               class="cozy-pill shrink-0 bg-sky-50 text-[10px] font-semibold text-sky-700 ring-1 ring-sky-200"
             >
-              Em trânsito
+              em trânsito
             </span>
           </div>
         }
@@ -117,7 +117,7 @@
   <!-- Atalhos rápidos -->
   <section class="space-y-2">
     <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-      Acesso rápido
+      acesso rápido
     </p>
     <div class="grid gap-2 sm:grid-cols-3">
       @for (s of shortcuts; track s.to) {

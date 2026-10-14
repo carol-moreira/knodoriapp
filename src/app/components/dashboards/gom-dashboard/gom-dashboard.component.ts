@@ -1,12 +1,8 @@
 import { Component, computed, inject, signal } from "@angular/core";
 import { AlertCircle, CheckCircle2, Clock, Layers, Package, Users } from "lucide-angular";
-import {
-  MOCK_JOINERS,
-  MOCK_SOLICITACOES,
-  type MercariStatus,
-  type SolicitacaoGOM,
-} from "@/lib/gom-types";
+import { MOCK_JOINERS, etapaMercari } from "@/lib/gom-types";
 import { AuthService } from "@/services/auth.service";
+import { PedidosMercariService } from "@/services/pedidos-mercari.service";
 import { IconDirective } from "@/shared/icon.directive";
 import { DashboardSectionComponent } from "./dashboard-section/dashboard-section.component";
 
@@ -58,10 +54,10 @@ const MOCK_CEGS: CegResumo[] = [
 ];
 
 const CEG_STATUS_META: Record<CegStatus, { label: string; badge: string }> = {
-  ABERTA: { label: "Aberta", badge: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" },
-  EM_COMPRA: { label: "Em compra", badge: "bg-blue-50 text-blue-700 ring-1 ring-blue-200" },
-  TRANSITO: { label: "Em trânsito", badge: "bg-sky-50 text-sky-700 ring-1 ring-sky-200" },
-  CHEGOU_BR: { label: "Chegou BR", badge: "bg-violet-50 text-violet-700 ring-1 ring-violet-200" },
+  ABERTA: { label: "aberta", badge: "bg-lime-50 text-lime-700 ring-1 ring-lime-200" },
+  EM_COMPRA: { label: "em compra", badge: "bg-blue-50 text-blue-700 ring-1 ring-blue-200" },
+  TRANSITO: { label: "em trânsito", badge: "bg-sky-50 text-sky-700 ring-1 ring-sky-200" },
+  CHEGOU_BR: { label: "chegou BR", badge: "bg-violet-50 text-violet-700 ring-1 ring-violet-200" },
 };
 
 interface PipelineRow {
@@ -85,8 +81,8 @@ export class GomDashboardComponent {
   protected readonly cegs = MOCK_CEGS;
   protected readonly CEG_STATUS_META = CEG_STATUS_META;
 
-  // 🔌 substituir por HttpClient.get(`/api/gom/${gomId}/solicitacoes`)
-  protected readonly solicitacoes = signal<SolicitacaoGOM[]>(MOCK_SOLICITACOES);
+  private readonly pedidos = inject(PedidosMercariService);
+  protected readonly solicitacoes = this.pedidos.solicitacoes;
 
   // Derivados do estado vivo — atualizam quando statuses mudam
   protected readonly pipeline = computed(() => {
@@ -94,7 +90,7 @@ export class GomDashboardComponent {
     return {
       pendente: sols.filter((s) => s.status === "PENDENTE").length,
       aguardandoPagamento: sols.filter((s) => s.status === "AGUARDANDO_PAGAMENTO").length,
-      comprado: sols.filter((s) => s.status === "COMPRADO").length,
+      comprado: sols.filter((s) => etapaMercari(s.status) >= etapaMercari("PAGO")).length,
       total: sols.length,
     };
   });
@@ -103,24 +99,24 @@ export class GomDashboardComponent {
     const p = this.pipeline();
     return [
       {
-        label: "Pendentes",
+        label: "pendentes",
         count: p.pendente,
         color: "bg-amber-400",
         textColor: "text-amber-700",
         alert: false,
       },
       {
-        label: "Aguardando pagamento",
+        label: "aguardando pagamento",
         count: p.aguardandoPagamento,
         color: "bg-blue-500",
         textColor: "text-blue-700",
         alert: p.aguardandoPagamento > 0,
       },
       {
-        label: "Comprados",
+        label: "pagos",
         count: p.comprado,
-        color: "bg-emerald-500",
-        textColor: "text-emerald-700",
+        color: "bg-lime-500",
+        textColor: "text-lime-700",
         alert: false,
       },
     ];
@@ -139,10 +135,7 @@ export class GomDashboardComponent {
   );
 
   protected handleConfirmarPagamento(id: string): void {
-    // 🔌 await fetch(`/api/gom/${gomId}/solicitacoes/${id}`, { method: "PATCH", body: JSON.stringify({ status: "COMPRADO" }) })
-    this.solicitacoes.update((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, status: "COMPRADO" as MercariStatus } : s)),
-    );
+    this.pedidos.alterarStatus(id, "PAGO");
   }
 
   protected pct(count: number): number {

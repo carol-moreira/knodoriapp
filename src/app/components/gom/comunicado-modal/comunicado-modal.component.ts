@@ -10,12 +10,12 @@ function brl(v: number) {
 }
 
 function buildDefaultMensagem(s: SolicitacaoGOM): string {
-  const pagamento = s.formaPagamento === "pix" ? "PIX" : `Cartão ${s.parcelas}×`;
+  const pagamento = s.formaPagamento === "pix" ? "PIX" : `cartão ${s.parcelas}×`;
   const itens = (Object.entries(s.itens) as [ItemKey, number][])
     .filter(([, q]) => q > 0)
     .map(([k, q]) => `${q}× ${ITEM_META[k]?.label ?? k}`)
     .join(", ");
-  return `Olá, ${s.joinerNome}! 🌸\n\nSeu pedido (${itens}) no valor de ${brl(s.valorBrl)} via ${pagamento} foi liberado!\n\nObrigada pela confiança. 💖\n— KNODORI`;
+  return `olá, ${s.joinerNome}! 🌸\n\nseu pedido (${itens}) no valor de ${brl(s.valorBrl)} via ${pagamento} foi liberado!\n\nobrigada pela confiança. 𑄝੭\n— KNODORI`;
 }
 
 export interface ComunicadoConfirm {

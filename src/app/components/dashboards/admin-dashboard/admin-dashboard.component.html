@@ -2,19 +2,19 @@
   <!-- Header -->
   <header>
     <h1 class="text-2xl font-bold tracking-tight">
-      Olá, {{ auth.user()?.nome }}
-      <span class="text-base font-normal text-muted-foreground">· Admin</span>
+      olá, {{ auth.user()?.nome }}
+      <span class="text-base font-normal text-muted-foreground">· admin</span>
     </h1>
-    <p class="mt-1 text-sm text-muted-foreground">Central de operações do ecossistema KNODORI.</p>
+    <p class="mt-1 text-sm text-muted-foreground">central de operações do ecossistema KNODORI.</p>
   </header>
 
   <!-- ── 1. GOMs ativas ──────────────────────────────────────────────── -->
   <app-painel-section
     [icon]="icons.ShieldCheck"
-    title="GOMs ativas"
+    title="GOMs ativos"
     [count]="gomsAtivas.length"
     href="/admin/usuarios"
-    linkLabel="Gerenciar usuários"
+    linkLabel="gerenciar usuários"
     iconColor="text-primary"
     iconBg="bg-primary/10"
   >
@@ -41,13 +41,13 @@
               <p class="text-[10px] text-muted-foreground">ativas</p>
             </div>
             <div class="text-right hidden sm:block">
-              <p class="text-[10px] text-muted-foreground">Último acesso</p>
+              <p class="text-[10px] text-muted-foreground">último acesso</p>
               <p class="text-xs font-medium">{{ fmtDate(gom.ultimaAtividade) }}</p>
             </div>
             <span
-              class="cozy-pill text-[10px] font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+              class="cozy-pill text-[10px] font-semibold bg-lime-50 text-lime-700 ring-1 ring-lime-200"
             >
-              Ativa
+              ativa
             </span>
           </div>
         </div>
@@ -58,11 +58,11 @@
   <!-- ── 2. Suportes solicitados ──────────────────────────────────────── -->
   <app-painel-section
     [icon]="icons.MessageSquare"
-    title="Suportes solicitados"
+    title="suportes solicitados"
     [count]="ticketsAbertos()"
     countLabel="em aberto"
     href="/admin/usuarios"
-    linkLabel="Ver todos"
+    linkLabel="ver todos"
     iconColor="text-blue-500"
     iconBg="bg-blue-50"
     [alert]="ticketsAbertos() > 0"
@@ -109,26 +109,26 @@
                 <button
                   type="button"
                   (click)="handleTicketStatus(ticket.id, 'EM_ATENDIMENTO')"
-                  class="rounded-xl bg-blue-100 px-3 py-1.5 text-[11px] font-semibold text-blue-800 transition hover:bg-blue-200"
+                  class="rounded-pill bg-blue-100 px-3 py-1.5 text-[11px] font-semibold text-blue-800 transition hover:bg-blue-200"
                 >
-                  Iniciar atendimento
+                  iniciar atendimento
                 </button>
               }
               @if (ticket.status === "EM_ATENDIMENTO") {
                 <button
                   type="button"
                   (click)="handleTicketStatus(ticket.id, 'RESOLVIDO')"
-                  class="rounded-xl bg-emerald-100 px-3 py-1.5 text-[11px] font-semibold text-emerald-800 transition hover:bg-emerald-200"
+                  class="rounded-pill bg-lime-100 px-3 py-1.5 text-[11px] font-semibold text-lime-800 transition hover:bg-lime-200"
                 >
-                  Marcar como resolvido
+                  marcar como resolvido
                 </button>
               }
               <button
                 type="button"
                 (click)="handleTicketStatus(ticket.id, 'RESOLVIDO')"
-                class="rounded-xl border border-border px-3 py-1.5 text-[11px] font-medium text-muted-foreground transition hover:bg-muted"
+                class="rounded-pill border border-border px-3 py-1.5 text-[11px] font-medium text-muted-foreground transition hover:bg-muted"
               >
-                Fechar
+                fechar
               </button>
             </div>
           }
@@ -140,15 +140,15 @@
   <!-- ── 3. Acessos GOM a liberar ────────────────────────────────────── -->
   <app-painel-section
     [icon]="icons.UserPlus"
-    title="Acessos GOM a liberar"
+    title="acessos GOM a liberar"
     [count]="pendentes()"
     countLabel="pendentes"
     href="/admin/usuarios"
-    linkLabel="Ver usuários"
+    linkLabel="ver usuários"
     iconColor="text-violet-600"
     iconBg="bg-violet-50"
     [alert]="pendentes() > 0"
-    emptyLabel="Nenhuma solicitação de acesso pendente."
+    emptyLabel="nenhuma solicitação de acesso pendente."
   >
     <div class="divide-y divide-border/50">
       @for (sol of solicitacoes(); track sol.id) {
@@ -172,24 +172,24 @@
             @switch (sol.status) {
               @case ("APROVADO") {
                 <span
-                  class="cozy-pill shrink-0 text-[10px] font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+                  class="cozy-pill shrink-0 text-[10px] font-semibold bg-lime-50 text-lime-700 ring-1 ring-lime-200"
                 >
                   <svg [appIcon]="icons.CheckCircle2" class="mr-0.5 inline h-2.5 w-2.5"></svg
-                  >Aprovado
+                  >aprovado
                 </span>
               }
               @case ("REJEITADO") {
                 <span
                   class="cozy-pill shrink-0 text-[10px] font-semibold bg-red-50 text-red-700 ring-1 ring-red-200"
                 >
-                  <svg [appIcon]="icons.XCircle" class="mr-0.5 inline h-2.5 w-2.5"></svg>Rejeitado
+                  <svg [appIcon]="icons.XCircle" class="mr-0.5 inline h-2.5 w-2.5"></svg>rejeitado
                 </span>
               }
               @case ("PENDENTE") {
                 <span
                   class="cozy-pill shrink-0 text-[10px] font-semibold bg-amber-50 text-amber-700 ring-1 ring-amber-200"
                 >
-                  <svg [appIcon]="icons.Clock" class="mr-0.5 inline h-2.5 w-2.5"></svg>Pendente
+                  <svg [appIcon]="icons.Clock" class="mr-0.5 inline h-2.5 w-2.5"></svg>pendente
                 </span>
               }
             }
@@ -200,7 +200,7 @@
             <p
               class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1"
             >
-              Justificativa
+              justificativa
             </p>
             <p class="text-xs text-foreground/80 line-clamp-2">{{ sol.justificativa }}</p>
           </div>
@@ -211,18 +211,18 @@
               <button
                 type="button"
                 (click)="handleAprovacao(sol.id, 'APROVADO')"
-                class="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-[11px] font-bold text-white transition hover:bg-emerald-700"
+                class="flex items-center gap-1.5 rounded-pill bg-lime-600 px-4 py-2 text-[11px] font-bold text-white transition hover:bg-lime-700"
               >
                 <svg [appIcon]="icons.CheckCircle2" class="h-3.5 w-3.5"></svg>
-                Aprovar acesso GOM
+                aprovar acesso GOM
               </button>
               <button
                 type="button"
                 (click)="handleAprovacao(sol.id, 'REJEITADO')"
-                class="flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-[11px] font-bold text-red-700 transition hover:bg-red-100"
+                class="flex items-center gap-1.5 rounded-pill border border-red-200 bg-red-50 px-4 py-2 text-[11px] font-bold text-red-700 transition hover:bg-red-100"
               >
                 <svg [appIcon]="icons.XCircle" class="h-3.5 w-3.5"></svg>
-                Rejeitar
+                rejeitar
               </button>
             </div>
           }

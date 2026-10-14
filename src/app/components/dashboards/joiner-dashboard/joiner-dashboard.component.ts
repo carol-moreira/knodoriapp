@@ -35,21 +35,21 @@ const MOCK_TODOS: PedidoResumo[] = [
     id: "p1",
     status: "AGUARDANDO_PIX",
     valorBrl: 142.8,
-    descricao: "2× Photocard · 1× Adesivo",
+    descricao: "2× photocard · 1× adesivo",
     gomUsername: "@knodori_gom",
   },
   {
     id: "p2",
     status: "PENDENTE",
     valorBrl: 79.5,
-    descricao: "3× Postcard · 2× Adesivo",
+    descricao: "3× postcard · 2× adesivo",
     gomUsername: "@knodori_gom",
   },
   {
     id: "p3",
     status: "EM_TRANSITO",
     valorBrl: 248.0,
-    descricao: "1× Álbum",
+    descricao: "1× álbum",
     gomUsername: "@knodori_gom",
     rastreio: "JP123456789BR",
   },
@@ -57,21 +57,21 @@ const MOCK_TODOS: PedidoResumo[] = [
     id: "p4",
     status: "PAGO",
     valorBrl: 89.9,
-    descricao: "1× Photocard · 2× Postcard",
+    descricao: "1× photocard · 2× postcard",
     gomUsername: "@knodori_gom",
   },
   {
     id: "p5",
     status: "CHEGOU",
     valorBrl: 315.0,
-    descricao: "3× Photocard",
+    descricao: "3× photocard",
     gomUsername: "@knodori_gom",
   },
   {
     id: "p6",
     status: "CHEGOU",
     valorBrl: 178.4,
-    descricao: "4× Postcard · 2× Adesivo",
+    descricao: "4× postcard · 2× adesivo",
     gomUsername: "@knodori_gom",
   },
 ];
@@ -89,7 +89,7 @@ type Accent = "primary" | "blue" | "emerald" | "neutral";
 const ACCENT: Record<Accent, { icon: string }> = {
   primary: { icon: "text-primary" },
   blue: { icon: "text-blue-500" },
-  emerald: { icon: "text-emerald-500" },
+  emerald: { icon: "text-lime-500" },
   neutral: { icon: "text-muted-foreground" },
 };
 
@@ -137,7 +137,7 @@ export class JoinerDashboardComponent {
   protected readonly metricCards: MetricCard[] = [
     {
       icon: ShoppingBag,
-      label: "Ativos",
+      label: "ativos",
       value: String(this.ativos),
       to: "/joiner/compras",
       accent: "primary",
@@ -146,7 +146,7 @@ export class JoinerDashboardComponent {
     },
     {
       icon: CreditCard,
-      label: "Aguardando PIX",
+      label: "aguardando PIX",
       value: String(this.aguardandoPix),
       to: "/joiner/compras",
       accent: this.aguardandoPix > 0 ? "blue" : "neutral",
@@ -155,7 +155,7 @@ export class JoinerDashboardComponent {
     },
     {
       icon: Package,
-      label: "Finalizados",
+      label: "finalizados",
       value: String(this.finalizados),
       to: "/joiner/extrato",
       accent: "emerald",
@@ -164,7 +164,7 @@ export class JoinerDashboardComponent {
     },
     {
       icon: TrendingUp,
-      label: "Total Movimentado",
+      label: "total movimentado",
       value: brl(this.totalMovimentado),
       to: "/joiner/extrato",
       accent: "neutral",
@@ -176,17 +176,17 @@ export class JoinerDashboardComponent {
   protected readonly shortcuts: ShortcutCard[] = [
     {
       icon: ShoppingBag,
-      label: "Minhas Compras",
-      desc: "Pedidos em andamento",
+      label: "minhas compras",
+      desc: "pedidos em andamento",
       to: "/joiner/compras",
     },
     {
       icon: Calculator,
-      label: "Calculadora",
-      desc: "Simule o valor antes de solicitar",
+      label: "calculadora",
+      desc: "simule o valor antes de solicitar",
       to: "/calculadora",
     },
-    { icon: FileText, label: "Extrato", desc: "Histórico e pendências", to: "/joiner/extrato" },
+    { icon: FileText, label: "extrato", desc: "histórico e pendências", to: "/joiner/extrato" },
   ];
 
   protected metricIconClass(card: MetricCard): string {
