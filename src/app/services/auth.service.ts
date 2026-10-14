@@ -61,7 +61,7 @@ export class AuthService {
       this._status.set("authenticated");
     } catch {
       this._status.set("unauthenticated");
-      throw new Error("Credenciais inválidas. Verifique e-mail e senha.");
+      throw new Error("credenciais inválidas. verifique e-mail e senha.");
     }
   }
 
@@ -86,7 +86,7 @@ export class AuthService {
       this._status.set("authenticated");
     } catch {
       this._status.set("unauthenticated");
-      throw new Error("Não foi possível criar a conta. Tente novamente.");
+      throw new Error("não foi possível criar a conta. tente novamente.");
     }
   }
 
@@ -103,7 +103,7 @@ export class AuthService {
       this._status.set("authenticated");
     } catch {
       this._status.set("unauthenticated");
-      throw new Error("Login com Google falhou. Tente novamente.");
+      throw new Error("login com google falhou. tente novamente.");
     }
   }
 
@@ -120,7 +120,7 @@ export class AuthService {
       this._status.set("authenticated");
     } catch {
       this._status.set("authenticated");
-      throw new Error("Erro ao salvar perfil. Tente novamente.");
+      throw new Error("erro ao salvar perfil. tente novamente.");
     }
   }
 

@@ -92,12 +92,12 @@ const MOCK_USERS: GlobalUser[] = [
 ];
 
 const SIDEBAR = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { id: "goms", label: "Gerenciar GOMs", icon: UserCog },
-  { id: "joiners", label: "Gerenciar Joiners", icon: Users },
-  { id: "cegs", label: "Todas CEGs Global", icon: Globe2 },
-  { id: "disputas", label: "Moderação de Disputas", icon: ShieldAlert },
-  { id: "config", label: "Configurações do Sistema", icon: Settings2 },
+  { id: "dashboard", label: "dashboard", icon: LayoutDashboard },
+  { id: "goms", label: "gerenciar GOMs", icon: UserCog },
+  { id: "joiners", label: "gerenciar joiners", icon: Users },
+  { id: "cegs", label: "todas CEGs global", icon: Globe2 },
+  { id: "disputas", label: "moderação de disputas", icon: ShieldAlert },
+  { id: "config", label: "configurações do sistema", icon: Settings2 },
 ] as const;
 
 type SidebarId = (typeof SIDEBAR)[number]["id"];
@@ -145,7 +145,7 @@ export class SuperAdminPanelComponent {
       },
       {
         icon: Users,
-        label: "Joiners ativos",
+        label: "joiners ativos",
         value: users.filter((u) => u.role === "JOINER" && u.status === "ATIVO").length,
       },
       {

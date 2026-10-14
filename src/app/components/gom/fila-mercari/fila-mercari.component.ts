@@ -25,21 +25,21 @@ const STATUS_META: Record<
   { label: string; icon: LucideIconData; badge: string; btn: string }
 > = {
   PENDENTE: {
-    label: "Pendente",
+    label: "pendente",
     icon: Clock,
     badge:
       "bg-amber-50 text-amber-700 ring-1 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-800",
     btn: "bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-900/60",
   },
   AGUARDANDO_PAGAMENTO: {
-    label: "Aguard. Pgto",
+    label: "aguard. pgto",
     icon: DollarSign,
     badge:
       "bg-blue-50 text-blue-700 ring-1 ring-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:ring-blue-800",
     btn: "bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60",
   },
   COMPRADO: {
-    label: "Comprado",
+    label: "comprado",
     icon: CheckCircle2,
     badge:
       "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-800",
@@ -48,10 +48,10 @@ const STATUS_META: Record<
 };
 
 const FILTER_TABS: { id: StatusFilter; label: string }[] = [
-  { id: "TODOS", label: "Todos" },
-  { id: "PENDENTE", label: "Pendentes" },
-  { id: "AGUARDANDO_PAGAMENTO", label: "Aguard. Pgto" },
-  { id: "COMPRADO", label: "Comprados" },
+  { id: "TODOS", label: "todos" },
+  { id: "PENDENTE", label: "pendentes" },
+  { id: "AGUARDANDO_PAGAMENTO", label: "aguard. pgto" },
+  { id: "COMPRADO", label: "comprados" },
 ];
 
 const NEXT_STATUS: Record<MercariStatus, MercariStatus[]> = {
@@ -111,7 +111,7 @@ export class FilaMercariComponent {
     const shown = this.filtradas().length;
     return shown === total
       ? `${total} pedido${total !== 1 ? "s" : ""} no total`
-      : `Exibindo ${shown} de ${total} pedidos`;
+      : `exibindo ${shown} de ${total} pedidos`;
   });
 
   protected tabClass(id: StatusFilter): string {

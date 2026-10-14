@@ -58,10 +58,10 @@ const MOCK_CEGS: CegResumo[] = [
 ];
 
 const CEG_STATUS_META: Record<CegStatus, { label: string; badge: string }> = {
-  ABERTA: { label: "Aberta", badge: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" },
-  EM_COMPRA: { label: "Em compra", badge: "bg-blue-50 text-blue-700 ring-1 ring-blue-200" },
-  TRANSITO: { label: "Em trânsito", badge: "bg-sky-50 text-sky-700 ring-1 ring-sky-200" },
-  CHEGOU_BR: { label: "Chegou BR", badge: "bg-violet-50 text-violet-700 ring-1 ring-violet-200" },
+  ABERTA: { label: "aberta", badge: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" },
+  EM_COMPRA: { label: "em compra", badge: "bg-blue-50 text-blue-700 ring-1 ring-blue-200" },
+  TRANSITO: { label: "em trânsito", badge: "bg-sky-50 text-sky-700 ring-1 ring-sky-200" },
+  CHEGOU_BR: { label: "chegou BR", badge: "bg-violet-50 text-violet-700 ring-1 ring-violet-200" },
 };
 
 interface PipelineRow {
@@ -103,21 +103,21 @@ export class GomDashboardComponent {
     const p = this.pipeline();
     return [
       {
-        label: "Pendentes",
+        label: "pendentes",
         count: p.pendente,
         color: "bg-amber-400",
         textColor: "text-amber-700",
         alert: false,
       },
       {
-        label: "Aguardando pagamento",
+        label: "aguardando pagamento",
         count: p.aguardandoPagamento,
         color: "bg-blue-500",
         textColor: "text-blue-700",
         alert: p.aguardandoPagamento > 0,
       },
       {
-        label: "Comprados",
+        label: "comprados",
         count: p.comprado,
         color: "bg-emerald-500",
         textColor: "text-emerald-700",

@@ -6,14 +6,14 @@ import type { UserRole } from "@/lib/auth";
 // ---------------------------------------------------------------------------
 
 export const ROLE_META: Record<UserRole, { label: string; badge: string }> = {
-  ADMIN: { label: "Admin", badge: "bg-purple-50 text-purple-700 ring-1 ring-purple-200" },
+  ADMIN: { label: "admin", badge: "bg-purple-50 text-purple-700 ring-1 ring-purple-200" },
   GOM: { label: "GOM", badge: "bg-primary/10 text-primary ring-1 ring-primary/30" },
-  JOINER: { label: "Joiner", badge: "bg-blue-50 text-blue-700 ring-1 ring-blue-200" },
+  JOINER: { label: "joiner", badge: "bg-blue-50 text-blue-700 ring-1 ring-blue-200" },
 };
 
 export const STATUS_META: Record<UserStatus, { label: string; badge: string }> = {
-  ATIVO: { label: "Ativo", badge: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" },
-  SUSPENSO: { label: "Suspenso", badge: "bg-red-50 text-red-700 ring-1 ring-red-200" },
+  ATIVO: { label: "ativo", badge: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" },
+  SUSPENSO: { label: "suspenso", badge: "bg-red-50 text-red-700 ring-1 ring-red-200" },
 };
 
 export const ROLE_OPTIONS: UserRole[] = ["JOINER", "GOM", "ADMIN"];

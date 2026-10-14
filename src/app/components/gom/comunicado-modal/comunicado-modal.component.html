@@ -10,9 +10,9 @@
         <svg [appIcon]="icons.MessageSquare" class="h-4 w-4 text-emerald-600"></svg>
       </div>
       <div>
-        <h2 class="text-sm font-bold">Liberar pagamento</h2>
+        <h2 class="text-sm font-bold">liberar pagamento</h2>
         <p class="text-[11px] text-muted-foreground">
-          {{ solicitacao() ? "Comunicado para " + solicitacao()!.joinerNome : "" }}
+          {{ solicitacao() ? "comunicado para " + solicitacao()!.joinerNome : "" }}
         </p>
       </div>
     </div>
@@ -36,14 +36,14 @@
         </p>
         <p class="text-xs text-muted-foreground">
           {{ brl(s.valorBrl) }} ·
-          {{ s.formaPagamento === "pix" ? "PIX" : "Cartão " + s.parcelas + "×" }}
+          {{ s.formaPagamento === "pix" ? "PIX" : "cartão " + s.parcelas + "×" }}
         </p>
       </div>
     }
 
     <!-- Textarea da mensagem -->
     <div class="space-y-1.5">
-      <label class="text-xs font-semibold">Comunicado para a joiner</label>
+      <label class="text-xs font-semibold">comunicado para a joiner</label>
       <textarea
         [value]="mensagem()"
         (input)="mensagem.set(val($event))"
@@ -52,7 +52,7 @@
         class="w-full rounded-xl border border-border bg-muted/40 px-3 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none disabled:opacity-60 placeholder:text-muted-foreground/60"
       ></textarea>
       <p class="text-[11px] text-muted-foreground">
-        Este comunicado será enviado diretamente para a joiner via plataforma.
+        este comunicado será enviado diretamente para a joiner via plataforma.
       </p>
     </div>
 
@@ -64,7 +64,7 @@
         (click)="onOpenChange(false)"
         class="flex-1 rounded-2xl border border-border py-2.5 text-sm font-medium text-muted-foreground transition hover:text-foreground disabled:opacity-50"
       >
-        Cancelar
+        cancelar
       </button>
       <button
         type="button"
@@ -74,12 +74,12 @@
       >
         @if (sent()) {
           <svg [appIcon]="icons.CheckCircle2" class="h-4 w-4"></svg>
-          Enviado!
+          enviado!
         } @else if (sending()) {
-          Enviando…
+          enviando…
         } @else {
           <svg [appIcon]="icons.Send" class="h-4 w-4"></svg>
-          Liberar e enviar
+          liberar e enviar
         }
       </button>
     </div>

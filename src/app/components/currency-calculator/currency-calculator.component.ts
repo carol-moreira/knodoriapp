@@ -21,13 +21,13 @@ const SPREAD_WISE = 1.025;
 
 // Configuração das taxas internas por tipo de item (agora ocultas para o usuário)
 const ITEM_TYPES = {
-  photocard: { label: "Photocard", taxa: 2.5 },
-  postcard: { label: "Postcard", taxa: 2.5 },
-  adesivo: { label: "Adesivo (Cartela)", taxa: 2.5 },
-  pequeno: { label: "Item Peq. (Outros Merchs)", taxa: 8.0 },
-  pelucia_pequena: { label: "Pelúcia Pequena", taxa: 10.0 },
-  album: { label: "Álbum", taxa: 15.0 },
-  grande: { label: "Item Grande (> 15cm)", taxa: 25.0 },
+  photocard: { label: "photocard", taxa: 2.5 },
+  postcard: { label: "postcard", taxa: 2.5 },
+  adesivo: { label: "adesivo (cartela)", taxa: 2.5 },
+  pequeno: { label: "item peq. (outros merchs)", taxa: 8.0 },
+  pelucia_pequena: { label: "pelúcia pequena", taxa: 10.0 },
+  album: { label: "álbum", taxa: 15.0 },
+  grande: { label: "item grande (> 15cm)", taxa: 25.0 },
 };
 
 type ItemChave = keyof typeof ITEM_TYPES;
@@ -44,13 +44,13 @@ const TAXAS_CARTAO: Record<number, number> = {
 };
 
 const PARCELAS_OPCOES = [
-  { value: 1, label: "1x (Taxa de 4,98%)" },
-  { value: 2, label: "2x (Taxa de 9,64%)" },
-  { value: 3, label: "3x (Taxa de 11,23%)" },
-  { value: 4, label: "4x (Taxa de 11,36%)" },
-  { value: 5, label: "5x (Taxa de 14,31%)" },
-  { value: 6, label: "6x (Taxa de 14,32%)" },
-  { value: 7, label: "7x (Taxa de 16,72%)" },
+  { value: 1, label: "1x (taxa de 4,98%)" },
+  { value: 2, label: "2x (taxa de 9,64%)" },
+  { value: 3, label: "3x (taxa de 11,23%)" },
+  { value: 4, label: "4x (taxa de 11,36%)" },
+  { value: 5, label: "5x (taxa de 14,31%)" },
+  { value: 6, label: "6x (taxa de 14,32%)" },
+  { value: 7, label: "7x (taxa de 16,72%)" },
 ];
 
 const QUANTIDADES_ZERADAS: Record<ItemChave, number> = {
@@ -194,13 +194,13 @@ export class CurrencyCalculatorComponent {
   protected handleSimularCotacao(): void {
     const jpy = parseInt(this.valorJpy().replace(/\D/g, "")) || 0;
     if (jpy <= 0) {
-      alert("Por favor, insira um valor válido em Iene.");
+      alert("por favor, insira um valor válido em iene.");
       return;
     }
 
     const totalItens = Object.values(this.quantidades()).reduce((a, b) => a + b, 0);
     if (totalItens === 0) {
-      alert("Por favor, selecione as quantidades de itens contidos no anúncio antes de simular.");
+      alert("por favor, selecione as quantidades de itens contidos no anúncio antes de simular.");
       return;
     }
 
@@ -221,7 +221,7 @@ export class CurrencyCalculatorComponent {
       installments: this.formaPagamento() === "cartao" ? this.parcelas() : 1,
     };
 
-    console.log("Enviando para a fila do GOM:", novaSolicitacao);
+    console.log("enviando para a fila do GOM:", novaSolicitacao);
     this.enviado.set(true);
   }
 

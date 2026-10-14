@@ -104,7 +104,7 @@ export class ResumoFinanceiroComponent {
     return [
       {
         icon: Wallet,
-        label: "Total em Caixa",
+        label: "total em caixa",
         value: brl(totalCaixa),
         sub: "pedidos confirmados",
         accent: "emerald",
@@ -112,7 +112,7 @@ export class ResumoFinanceiroComponent {
       },
       {
         icon: CreditCard,
-        label: "A Receber",
+        label: "a receber",
         value: brl(aReceber),
         sub: "aguardando pagamento",
         accent: "blue",
@@ -120,7 +120,7 @@ export class ResumoFinanceiroComponent {
       },
       {
         icon: TrendingUp,
-        label: "Lucro Estimado",
+        label: "lucro estimado",
         value: brl(lucroEstimado),
         sub: "markup sobre confirmados",
         accent: "primary",
@@ -128,7 +128,7 @@ export class ResumoFinanceiroComponent {
       },
       {
         icon: PackageSearch,
-        label: "CEGs Abertas",
+        label: "CEGs abertas",
         value: String(this.cegsAbertas()),
         sub: "grupos em andamento",
         accent: "neutral",
@@ -141,21 +141,21 @@ export class ResumoFinanceiroComponent {
     const p = this.resumo().pipeline;
     return [
       {
-        label: "Pendentes",
+        label: "pendentes",
         count: p.pendente,
         color: "bg-amber-400",
         textColor: "text-amber-700",
         bgColor: "bg-amber-50",
       },
       {
-        label: "Aguardando pagamento",
+        label: "aguardando pagamento",
         count: p.aguardandoPagamento,
         color: "bg-blue-400",
         textColor: "text-blue-700",
         bgColor: "bg-blue-50",
       },
       {
-        label: "Comprados",
+        label: "comprados",
         count: p.comprado,
         color: "bg-emerald-500",
         textColor: "text-emerald-700",

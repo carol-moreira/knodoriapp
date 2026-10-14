@@ -4,7 +4,7 @@
     <div
       class="rounded-3xl border border-primary/30 bg-primary p-5 text-primary-foreground shadow-sm"
     >
-      <p class="text-xs font-semibold uppercase tracking-widest opacity-80">Total movimentado</p>
+      <p class="text-xs font-semibold uppercase tracking-widest opacity-80">total movimentado</p>
       <p class="mt-1.5 text-3xl font-bold tracking-tight">{{ brl(totalGasto) }}</p>
       <p class="mt-1 text-xs opacity-70">
         {{ historico.length }} compra{{ historico.length !== 1 ? "s" : "" }} concluída{{
@@ -20,7 +20,7 @@
       "
     >
       <p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-        Pendências
+        pendências
       </p>
       <p
         [class]="
@@ -28,10 +28,10 @@
           (totalPendente > 0 ? 'text-amber-700' : 'text-emerald-600')
         "
       >
-        {{ totalPendente > 0 ? brl(totalPendente) : "Em dia ✓" }}
+        {{ totalPendente > 0 ? brl(totalPendente) : "em dia ✓" }}
       </p>
       <p class="mt-1 text-xs text-muted-foreground">
-        {{ totalPendente > 0 ? "parcelas + fretes pendentes" : "Nenhuma pendência financeira" }}
+        {{ totalPendente > 0 ? "parcelas + fretes pendentes" : "nenhuma pendência financeira" }}
       </p>
     </div>
   </div>
@@ -39,12 +39,12 @@
   <!-- Histórico de transações -->
   <app-extrato-section
     [icon]="icons.TrendingUp"
-    titulo="Histórico de compras"
+    titulo="histórico de compras"
     [badge]="historico.length + ' entregues'"
     [defaultOpen]="true"
   >
     @if (historico.length === 0) {
-      <p class="py-2 text-xs text-muted-foreground">Nenhuma compra concluída ainda.</p>
+      <p class="py-2 text-xs text-muted-foreground">nenhuma compra concluída ainda.</p>
     } @else {
       <div class="divide-y divide-border/50">
         @for (t of historico; track t.id) {
@@ -54,7 +54,7 @@
               <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 <span>{{ fmtDate(t.data) }}</span>
                 <span>·</span>
-                <span>{{ t.formaPagamento === "pix" ? "PIX" : "Cartão " + t.parcelas + "×" }}</span>
+                <span>{{ t.formaPagamento === "pix" ? "PIX" : "cartão " + t.parcelas + "×" }}</span>
                 <span>·</span>
                 <span>{{ t.gomUsername }}</span>
               </div>
@@ -70,7 +70,7 @@
               <span
                 class="cozy-pill bg-emerald-50 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200"
               >
-                <svg [appIcon]="icons.CheckCircle2" class="mr-0.5 inline h-2.5 w-2.5"></svg>Entregue
+                <svg [appIcon]="icons.CheckCircle2" class="mr-0.5 inline h-2.5 w-2.5"></svg>entregue
               </span>
             </div>
           </div>
@@ -82,12 +82,12 @@
   <!-- Parcelas do cartão -->
   <app-extrato-section
     [icon]="icons.CreditCard"
-    titulo="Parcelas pendentes"
-    [badge]="parcelasPend > 0 ? brl(parcelasPend) : 'Em dia ✓'"
+    titulo="parcelas pendentes"
+    [badge]="parcelasPend > 0 ? brl(parcelasPend) : 'em dia ✓'"
     [defaultOpen]="parcelasPend > 0"
   >
     @if (parcelas.length === 0) {
-      <p class="py-2 text-xs text-muted-foreground">Sem parcelas pendentes.</p>
+      <p class="py-2 text-xs text-muted-foreground">sem parcelas pendentes.</p>
     } @else {
       <div class="divide-y divide-border/50">
         @for (p of parcelas; track p.id) {
@@ -96,7 +96,7 @@
               <div class="min-w-0 flex-1 space-y-0.5">
                 <p class="text-sm font-medium truncate">{{ p.descricao }}</p>
                 <p class="text-xs text-muted-foreground">
-                  Parcela {{ p.parcelaAtual }}/{{ p.totalParcelas }} · vence
+                  parcela {{ p.parcelaAtual }}/{{ p.totalParcelas }} · vence
                   {{ fmtDate(p.dataVencimento) }}
                 </p>
               </div>
@@ -121,12 +121,12 @@
   <!-- Fretes internacionais -->
   <app-extrato-section
     [icon]="icons.Truck"
-    titulo="Fretes internacionais"
-    [badge]="fretesPend > 0 ? brl(fretesPend) + ' pendente' : 'Em dia ✓'"
+    titulo="fretes internacionais"
+    [badge]="fretesPend > 0 ? brl(fretesPend) + ' pendente' : 'em dia ✓'"
     [defaultOpen]="false"
   >
     @if (fretes.length === 0) {
-      <p class="py-2 text-xs text-muted-foreground">Sem fretes registrados.</p>
+      <p class="py-2 text-xs text-muted-foreground">sem fretes registrados.</p>
     } @else {
       <div class="divide-y divide-border/50">
         @for (f of fretes; track f.id) {
@@ -144,9 +144,9 @@
                   "
                 >
                   @if (f.status === "PENDENTE") {
-                    <svg [appIcon]="icons.Clock" class="mr-0.5 inline h-2.5 w-2.5"></svg>Pendente
+                    <svg [appIcon]="icons.Clock" class="mr-0.5 inline h-2.5 w-2.5"></svg>pendente
                   } @else {
-                    <svg [appIcon]="icons.CheckCircle2" class="mr-0.5 inline h-2.5 w-2.5"></svg>Pago
+                    <svg [appIcon]="icons.CheckCircle2" class="mr-0.5 inline h-2.5 w-2.5"></svg>pago
                   }
                 </span>
               </div>

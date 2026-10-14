@@ -8,7 +8,7 @@
     class="sticky top-0 flex items-center justify-between border-b border-border/60 bg-card px-6 py-4"
   >
     <div>
-      <h2 class="text-sm font-bold">Repasses — {{ ceg()?.nome }}</h2>
+      <h2 class="text-sm font-bold">repasses — {{ ceg()?.nome }}</h2>
       <p class="text-[11px] text-muted-foreground">{{ descricao() }}</p>
     </div>
     <button
@@ -25,9 +25,9 @@
       <div class="flex flex-col items-center justify-center gap-3 py-12 text-center">
         <svg [appIcon]="icons.CreditCard" class="h-8 w-8 text-muted-foreground/40"></svg>
         <div>
-          <p class="text-sm font-semibold">Sem repasses</p>
+          <p class="text-sm font-semibold">sem repasses</p>
           <p class="text-xs text-muted-foreground">
-            Os repasses aparecerão quando as joiners entrarem nesta CEG.
+            os repasses aparecerão quando as joiners entrarem nesta CEG.
           </p>
         </div>
       </div>
@@ -36,7 +36,7 @@
       @if (totalGeral() > 0) {
         <div class="mb-5 space-y-1.5">
           <div class="flex justify-between text-xs text-muted-foreground">
-            <span>Progresso total</span>
+            <span>progresso total</span>
             <span>{{ percentTotal() }}%</span>
           </div>
           <div class="h-2 w-full overflow-hidden rounded-full bg-muted">
@@ -46,8 +46,8 @@
             ></div>
           </div>
           <div class="flex justify-between text-[11px] text-muted-foreground">
-            <span>Recebido: {{ brl(totalPago()) }}</span>
-            <span>Total: {{ brl(totalGeral()) }}</span>
+            <span>recebido: {{ brl(totalPago()) }}</span>
+            <span>total: {{ brl(totalGeral()) }}</span>
           </div>
         </div>
       }
@@ -94,7 +94,7 @@
                   <span
                     class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground"
                   >
-                    R$
+                    r$
                   </span>
                   <input
                     type="number"
@@ -112,7 +112,7 @@
                   class="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-emerald-700"
                 >
                   <svg [appIcon]="icons.CheckCircle2" class="h-3.5 w-3.5"></svg>
-                  Confirmar
+                  confirmar
                 </button>
                 <button
                   type="button"
@@ -129,7 +129,7 @@
                 class="flex items-center gap-1.5 rounded-xl border border-dashed border-primary/40 px-3 py-1.5 text-[11px] font-medium text-primary transition hover:bg-primary/5"
               >
                 <svg [appIcon]="icons.Plus" class="h-3 w-3"></svg>
-                Registrar pagamento
+                registrar pagamento
               </button>
             }
           </div>

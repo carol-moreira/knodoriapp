@@ -67,15 +67,15 @@ export class ConfiguracoesCoreComponent {
   protected readonly stats = computed(() => {
     const s = this.dbStatus();
     return [
-      { label: "Latência", value: `${s.latenciaMs} ms`, ok: s.latenciaMs < 50, sub: undefined },
+      { label: "latência", value: `${s.latenciaMs} ms`, ok: s.latenciaMs < 50, sub: undefined },
       {
-        label: "Conexões ativas",
+        label: "conexões ativas",
         value: `${s.conexoesAtivas} / ${s.conexoesMax}`,
         ok: this.pctConexoes() < 80,
         sub: undefined,
       },
       {
-        label: "Última migração",
+        label: "última migração",
         value: s.versaoMigracao,
         ok: true,
         sub: fmtDatetime(s.ultimaMigracao),

@@ -37,24 +37,24 @@ type NavItem = { to: string; label: string; icon: LucideIconData; exact?: boolea
 
 export const NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
   ADMIN: [
-    { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-    { to: "/admin/metricas", label: "Métricas", icon: BarChart2 },
-    { to: "/admin/usuarios", label: "Usuários", icon: Users },
-    { to: "/admin/configuracoes", label: "Configurações", icon: Settings2 },
+    { to: "/admin", label: "dashboard", icon: LayoutDashboard, exact: true },
+    { to: "/admin/metricas", label: "métricas", icon: BarChart2 },
+    { to: "/admin/usuarios", label: "usuários", icon: Users },
+    { to: "/admin/configuracoes", label: "configurações", icon: Settings2 },
   ],
   GOM: [
-    { to: "/gom", label: "Dashboard", icon: LayoutDashboard, exact: true },
+    { to: "/gom", label: "dashboard", icon: LayoutDashboard, exact: true },
     { to: "/gom/cegs", label: "CEGs", icon: Layers },
-    { to: "/gom/financeiro", label: "Financeiro", icon: BarChart2 },
-    { to: "/gom/fila", label: "Fila Mercari", icon: ShoppingBag },
-    { to: "/gom/joiners", label: "Joiners", icon: Users },
-    { to: "/gom/taxas", label: "Taxas", icon: Settings2 },
+    { to: "/gom/financeiro", label: "financeiro", icon: BarChart2 },
+    { to: "/gom/fila", label: "fila mercari", icon: ShoppingBag },
+    { to: "/gom/joiners", label: "joiners", icon: Users },
+    { to: "/gom/taxas", label: "taxas", icon: Settings2 },
   ],
   JOINER: [
-    { to: "/joiner", label: "Dashboard", icon: LayoutDashboard, exact: true },
-    { to: "/joiner/compras", label: "Minhas Compras", icon: ShoppingBag },
-    { to: "/calculadora", label: "Calculadora", icon: Calculator },
-    { to: "/joiner/extrato", label: "Extrato", icon: FileText },
+    { to: "/joiner", label: "dashboard", icon: LayoutDashboard, exact: true },
+    { to: "/joiner/compras", label: "minhas compras", icon: ShoppingBag },
+    { to: "/calculadora", label: "calculadora", icon: Calculator },
+    { to: "/joiner/extrato", label: "extrato", icon: FileText },
   ],
 };
 

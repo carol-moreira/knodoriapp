@@ -56,22 +56,26 @@
 /* Classic Elegance (padrão) — Aquamarine · Concrete · Burgundy */
 :root,
 [data-theme="classic-elegance"] {
-  --bg-color:           #ece6df;
-  --text-color:         #0f3f49;
-  --primary-color:      #7f0508;
-  --on-primary-color:   #ece6df;
-  --secondary-color:    #0f3f49;
-  --on-secondary-color: #ece6df;
+  /* Paleta: #043a51 · #1b100e · #1b2433 · #b4c6d7 · #06141b
+   * Claro: fundo = #b4c6d7 clareado, tinta #06141b, ação #043a51, apoio #1b2433. */
+  --bg-color:           color-mix(in oklch, #b4c6d7, white 62%);
+  --text-color:         #06141b;
+  --primary-color:      #043a51;
+  --on-primary-color:   color-mix(in oklch, #b4c6d7, white 70%);
+  --secondary-color:    #1b2433;
+  --on-secondary-color: #b4c6d7;
 }
 
 [data-theme="classic-elegance"].dark,
 .dark [data-theme="classic-elegance"] {
-  --bg-color:           oklch(0.17 0.03 215);
-  --text-color:         #ece6df;
-  --primary-color:      oklch(0.62 0.17 27);
-  --on-primary-color:   oklch(0.14 0.03 27);
-  --secondary-color:    oklch(0.68 0.08 205);
-  --on-secondary-color: oklch(0.14 0.03 215);
+  /* Escuro: fundo #06141b, superfícies #1b2433, texto/ação #b4c6d7 (invertido,
+   * para o botão primário não sumir no fundo), apoio #043a51, tinta quente #1b100e. */
+  --bg-color:           #06141b;
+  --text-color:         #b4c6d7;
+  --primary-color:      #b4c6d7;
+  --on-primary-color:   #1b100e;
+  --secondary-color:    #043a51;
+  --on-secondary-color: #b4c6d7;
 }
 
 /* Winter Frost — #D9E7F8 · #6371A2 · #56021E */
@@ -193,6 +197,16 @@
   --muted:                  color-mix(in oklch, var(--bg-color), white 10%);
   --destructive:            oklch(0.65 0.20 25);
   --destructive-foreground: oklch(0.15 0.03 25);
+}
+
+/* Classic Elegance escuro: cards e áreas neutras usam o navy #1b2433 da paleta */
+html.dark[data-theme="classic-elegance"],
+.dark [data-theme="classic-elegance"] {
+  --card:   #1b2433;
+  --muted:  color-mix(in oklch, #1b2433, #06141b 40%);
+  --accent: color-mix(in oklch, #1b2433, #043a51 55%);
+  --border: color-mix(in oklch, #1b2433, #b4c6d7 12%);
+  --input:  color-mix(in oklch, #1b2433, #b4c6d7 18%);
 }
 
 /* ── Base layer ─────────────────────────────────────────────────────────── */

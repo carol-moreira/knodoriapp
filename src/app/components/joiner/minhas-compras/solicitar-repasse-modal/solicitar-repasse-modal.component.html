@@ -10,7 +10,7 @@
         <svg [appIcon]="icons.PackageCheck" class="h-4 w-4 text-primary"></svg>
       </div>
       <div>
-        <h2 class="text-sm font-bold">Solicitar Repasse</h2>
+        <h2 class="text-sm font-bold">solicitar repasse</h2>
         <p class="text-[11px] text-muted-foreground">{{ pedido()?.cegNome }}</p>
       </div>
     </div>
@@ -32,16 +32,16 @@
       </div>
     }
     <p class="text-sm text-muted-foreground">
-      Ao solicitar o repasse, sua GOM será notificada e entrará em contato para combinar a entrega.
+      ao solicitar o repasse, sua GOM será notificada e entrará em contato para combinar a entrega.
     </p>
     <div class="space-y-1.5">
-      <label class="text-xs font-semibold">Observação (opcional)</label>
+      <label class="text-xs font-semibold">observação (opcional)</label>
       <textarea
         [value]="obs()"
         (input)="obs.set(val($event))"
         rows="3"
         [disabled]="sending() || sent()"
-        placeholder="Ex: prefiro retirar pessoalmente, qualquer dúvida me chama…"
+        placeholder="ex: prefiro retirar pessoalmente, qualquer dúvida me chama…"
         [class]="INPUT_CLS + ' resize-none disabled:opacity-60'"
       ></textarea>
     </div>
@@ -52,7 +52,7 @@
         (click)="onOpenChange(false)"
         class="flex-1 rounded-2xl border border-border py-2.5 text-sm font-medium text-muted-foreground transition hover:text-foreground disabled:opacity-50"
       >
-        Cancelar
+        cancelar
       </button>
       <button
         type="button"
@@ -61,11 +61,11 @@
         class="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
       >
         @if (sent()) {
-          <svg [appIcon]="icons.CheckCircle2" class="h-4 w-4"></svg> Solicitado!
+          <svg [appIcon]="icons.CheckCircle2" class="h-4 w-4"></svg> solicitado!
         } @else if (sending()) {
-          Enviando…
+          enviando…
         } @else {
-          <svg [appIcon]="icons.Send" class="h-4 w-4"></svg> Confirmar repasse
+          <svg [appIcon]="icons.Send" class="h-4 w-4"></svg> confirmar repasse
         }
       </button>
     </div>

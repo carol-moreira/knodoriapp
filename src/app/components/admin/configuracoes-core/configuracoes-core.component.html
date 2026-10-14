@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
         <svg [appIcon]="icons.Database" class="h-4 w-4 text-primary"></svg>
-        <h3 class="text-sm font-semibold">Status do Banco de Dados</h3>
+        <h3 class="text-sm font-semibold">status do banco de dados</h3>
       </div>
       <span
         [class]="
@@ -15,7 +15,7 @@
         "
       >
         <svg [appIcon]="dbStatus().healthy ? icons.Wifi : icons.WifiOff" class="h-3 w-3"></svg>
-        {{ dbStatus().healthy ? "Saudável" : "Degradado" }}
+        {{ dbStatus().healthy ? "saudável" : "degradado" }}
       </span>
     </div>
 
@@ -36,7 +36,7 @@
     <!-- Barra de uso de conexões -->
     <div>
       <div class="flex justify-between text-[10px] text-muted-foreground mb-1">
-        <span>Pool de conexões</span>
+        <span>pool de conexões</span>
         <span>{{ pctConexoes().toFixed(0) }}%</span>
       </div>
       <div class="h-1.5 w-full overflow-hidden rounded-full bg-muted">
@@ -50,7 +50,7 @@
     <div class="flex items-center justify-between flex-wrap gap-2">
       <div class="flex items-center gap-2">
         <svg [appIcon]="icons.AlertTriangle" class="h-4 w-4 text-primary"></svg>
-        <h3 class="text-sm font-semibold">Logs do Sistema</h3>
+        <h3 class="text-sm font-semibold">logs do sistema</h3>
       </div>
 
       <div class="flex items-center gap-2">
@@ -72,7 +72,7 @@
           class="rounded-lg border border-border bg-card px-2 py-1 text-xs outline-none"
         >
           @for (n of limitOptions; track n) {
-            <option [value]="n" [selected]="n === limite()">Últimos {{ n }}</option>
+            <option [value]="n" [selected]="n === limite()">últimos {{ n }}</option>
           }
         </select>
       </div>
@@ -80,7 +80,7 @@
 
     <div class="overflow-hidden rounded-xl border border-border/60 divide-y divide-border/40">
       @if (filtrados().length === 0) {
-        <p class="py-8 text-center text-sm text-muted-foreground">Nenhum log encontrado.</p>
+        <p class="py-8 text-center text-sm text-muted-foreground">nenhum log encontrado.</p>
       } @else {
         @for (log of filtrados(); track log.id) {
           <div [class]="'px-4 py-3 ' + LOG_META[log.level].row">
@@ -122,7 +122,7 @@
   <div class="cozy-card p-5 space-y-4">
     <div class="flex items-center gap-2">
       <svg [appIcon]="icons.RefreshCw" class="h-4 w-4 text-primary"></svg>
-      <h3 class="text-sm font-semibold">Chaves de API Globais</h3>
+      <h3 class="text-sm font-semibold">chaves de API globais</h3>
     </div>
 
     <div class="space-y-3">

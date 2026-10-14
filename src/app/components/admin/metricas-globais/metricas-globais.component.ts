@@ -59,21 +59,21 @@ export class MetricasGlobaisComponent {
     return [
       {
         icon: TrendingUp,
-        label: "Faturamento global",
+        label: "faturamento global",
         value: brl(totalFaturamento),
         trend: tendFat,
         color: "cherry",
       },
       {
         icon: ShoppingBag,
-        label: "Volume de vendas",
+        label: "volume de vendas",
         value: `${totalVendas} pedidos`,
         trend: tendVend,
         color: "blue",
       },
       {
         icon: Activity,
-        label: "Tráfego total",
+        label: "tráfego total",
         value: `${totalSolicits} solicit.`,
         trend: tendSol,
         color: "emerald",

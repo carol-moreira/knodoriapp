@@ -154,7 +154,7 @@ Font stack: `SF Pro Rounded`, `Nunito`, `Quicksand`.
 
 ### App Logo
 
-The logo lives at `public/logo.png` (served at `/logo.png`). It renders in the header and auth screen. If it fails to load, a Heart icon fallback is shown automatically.
+The logo lives at `public/logo.jpg` (served at `/logo.jpg`). It renders in the header and auth screen. If it fails to load, a Heart icon fallback is shown automatically.
 
 ### Profile Settings
 

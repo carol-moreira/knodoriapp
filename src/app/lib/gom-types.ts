@@ -74,13 +74,13 @@ export type ItemKey =
   "photocard" | "postcard" | "adesivo" | "pequeno" | "pelucia_pequena" | "album" | "grande";
 
 export const ITEM_META: Record<ItemKey, { label: string; emoji: string }> = {
-  photocard: { label: "Photocard", emoji: "🃏" },
-  postcard: { label: "Postcard", emoji: "📮" },
-  adesivo: { label: "Adesivo (Cartela)", emoji: "✨" },
-  pequeno: { label: "Item Peq. (Outros Merchs)", emoji: "📦" },
-  pelucia_pequena: { label: "Pelúcia Pequena", emoji: "🧸" },
-  album: { label: "Álbum", emoji: "💿" },
-  grande: { label: "Item Grande (>15cm)", emoji: "🎁" },
+  photocard: { label: "photocard", emoji: "🃏" },
+  postcard: { label: "postcard", emoji: "📮" },
+  adesivo: { label: "adesivo (cartela)", emoji: "✨" },
+  pequeno: { label: "item peq. (outros merchs)", emoji: "📦" },
+  pelucia_pequena: { label: "pelúcia pequena", emoji: "🧸" },
+  album: { label: "álbum", emoji: "💿" },
+  grande: { label: "item grande (>15cm)", emoji: "🎁" },
 };
 
 export const CONFIG_TAXAS_DEFAULT: ConfigTaxasGOM = {
@@ -247,7 +247,7 @@ export const MOCK_HISTORICO: Record<string, HistoricoPedido[]> = {
   j1: [
     {
       id: "req_01",
-      descricao: "2x Photocard · 1x Adesivo",
+      descricao: "2x photocard · 1x adesivo",
       valorBrl: 95.3,
       status: "PENDENTE",
       dataSolicitacao: "2026-06-05",
@@ -256,7 +256,7 @@ export const MOCK_HISTORICO: Record<string, HistoricoPedido[]> = {
     },
     {
       id: "req_04",
-      descricao: "1x Pelúcia Pequena",
+      descricao: "1x pelúcia pequena",
       valorBrl: 152.4,
       status: "PENDENTE",
       dataSolicitacao: "2026-06-06",
@@ -265,7 +265,7 @@ export const MOCK_HISTORICO: Record<string, HistoricoPedido[]> = {
     },
     {
       id: "old_01",
-      descricao: "3x Photocard",
+      descricao: "3x photocard",
       valorBrl: 130.2,
       status: "COMPRADO",
       dataSolicitacao: "2026-04-10",
@@ -274,7 +274,7 @@ export const MOCK_HISTORICO: Record<string, HistoricoPedido[]> = {
     },
     {
       id: "old_02",
-      descricao: "1x Álbum",
+      descricao: "1x álbum",
       valorBrl: 215.8,
       status: "COMPRADO",
       dataSolicitacao: "2026-03-22",
@@ -283,7 +283,7 @@ export const MOCK_HISTORICO: Record<string, HistoricoPedido[]> = {
     },
     {
       id: "old_03",
-      descricao: "2x Postcard",
+      descricao: "2x postcard",
       valorBrl: 46.8,
       status: "COMPRADO",
       dataSolicitacao: "2026-02-14",
@@ -294,7 +294,7 @@ export const MOCK_HISTORICO: Record<string, HistoricoPedido[]> = {
   j2: [
     {
       id: "req_02",
-      descricao: "1x Álbum · 1x Photocard",
+      descricao: "1x álbum · 1x photocard",
       valorBrl: 186.5,
       status: "AGUARDANDO_PAGAMENTO",
       dataSolicitacao: "2026-05-28",
@@ -303,7 +303,7 @@ export const MOCK_HISTORICO: Record<string, HistoricoPedido[]> = {
     },
     {
       id: "req_06",
-      descricao: "4x Postcard · 2x Adesivo",
+      descricao: "4x postcard · 2x adesivo",
       valorBrl: 79.2,
       status: "COMPRADO",
       dataSolicitacao: "2026-05-15",
@@ -312,7 +312,7 @@ export const MOCK_HISTORICO: Record<string, HistoricoPedido[]> = {
     },
     {
       id: "old_04",
-      descricao: "1x Álbum",
+      descricao: "1x álbum",
       valorBrl: 215.8,
       status: "COMPRADO",
       dataSolicitacao: "2026-04-02",
@@ -323,7 +323,7 @@ export const MOCK_HISTORICO: Record<string, HistoricoPedido[]> = {
   j3: [
     {
       id: "req_03",
-      descricao: "1x Item Grande",
+      descricao: "1x item grande",
       valorBrl: 301.0,
       status: "COMPRADO",
       dataSolicitacao: "2026-05-20",
@@ -334,7 +334,7 @@ export const MOCK_HISTORICO: Record<string, HistoricoPedido[]> = {
   j4: [
     {
       id: "req_05",
-      descricao: "5x Photocard",
+      descricao: "5x photocard",
       valorBrl: 198.6,
       status: "AGUARDANDO_PAGAMENTO",
       dataSolicitacao: "2026-06-03",

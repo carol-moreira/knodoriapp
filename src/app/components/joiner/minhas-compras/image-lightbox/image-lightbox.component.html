@@ -4,13 +4,13 @@
   overlayClass="fixed inset-0 z-50 bg-black/92 backdrop-blur-md animate-in fade-in duration-200"
   contentClass="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 p-4 outline-none"
 >
-  <h2 class="sr-only">Galeria de fotos — item {{ idx() + 1 }} de {{ images().length }}</h2>
-  <p class="sr-only">Use as setas do teclado ou os botões para navegar entre as fotos.</p>
+  <h2 class="sr-only">galeria de fotos — item {{ idx() + 1 }} de {{ images().length }}</h2>
+  <p class="sr-only">use as setas do teclado ou os botões para navegar entre as fotos.</p>
 
   <!-- Botão fechar -->
   <button
     type="button"
-    aria-label="Fechar galeria"
+    aria-label="fechar galeria"
     (click)="onOpenChange(false)"
     class="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white backdrop-blur-sm transition hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
   >
@@ -23,7 +23,7 @@
       <button
         type="button"
         (click)="prev()"
-        aria-label="Foto anterior"
+        aria-label="foto anterior"
         class="shrink-0 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white backdrop-blur-sm transition hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
       >
         <svg [appIcon]="icons.ChevronLeft" class="h-5 w-5"></svg>
@@ -34,7 +34,7 @@
     @for (i of [idx()]; track i) {
       <img
         [src]="images()[i]"
-        [alt]="'Foto ' + (i + 1) + ' de ' + images().length"
+        [alt]="'foto ' + (i + 1) + ' de ' + images().length"
         draggable="false"
         class="max-h-[70svh] max-w-[min(80vw,720px)] rounded-2xl object-contain shadow-2xl animate-in zoom-in-95 fade-in duration-150"
       />
@@ -44,7 +44,7 @@
       <button
         type="button"
         (click)="next()"
-        aria-label="Próxima foto"
+        aria-label="próxima foto"
         class="shrink-0 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white backdrop-blur-sm transition hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
       >
         <svg [appIcon]="icons.ChevronRight" class="h-5 w-5"></svg>
@@ -64,7 +64,7 @@
         <button
           type="button"
           (click)="idx.set(i)"
-          [attr.aria-label]="'Ir para foto ' + (i + 1)"
+          [attr.aria-label]="'ir para foto ' + (i + 1)"
           [class]="thumbClass(i)"
         >
           <img [src]="src" alt="" draggable="false" class="h-full w-full object-cover" />

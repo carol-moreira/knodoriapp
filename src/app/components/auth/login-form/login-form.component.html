@@ -1,7 +1,7 @@
 <form (submit)="handleSubmit($event)" class="space-y-4" novalidate>
   <!-- E-mail -->
   <div class="space-y-1.5">
-    <label [class]="labelCls">E-mail</label>
+    <label [class]="labelCls">e-mail</label>
     <input
       type="email"
       [value]="email()"
@@ -22,14 +22,14 @@
   <!-- Senha -->
   <div class="space-y-1.5">
     <div class="flex items-center justify-between">
-      <label [class]="labelCls">Senha</label>
+      <label [class]="labelCls">senha</label>
       <button
         type="button"
         class="text-xs text-primary hover:underline underline-offset-2"
         tabindex="-1"
         (click)="forgotPassword()"
       >
-        Esqueceu a senha?
+        esqueceu a senha?
       </button>
     </div>
     <div class="relative">
@@ -76,10 +76,10 @@
   >
     @if (loading()) {
       <span class="flex items-center justify-center gap-2">
-        <svg [appIcon]="icons.Loader2" class="h-4 w-4 animate-spin"></svg> Entrando…
+        <svg [appIcon]="icons.Loader2" class="h-4 w-4 animate-spin"></svg> entrando…
       </span>
     } @else {
-      Entrar
+      entrar
     }
   </button>
 </form>

@@ -33,23 +33,23 @@ export const routes: Routes = [
   },
   {
     path: "login",
-    title: "Entrar · KNODORI",
-    data: { seo: seo("Entre ou crie sua conta na KNODORI.") },
+    title: "entrar · KNODORI",
+    data: { seo: seo("entre ou crie sua conta na KNODORI.") },
     loadComponent: () => import("./pages/login/login.page").then((m) => m.LoginPage),
   },
   {
     path: "onboarding",
-    title: "Configure seu perfil · KNODORI",
-    data: { seo: seo("Personalize seu perfil para começar.") },
+    title: "configure seu perfil · KNODORI",
+    data: { seo: seo("personalize seu perfil para começar.") },
     loadComponent: () => import("./pages/onboarding/onboarding.page").then((m) => m.OnboardingPage),
   },
   {
     path: "calculadora",
-    title: "Calculadora · KNODORI",
+    title: "calculadora · KNODORI",
     data: {
-      seo: seo("Converta Won, Iene, Dólar e Rupia para Real rapidinho.", {
-        title: "Calculadora · KNODORI",
-        description: "Conversor de moedas para joiners de CEG.",
+      seo: seo("converta won, iene, dólar e rupia para real rapidinho.", {
+        title: "calculadora · KNODORI",
+        description: "conversor de moedas para joiners de CEG.",
       }),
     },
     loadComponent: () =>
@@ -59,11 +59,11 @@ export const routes: Routes = [
   },
   {
     path: "mercari",
-    title: "Mercari · KNODORI",
+    title: "mercari · KNODORI",
     data: {
-      seo: seo("Vitrine fofa de itens K-pop garimpados no Mercari.", {
-        title: "Mercari · KNODORI",
-        description: "Vitrine Mercari para joiners.",
+      seo: seo("vitrine fofa de itens k-pop garimpados no mercari.", {
+        title: "mercari · KNODORI",
+        description: "vitrine mercari para joiners.",
       }),
     },
     loadComponent: () =>
@@ -73,11 +73,11 @@ export const routes: Routes = [
   },
   {
     path: "sistema",
-    title: "Sistema · Super Admin · KNODORI",
+    title: "sistema · super admin · KNODORI",
     data: {
-      seo: seo("Painel de Super Administração: gerenciamento global de GOMs, Joiners e CEGs.", {
-        title: "Super Admin · KNODORI",
-        description: "Gerenciamento global do sistema.",
+      seo: seo("painel de super administração: gerenciamento global de GOMs, joiners e CEGs.", {
+        title: "super admin · KNODORI",
+        description: "gerenciamento global do sistema.",
       }),
     },
     loadComponent: () =>
@@ -95,8 +95,8 @@ export const routes: Routes = [
       {
         path: "",
         pathMatch: "full",
-        title: "Admin · KNODORI",
-        data: { seo: seo("Painel de administração global do sistema.") },
+        title: "admin · KNODORI",
+        data: { seo: seo("painel de administração global do sistema.") },
         loadComponent: () =>
           import("./components/dashboards/admin-dashboard/admin-dashboard.component").then(
             (m) => m.AdminDashboardComponent,
@@ -104,8 +104,8 @@ export const routes: Routes = [
       },
       {
         path: "metricas",
-        title: "Métricas · KNODORI",
-        data: { seo: seo("Métricas globais de faturamento e engajamento."), data: MOCK_CHART_DATA },
+        title: "métricas · KNODORI",
+        data: { seo: seo("métricas globais de faturamento e engajamento."), data: MOCK_CHART_DATA },
         loadComponent: () =>
           import("./components/admin/metricas-globais/metricas-globais.component").then(
             (m) => m.MetricasGlobaisComponent,
@@ -113,9 +113,9 @@ export const routes: Routes = [
       },
       {
         path: "usuarios",
-        title: "Usuários · KNODORI",
+        title: "usuários · KNODORI",
         data: {
-          seo: seo("Controle global de usuários, roles e banimentos."),
+          seo: seo("controle global de usuários, roles e banimentos."),
           usuarios: MOCK_USERS,
         },
         loadComponent: () =>
@@ -125,9 +125,9 @@ export const routes: Routes = [
       },
       {
         path: "configuracoes",
-        title: "Configurações · KNODORI",
+        title: "configurações · KNODORI",
         data: {
-          seo: seo("Status do banco de dados, logs e chaves de API."),
+          seo: seo("status do banco de dados, logs e chaves de API."),
           logs: MOCK_LOGS,
           dbStatus: MOCK_DB_STATUS,
           apiKeys: MOCK_API_KEYS,
@@ -149,8 +149,8 @@ export const routes: Routes = [
       {
         path: "",
         pathMatch: "full",
-        title: "Painel GOM · KNODORI",
-        data: { seo: seo("Painel da GOM: CEGs, pedidos Mercari e suas joiners.") },
+        title: "painel GOM · KNODORI",
+        data: { seo: seo("painel da GOM: CEGs, pedidos mercari e suas joiners.") },
         loadComponent: () =>
           import("./components/dashboards/gom-dashboard/gom-dashboard.component").then(
             (m) => m.GomDashboardComponent,
@@ -159,7 +159,7 @@ export const routes: Routes = [
       {
         path: "cegs",
         title: "CEGs · KNODORI",
-        data: { seo: seo("Gestão das suas CEGs.") },
+        data: { seo: seo("gestão das suas CEGs.") },
         loadComponent: () =>
           import("./components/gom/gerenciamento-cegs/gerenciamento-cegs.component").then(
             (m) => m.GerenciamentoCegsComponent,
@@ -167,21 +167,21 @@ export const routes: Routes = [
       },
       {
         path: "financeiro",
-        title: "Financeiro · KNODORI",
-        data: { seo: seo("Resumo financeiro das suas CEGs.") },
+        title: "financeiro · KNODORI",
+        data: { seo: seo("resumo financeiro das suas CEGs.") },
         loadComponent: () =>
           import("./pages/gom-financeiro/gom-financeiro.page").then((m) => m.GomFinanceiroPage),
       },
       {
         path: "fila",
-        title: "Fila Mercari · KNODORI",
-        data: { seo: seo("Gerencie os pedidos Mercari e acompanhe o status das solicitações.") },
+        title: "fila mercari · KNODORI",
+        data: { seo: seo("gerencie os pedidos mercari e acompanhe o status das solicitações.") },
         loadComponent: () => import("./pages/gom-fila/gom-fila.page").then((m) => m.GomFilaPage),
       },
       {
         path: "joiners",
-        title: "Joiners · KNODORI",
-        data: { seo: seo("Gestão de joiners e histórico de pedidos."), joiners: MOCK_JOINERS },
+        title: "joiners · KNODORI",
+        data: { seo: seo("gestão de joiners e histórico de pedidos."), joiners: MOCK_JOINERS },
         loadComponent: () =>
           import("./components/gom/gestao-joiners/gestao-joiners.component").then(
             (m) => m.GestaoJoinersComponent,
@@ -189,8 +189,8 @@ export const routes: Routes = [
       },
       {
         path: "taxas",
-        title: "Taxas · KNODORI",
-        data: { seo: seo("Configure spreads e markups por item."), config: CONFIG_TAXAS_DEFAULT },
+        title: "taxas · KNODORI",
+        data: { seo: seo("configure spreads e markups por item."), config: CONFIG_TAXAS_DEFAULT },
         loadComponent: () =>
           import("./components/gom/painel-taxas/painel-taxas.component").then(
             (m) => m.PainelTaxasComponent,
@@ -208,8 +208,8 @@ export const routes: Routes = [
       {
         path: "",
         pathMatch: "full",
-        title: "Minha Área · KNODORI",
-        data: { seo: seo("Sua área de joiner: pedidos, pagamentos e perfil.") },
+        title: "minha área · KNODORI",
+        data: { seo: seo("sua área de joiner: pedidos, pagamentos e perfil.") },
         loadComponent: () =>
           import("./components/dashboards/joiner-dashboard/joiner-dashboard.component").then(
             (m) => m.JoinerDashboardComponent,
@@ -217,8 +217,8 @@ export const routes: Routes = [
       },
       {
         path: "compras",
-        title: "Minhas Compras · KNODORI",
-        data: { seo: seo("Acompanhe seus pedidos em andamento.") },
+        title: "minhas compras · KNODORI",
+        data: { seo: seo("acompanhe seus pedidos em andamento.") },
         loadComponent: () =>
           import("./components/joiner/minhas-compras/minhas-compras.component").then(
             (m) => m.MinhasComprasComponent,
@@ -226,8 +226,8 @@ export const routes: Routes = [
       },
       {
         path: "extrato",
-        title: "Extrato · KNODORI",
-        data: { seo: seo("Seu histórico financeiro de compras.") },
+        title: "extrato · KNODORI",
+        data: { seo: seo("seu histórico financeiro de compras.") },
         loadComponent: () =>
           import("./components/joiner/extrato-individual/extrato-individual.component").then(
             (m) => m.ExtratoIndividualComponent,
@@ -239,7 +239,7 @@ export const routes: Routes = [
   // ── 404 ──────────────────────────────────────────────────────────────────
   {
     path: "**",
-    title: "Page not found · KNODORI",
+    title: "page not found · KNODORI",
     loadComponent: () => import("./pages/not-found/not-found.page").then((m) => m.NotFoundPage),
   },
 ];

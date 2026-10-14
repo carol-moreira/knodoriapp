@@ -3,7 +3,7 @@
   <aside class="cozy-card h-fit p-4 lg:sticky lg:top-24">
     <div class="mb-4 px-2">
       <p class="cozy-pill bg-primary text-primary-foreground inline-block">SUPER ADMIN</p>
-      <h2 class="mt-2 text-sm font-bold leading-snug text-foreground">Gerenciamento Global</h2>
+      <h2 class="mt-2 text-sm font-bold leading-snug text-foreground">gerenciamento global</h2>
     </div>
     <nav class="flex flex-col gap-1">
       @for (item of sidebar; track item.id) {
@@ -19,14 +19,14 @@
     <header class="flex flex-wrap items-end justify-between gap-3">
       <div>
         <p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-          Painel de Super Administração
+          painel de super administração
         </p>
-        <h1 class="mt-1 text-3xl font-bold tracking-tight">Gerenciamento Global</h1>
+        <h1 class="mt-1 text-3xl font-bold tracking-tight">gerenciamento global</h1>
       </div>
       <button
         class="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-md transition hover:opacity-90"
       >
-        <svg [appIcon]="icons.Plus" class="h-4 w-4"></svg> Registrar Nova GOM
+        <svg [appIcon]="icons.Plus" class="h-4 w-4"></svg> registrar nova GOM
       </button>
     </header>
 
@@ -66,7 +66,7 @@
       <div class="flex gap-2">
         @for (r of roleFilters; track r) {
           <button (click)="roleFilter.set(r)" [class]="roleFilterClass(r)">
-            {{ r === "ALL" ? "Todas funções" : r }}
+            {{ r === "ALL" ? "todas funções" : r }}
           </button>
         }
       </div>
@@ -77,12 +77,12 @@
       <table class="w-full text-sm">
         <thead class="bg-primary text-xs uppercase tracking-wider text-primary-foreground">
           <tr>
-            <th class="px-6 py-4 text-left font-semibold">Usuário</th>
-            <th class="px-4 py-4 text-left font-semibold">Função</th>
-            <th class="px-4 py-4 text-left font-semibold">Status</th>
-            <th class="px-4 py-4 text-left font-semibold">Cadastro</th>
-            <th class="px-4 py-4 text-left font-semibold">Última atividade</th>
-            <th class="px-4 py-4 text-right font-semibold">Ações</th>
+            <th class="px-6 py-4 text-left font-semibold">usuário</th>
+            <th class="px-4 py-4 text-left font-semibold">função</th>
+            <th class="px-4 py-4 text-left font-semibold">status</th>
+            <th class="px-4 py-4 text-left font-semibold">cadastro</th>
+            <th class="px-4 py-4 text-left font-semibold">última atividade</th>
+            <th class="px-4 py-4 text-right font-semibold">ações</th>
           </tr>
         </thead>
         <tbody>
@@ -122,7 +122,7 @@
                       : 'bg-neutral-200 text-neutral-700 ring-neutral-300')
                   "
                 >
-                  {{ u.status === "ATIVO" ? "● Ativo" : "● Suspenso" }}
+                  {{ u.status === "ATIVO" ? "● ativo" : "● suspenso" }}
                 </span>
               </td>
               <td class="px-4 py-4 text-muted-foreground">{{ u.cadastro }}</td>
@@ -133,7 +133,7 @@
                     (click)="selected.set(u)"
                     class="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary ring-1 ring-primary/30 hover:bg-primary/20"
                   >
-                    <svg [appIcon]="icons.Eye" class="h-3.5 w-3.5"></svg> Ver CEGs
+                    <svg [appIcon]="icons.Eye" class="h-3.5 w-3.5"></svg> ver CEGs
                   </button>
                   <button
                     (click)="toggleStatus(u.id)"
@@ -145,9 +145,9 @@
                     "
                   >
                     @if (u.status === "ATIVO") {
-                      <svg [appIcon]="icons.Ban" class="h-3.5 w-3.5"></svg> Suspender
+                      <svg [appIcon]="icons.Ban" class="h-3.5 w-3.5"></svg> suspender
                     } @else {
-                      <svg [appIcon]="icons.RotateCcw" class="h-3.5 w-3.5"></svg> Reativar
+                      <svg [appIcon]="icons.RotateCcw" class="h-3.5 w-3.5"></svg> reativar
                     }
                   </button>
                 </div>
@@ -195,7 +195,7 @@
         </h3>
         <ul class="mt-2 divide-y divide-border">
           @if (sel.cegs.length === 0) {
-            <li class="py-6 text-center text-sm text-muted-foreground">Nenhuma CEG vinculada.</li>
+            <li class="py-6 text-center text-sm text-muted-foreground">nenhuma CEG vinculada.</li>
           }
           @for (c of sel.cegs; track c.id) {
             <li class="flex items-center justify-between py-3">

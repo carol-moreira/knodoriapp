@@ -122,11 +122,11 @@ export const MOCK_PEDIDOS: PedidoJoiner[] = [
 // ---------------------------------------------------------------------------
 
 export const STEPS: { key: PedidoStatus; label: string; icon: LucideIconData }[] = [
-  { key: "PENDENTE", label: "Solicitado", icon: Clock },
-  { key: "AGUARDANDO_PIX", label: "Aguard. PIX", icon: DollarSign },
-  { key: "PAGO", label: "Pago", icon: CheckCircle2 },
-  { key: "COMPRADO", label: "Comprado", icon: ShoppingCart },
-  { key: "EM_TRANSITO", label: "Em Trânsito", icon: Truck },
+  { key: "PENDENTE", label: "solicitado", icon: Clock },
+  { key: "AGUARDANDO_PIX", label: "aguard. PIX", icon: DollarSign },
+  { key: "PAGO", label: "pago", icon: CheckCircle2 },
+  { key: "COMPRADO", label: "comprado", icon: ShoppingCart },
+  { key: "EM_TRANSITO", label: "em trânsito", icon: Truck },
 ];
 
 export const STEP_INDEX: Record<PedidoStatus, number> = {
@@ -148,12 +148,12 @@ export const STATUS_BADGE: Record<PedidoStatus, string> = {
 };
 
 export const STATUS_LABEL: Record<PedidoStatus, string> = {
-  PENDENTE: "Pendente",
-  AGUARDANDO_PIX: "Aguardando PIX",
-  PAGO: "Pago",
-  COMPRADO: "Comprado",
-  EM_TRANSITO: "Em Trânsito",
-  CHEGOU: "Entregue",
+  PENDENTE: "pendente",
+  AGUARDANDO_PIX: "aguardando PIX",
+  PAGO: "pago",
+  COMPRADO: "comprado",
+  EM_TRANSITO: "em trânsito",
+  CHEGOU: "entregue",
 };
 
 export const BAR_COLOR: Partial<Record<PedidoStatus, string>> = {
@@ -165,13 +165,13 @@ export const BAR_COLOR: Partial<Record<PedidoStatus, string>> = {
 };
 
 export const ITEM_LABELS: Record<string, string> = {
-  photocard: "Photocard",
-  postcard: "Postcard",
-  adesivo: "Adesivo",
-  pequeno: "Merch Peq.",
-  pelucia_pequena: "Pelúcia",
-  album: "Álbum",
-  grande: "Item Grande",
+  photocard: "photocard",
+  postcard: "postcard",
+  adesivo: "adesivo",
+  pequeno: "merch peq.",
+  pelucia_pequena: "pelúcia",
+  album: "álbum",
+  grande: "item grande",
 };
 
 export const INPUT_CLS =

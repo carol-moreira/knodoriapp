@@ -7,9 +7,9 @@
       >
         <svg [appIcon]="icons.Heart" class="h-8 w-8" fill="currentColor"></svg>
       </div>
-      <h1 class="text-2xl font-bold tracking-tight">Bem-vinda! 🎉</h1>
+      <h1 class="text-2xl font-bold tracking-tight">bem-vinda! 🎉</h1>
       <p class="mt-2 text-sm text-muted-foreground">
-        Configure seu perfil para começar. Você pode editar isso depois.
+        configure seu perfil para começar. você pode editar isso depois.
       </p>
     </div>
 
@@ -17,14 +17,14 @@
       <!-- Avatar picker -->
       <div class="space-y-3">
         <label class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Foto de perfil
+          foto de perfil
         </label>
 
         <!-- Preview do avatar atual -->
         <div class="flex items-center gap-4">
           @if (effectiveAvatar()?.startsWith("data:")) {
             <div class="h-16 w-16 shrink-0 overflow-hidden rounded-2xl ring-2 ring-primary/20">
-              <img [src]="effectiveAvatar()" alt="Avatar" class="h-full w-full object-cover" />
+              <img [src]="effectiveAvatar()" alt="avatar" class="h-full w-full object-cover" />
             </div>
           } @else if (previewPreset(); as preset) {
             <div
@@ -50,7 +50,7 @@
               class="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground transition hover:bg-muted"
             >
               <svg [appIcon]="icons.Upload" class="h-3.5 w-3.5"></svg>
-              {{ uploadedAvatar() ? "Trocar foto" : "Fazer upload" }}
+              {{ uploadedAvatar() ? "trocar foto" : "fazer upload" }}
             </button>
             <p class="text-[10px] text-muted-foreground">JPG, PNG ou WebP · máx. 4 MB</p>
           </div>
@@ -78,12 +78,12 @@
 
       <!-- Nome de exibição -->
       <div class="space-y-1.5">
-        <label [class]="labelCls"> Nome de exibição <span class="text-destructive">*</span> </label>
+        <label [class]="labelCls"> nome de exibição <span class="text-destructive">*</span> </label>
         <input
           [value]="nome()"
           (input)="nome.set(val($event))"
           (blur)="touch('nome')"
-          placeholder="Como você quer ser chamada?"
+          placeholder="como você quer ser chamada?"
           maxlength="40"
           [class]="inputCls(!!nomeError())"
         />
@@ -98,7 +98,7 @@
       <!-- Username -->
       <div class="space-y-1.5">
         <label [class]="labelCls">
-          Seu &#64; na plataforma <span class="text-destructive">*</span>
+          seu &#64; na plataforma <span class="text-destructive">*</span>
         </label>
         <div
           [class]="
@@ -132,13 +132,13 @@
         }
         @if (!usernameError() && rawUsername().length >= 3) {
           <p class="flex items-center gap-1 text-[10px] text-emerald-600">
-            <svg [appIcon]="icons.CheckCircle2" class="h-3 w-3"></svg> Você será &#64;{{
+            <svg [appIcon]="icons.CheckCircle2" class="h-3 w-3"></svg> você será &#64;{{
               rawUsername()
             }}
           </p>
         }
         <p class="text-[10px] text-muted-foreground">
-          Letras, números, _ e . · não pode mudar depois (por enquanto)
+          letras, números, _ e . · não pode mudar depois (por enquanto)
         </p>
       </div>
 
@@ -160,10 +160,10 @@
       >
         @if (loading()) {
           <span class="flex items-center justify-center gap-2">
-            <svg [appIcon]="icons.Loader2" class="h-4 w-4 animate-spin"></svg> Configurando…
+            <svg [appIcon]="icons.Loader2" class="h-4 w-4 animate-spin"></svg> configurando…
           </span>
         } @else {
-          Entrar na plataforma 🍒
+          entrar na plataforma 🍒
         }
       </button>
     </form>

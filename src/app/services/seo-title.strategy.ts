@@ -7,7 +7,7 @@ import {
 } from "@angular/router";
 
 const DEFAULT_TITLE = "KNODORI";
-const DEFAULT_DESCRIPTION = "Gerenciamento fofo de CEGs e coleções de K-pop.";
+const DEFAULT_DESCRIPTION = "gerenciamento fofo de CEGs e coleções de k-pop.";
 
 /** Metadados de <head> declarados em `data` de cada rota (antes: `head()` do TanStack). */
 export interface RouteSeo {

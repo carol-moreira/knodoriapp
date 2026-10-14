@@ -209,39 +209,39 @@ export const MOCK_REPASSES: Record<string, Repasse[]> = {
 
 export const CEG_STATUS_META: Record<CegStatus, { label: string; badge: string; step: number }> = {
   ABERTA: {
-    label: "Aberta",
+    label: "aberta",
     badge: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
     step: 1,
   },
   EM_COMPRA: {
-    label: "Em compra",
+    label: "em compra",
     badge: "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
     step: 2,
   },
-  TRANSITO: { label: "Em trânsito", badge: "bg-sky-50 text-sky-700 ring-1 ring-sky-200", step: 3 },
+  TRANSITO: { label: "em trânsito", badge: "bg-sky-50 text-sky-700 ring-1 ring-sky-200", step: 3 },
   CHEGOU_BR: {
-    label: "Chegou BR",
+    label: "chegou BR",
     badge: "bg-violet-50 text-violet-700 ring-1 ring-violet-200",
     step: 4,
   },
-  FINALIZADA: { label: "Finalizada", badge: "bg-muted text-muted-foreground", step: 5 },
+  FINALIZADA: { label: "finalizada", badge: "bg-muted text-muted-foreground", step: 5 },
 };
 
 export const REPASSE_META = {
-  PENDENTE: { label: "Pendente", cls: "bg-amber-50 text-amber-700 ring-1 ring-amber-200" },
-  PARCIAL: { label: "Parcial", cls: "bg-blue-50 text-blue-700 ring-1 ring-blue-200" },
-  PAGO: { label: "Pago", cls: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" },
+  PENDENTE: { label: "pendente", cls: "bg-amber-50 text-amber-700 ring-1 ring-amber-200" },
+  PARCIAL: { label: "parcial", cls: "bg-blue-50 text-blue-700 ring-1 ring-blue-200" },
+  PAGO: { label: "pago", cls: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" },
 };
 
 export const LOJAS = ["Mercari", "Ktown4u", "Weverse", "YesAsia", "Outra"];
 export const MOEDAS: Moeda[] = ["JPY", "KRW", "USD", "IDR"];
 export const FILTROS: { label: string; value: CegStatus | "TODAS" }[] = [
-  { label: "Todas", value: "TODAS" },
-  { label: "Aberta", value: "ABERTA" },
-  { label: "Em compra", value: "EM_COMPRA" },
-  { label: "Em trânsito", value: "TRANSITO" },
-  { label: "Chegou BR", value: "CHEGOU_BR" },
-  { label: "Finalizada", value: "FINALIZADA" },
+  { label: "todas", value: "TODAS" },
+  { label: "aberta", value: "ABERTA" },
+  { label: "em compra", value: "EM_COMPRA" },
+  { label: "em trânsito", value: "TRANSITO" },
+  { label: "chegou BR", value: "CHEGOU_BR" },
+  { label: "finalizada", value: "FINALIZADA" },
 ];
 
 export const INPUT_CLS =

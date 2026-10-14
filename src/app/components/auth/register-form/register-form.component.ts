@@ -12,9 +12,9 @@ import { inputCls, labelCls } from "../auth-form.styles";
 
 const REQUIREMENTS = [
   { label: "8+ caracteres", test: (p: string) => p.length >= 8 },
-  { label: "Letra maiúscula", test: (p: string) => /[A-Z]/.test(p) },
-  { label: "Número", test: (p: string) => /[0-9]/.test(p) },
-  { label: "Caractere especial", test: (p: string) => /[^A-Za-z0-9]/.test(p) },
+  { label: "letra maiúscula", test: (p: string) => /[A-Z]/.test(p) },
+  { label: "número", test: (p: string) => /[0-9]/.test(p) },
+  { label: "caractere especial", test: (p: string) => /[^A-Za-z0-9]/.test(p) },
 ];
 
 const STRENGTH_COLORS = [
@@ -58,13 +58,13 @@ export class RegisterFormComponent {
   );
 
   protected readonly emailError = computed(() =>
-    this.touched().email && !isValidEmail(this.email()) ? "E-mail inválido." : "",
+    this.touched().email && !isValidEmail(this.email()) ? "e-mail inválido." : "",
   );
   protected readonly passwordError = computed(() =>
-    this.touched().password && this.password().length < 8 ? "Mínimo de 8 caracteres." : "",
+    this.touched().password && this.password().length < 8 ? "mínimo de 8 caracteres." : "",
   );
   protected readonly confirmError = computed(() =>
-    this.touched().confirm && this.confirm() !== this.password() ? "As senhas não coincidem." : "",
+    this.touched().confirm && this.confirm() !== this.password() ? "as senhas não coincidem." : "",
   );
 
   protected readonly canSubmit = computed(
@@ -90,7 +90,7 @@ export class RegisterFormComponent {
       await this.auth.signUpWithEmail(this.email(), this.password());
       this.success.emit();
     } catch (err) {
-      this.error.set(err instanceof Error ? err.message : "Erro ao criar conta.");
+      this.error.set(err instanceof Error ? err.message : "erro ao criar conta.");
     } finally {
       this.loading.set(false);
     }
