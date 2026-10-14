@@ -15,7 +15,7 @@
       <!-- Logo mobile -->
       <div class="flex items-center gap-2.5 lg:hidden">
         <span
-          class="grid h-10 w-10 place-items-center overflow-hidden rounded-2xl bg-primary shadow-sm"
+          class="grid h-10 w-10 place-items-center"
         >
           @if (!logoMobileFailed()) {
             <img
@@ -27,7 +27,7 @@
           } @else {
             <svg
               [appIcon]="icons.Heart"
-              class="h-5 w-5 text-primary-foreground"
+              class="h-5 w-5 text-primary"
               fill="currentColor"
             ></svg>
           }
