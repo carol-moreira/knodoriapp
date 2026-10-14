@@ -20,6 +20,6 @@ export class AuthScreenComponent {
   protected readonly tabs: AuthTab[] = ["login", "register"];
 
   protected readonly tab = signal<AuthTab>("login");
-  // Fallback do logo: se /logo.jpg não carregar, mostra o coração
+  // Fallback do logo: se /images/init/icon.png não carregar, mostra o coração
   protected readonly logoMobileFailed = signal(false);
 }

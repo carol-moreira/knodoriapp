@@ -154,7 +154,7 @@ Font stack: `SF Pro Rounded`, `Nunito`, `Quicksand`.
 
 ### App Logo
 
-The logo lives at `public/logo.jpg` (served at `/logo.jpg`). It renders in the header and auth screen. If it fails to load, a Heart icon fallback is shown automatically.
+The official icon/logo lives at `public/images/init/icon.png` (served at `/images/init/icon.png`); it is also the favicon, apple-touch-icon and og:image. It renders in the header and auth screen. If it fails to load, a Heart icon fallback is shown automatically.
 
 ### Profile Settings
 
