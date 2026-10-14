@@ -8,7 +8,75 @@
 // Solicitação Mercari (perspectiva da GOM)
 // ---------------------------------------------------------------------------
 
-export type MercariStatus = "PENDENTE" | "AGUARDANDO_PAGAMENTO" | "COMPRADO";
+/**
+ * Etapas de um pedido Mercari, na ordem do fluxo:
+ *  fila → pagamento → GOM compra com a proxy → compra confirmada (proof) → warehouse
+ *  → caixa fechada (fretes/taxas cobrados) → caixa chegou na GOM → envio nacional liberado.
+ * As 3 últimas são controladas pela caixa (CEG "caixa mercari N"), não pedido a pedido.
+ */
+export type MercariStatus =
+  | "PENDENTE"
+  | "AGUARDANDO_PAGAMENTO"
+  | "PAGO"
+  | "PEDIDO_FEITO"
+  | "COMPRADO"
+  | "NA_WAREHOUSE"
+  | "CAIXA_FECHADA"
+  | "CHEGOU_GOM"
+  | "ENVIO_LIBERADO";
+
+export const MERCARI_ETAPAS: MercariStatus[] = [
+  "PENDENTE",
+  "AGUARDANDO_PAGAMENTO",
+  "PAGO",
+  "PEDIDO_FEITO",
+  "COMPRADO",
+  "NA_WAREHOUSE",
+  "CAIXA_FECHADA",
+  "CHEGOU_GOM",
+  "ENVIO_LIBERADO",
+];
+
+/** Etapas alteradas pedido a pedido (as demais vêm das ações da caixa). */
+export const MERCARI_ETAPAS_PEDIDO: MercariStatus[] = MERCARI_ETAPAS.slice(0, 6);
+
+export const MERCARI_STATUS_META: Record<MercariStatus, { label: string; badge: string }> = {
+  PENDENTE: { label: "na fila", badge: "bg-amber-50 text-amber-700 ring-1 ring-amber-200" },
+  AGUARDANDO_PAGAMENTO: {
+    label: "aguard. pgto",
+    badge: "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
+  },
+  PAGO: { label: "pago", badge: "bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200" },
+  PEDIDO_FEITO: {
+    label: "pedido feito",
+    badge: "bg-violet-50 text-violet-700 ring-1 ring-violet-200",
+  },
+  COMPRADO: {
+    label: "compra confirmada",
+    badge: "bg-lime-50 text-lime-700 ring-1 ring-lime-200",
+  },
+  NA_WAREHOUSE: {
+    label: "na warehouse",
+    badge: "bg-teal-50 text-teal-700 ring-1 ring-teal-200",
+  },
+  CAIXA_FECHADA: {
+    label: "caixa fechada",
+    badge: "bg-sky-50 text-sky-700 ring-1 ring-sky-200",
+  },
+  CHEGOU_GOM: {
+    label: "chegou na GOM",
+    badge: "bg-orange-50 text-orange-700 ring-1 ring-orange-200",
+  },
+  ENVIO_LIBERADO: {
+    label: "envio liberado",
+    badge: "bg-primary/10 text-primary ring-1 ring-primary/30",
+  },
+};
+
+/** Posição da etapa no fluxo (para comparações "já passou de…"). */
+export function etapaMercari(status: MercariStatus): number {
+  return MERCARI_ETAPAS.indexOf(status);
+}
 
 export interface SolicitacaoGOM {
   id: string;
@@ -24,6 +92,11 @@ export interface SolicitacaoGOM {
   status: MercariStatus;
   dataSolicitacao: string;
   rastreio?: string;
+  /** Caixa mercari (CEG) para a qual o pedido foi direcionado ao confirmar a compra. */
+  cegId?: string;
+  cegNome?: string;
+  /** Imagens de proof da compra anexadas pela GOM. */
+  proofs?: string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -74,13 +147,13 @@ export type ItemKey =
   "photocard" | "postcard" | "adesivo" | "pequeno" | "pelucia_pequena" | "album" | "grande";
 
 export const ITEM_META: Record<ItemKey, { label: string; emoji: string }> = {
-  photocard: { label: "Photocard", emoji: "🃏" },
-  postcard: { label: "Postcard", emoji: "📮" },
-  adesivo: { label: "Adesivo (Cartela)", emoji: "✨" },
-  pequeno: { label: "Item Peq. (Outros Merchs)", emoji: "📦" },
-  pelucia_pequena: { label: "Pelúcia Pequena", emoji: "🧸" },
-  album: { label: "Álbum", emoji: "💿" },
-  grande: { label: "Item Grande (>15cm)", emoji: "🎁" },
+  photocard: { label: "photocard", emoji: "🃏" },
+  postcard: { label: "postcard", emoji: "📮" },
+  adesivo: { label: "adesivo (cartela)", emoji: "✨" },
+  pequeno: { label: "item peq. (outros merchs)", emoji: "📦" },
+  pelucia_pequena: { label: "pelúcia pequena", emoji: "🧸" },
+  album: { label: "álbum", emoji: "💿" },
+  grande: { label: "item grande (>15cm)", emoji: "🎁" },
 };
 
 export const CONFIG_TAXAS_DEFAULT: ConfigTaxasGOM = {
@@ -144,9 +217,12 @@ export const MOCK_SOLICITACOES: SolicitacaoGOM[] = [
     valorBrl: 301.0,
     formaPagamento: "cartao",
     parcelas: 1,
-    status: "COMPRADO",
+    status: "NA_WAREHOUSE",
     dataSolicitacao: "2026-05-20",
     rastreio: "JP123456789BR",
+    cegId: "ceg_cx1",
+    cegNome: "caixa mercari 1",
+    proofs: ["https://picsum.photos/seed/proof-req03/400/400"],
   },
   {
     id: "req_04",
@@ -159,8 +235,11 @@ export const MOCK_SOLICITACOES: SolicitacaoGOM[] = [
     valorBrl: 152.4,
     formaPagamento: "pix",
     parcelas: 1,
-    status: "PENDENTE",
+    status: "COMPRADO",
     dataSolicitacao: "2026-06-06",
+    cegId: "ceg_cx1",
+    cegNome: "caixa mercari 1",
+    proofs: ["https://picsum.photos/seed/proof-req04/400/400"],
   },
   {
     id: "req_05",
@@ -189,6 +268,9 @@ export const MOCK_SOLICITACOES: SolicitacaoGOM[] = [
     parcelas: 1,
     status: "COMPRADO",
     dataSolicitacao: "2026-05-15",
+    cegId: "ceg_cx1",
+    cegNome: "caixa mercari 1",
+    proofs: ["https://picsum.photos/seed/proof-req06/400/400"],
   },
 ];
 
@@ -247,7 +329,7 @@ export const MOCK_HISTORICO: Record<string, HistoricoPedido[]> = {
   j1: [
     {
       id: "req_01",
-      descricao: "2x Photocard · 1x Adesivo",
+      descricao: "2x photocard · 1x adesivo",
       valorBrl: 95.3,
       status: "PENDENTE",
       dataSolicitacao: "2026-06-05",
@@ -256,7 +338,7 @@ export const MOCK_HISTORICO: Record<string, HistoricoPedido[]> = {
     },
     {
       id: "req_04",
-      descricao: "1x Pelúcia Pequena",
+      descricao: "1x pelúcia pequena",
       valorBrl: 152.4,
       status: "PENDENTE",
       dataSolicitacao: "2026-06-06",
@@ -265,7 +347,7 @@ export const MOCK_HISTORICO: Record<string, HistoricoPedido[]> = {
     },
     {
       id: "old_01",
-      descricao: "3x Photocard",
+      descricao: "3x photocard",
       valorBrl: 130.2,
       status: "COMPRADO",
       dataSolicitacao: "2026-04-10",
@@ -274,7 +356,7 @@ export const MOCK_HISTORICO: Record<string, HistoricoPedido[]> = {
     },
     {
       id: "old_02",
-      descricao: "1x Álbum",
+      descricao: "1x álbum",
       valorBrl: 215.8,
       status: "COMPRADO",
       dataSolicitacao: "2026-03-22",
@@ -283,7 +365,7 @@ export const MOCK_HISTORICO: Record<string, HistoricoPedido[]> = {
     },
     {
       id: "old_03",
-      descricao: "2x Postcard",
+      descricao: "2x postcard",
       valorBrl: 46.8,
       status: "COMPRADO",
       dataSolicitacao: "2026-02-14",
@@ -294,7 +376,7 @@ export const MOCK_HISTORICO: Record<string, HistoricoPedido[]> = {
   j2: [
     {
       id: "req_02",
-      descricao: "1x Álbum · 1x Photocard",
+      descricao: "1x álbum · 1x photocard",
       valorBrl: 186.5,
       status: "AGUARDANDO_PAGAMENTO",
       dataSolicitacao: "2026-05-28",
@@ -303,7 +385,7 @@ export const MOCK_HISTORICO: Record<string, HistoricoPedido[]> = {
     },
     {
       id: "req_06",
-      descricao: "4x Postcard · 2x Adesivo",
+      descricao: "4x postcard · 2x adesivo",
       valorBrl: 79.2,
       status: "COMPRADO",
       dataSolicitacao: "2026-05-15",
@@ -312,7 +394,7 @@ export const MOCK_HISTORICO: Record<string, HistoricoPedido[]> = {
     },
     {
       id: "old_04",
-      descricao: "1x Álbum",
+      descricao: "1x álbum",
       valorBrl: 215.8,
       status: "COMPRADO",
       dataSolicitacao: "2026-04-02",
@@ -323,7 +405,7 @@ export const MOCK_HISTORICO: Record<string, HistoricoPedido[]> = {
   j3: [
     {
       id: "req_03",
-      descricao: "1x Item Grande",
+      descricao: "1x item grande",
       valorBrl: 301.0,
       status: "COMPRADO",
       dataSolicitacao: "2026-05-20",
@@ -334,7 +416,7 @@ export const MOCK_HISTORICO: Record<string, HistoricoPedido[]> = {
   j4: [
     {
       id: "req_05",
-      descricao: "5x Photocard",
+      descricao: "5x photocard",
       valorBrl: 198.6,
       status: "AGUARDANDO_PAGAMENTO",
       dataSolicitacao: "2026-06-03",

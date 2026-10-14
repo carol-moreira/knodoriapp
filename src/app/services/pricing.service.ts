@@ -104,7 +104,7 @@ export class PricingService {
 function toError(e: unknown): Error {
   if (e instanceof HttpErrorResponse) {
     const msg = (e.error as { message?: string } | null)?.message;
-    return new Error(msg ?? "Erro inesperado ao calcular o preço.");
+    return new Error(msg ?? "erro inesperado ao calcular o preço.");
   }
-  return e instanceof Error ? e : new Error("Erro inesperado ao calcular o preço.");
+  return e instanceof Error ? e : new Error("erro inesperado ao calcular o preço.");
 }

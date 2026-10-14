@@ -174,15 +174,15 @@ export function createOAuth2Adapter(config: OAuth2Config): AuthAdapter {
   return {
     async signInWithEmail(_email, _password) {
       // OAuth2 puro não expõe login por senha no cliente; use resource-owner grant ou redirecione
-      throw new Error("Use signInWithGoogle para este provedor OAuth2.");
+      throw new Error("use signInWithGoogle para este provedor OAuth2.");
     },
     async signUpWithEmail(_email, _password) {
-      throw new Error("Cadastro via OAuth2 deve ser feito no portal do provedor.");
+      throw new Error("cadastro via OAuth2 deve ser feito no portal do provedor.");
     },
     async signInWithGoogle() {
       await manager.signinRedirect();
       const user = await manager.getUser();
-      if (!user) throw new Error("Autenticação cancelada.");
+      if (!user) throw new Error("autenticação cancelada.");
       return { id: user.profile.sub, email: user.profile.email!, nome: user.profile.name, avatarUrl: user.profile.picture };
     },
     async signOut() {

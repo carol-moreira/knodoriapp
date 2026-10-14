@@ -31,10 +31,10 @@ export class LoginFormComponent {
   // Erros de validação por campo
   protected readonly touched = signal({ email: false, password: false });
   protected readonly emailError = computed(() =>
-    this.touched().email && !isValidEmail(this.email()) ? "E-mail inválido." : "",
+    this.touched().email && !isValidEmail(this.email()) ? "e-mail inválido." : "",
   );
   protected readonly passwordError = computed(() =>
-    this.touched().password && this.password().length < 8 ? "Mínimo de 8 caracteres." : "",
+    this.touched().password && this.password().length < 8 ? "mínimo de 8 caracteres." : "",
   );
 
   protected readonly canSubmit = computed(
@@ -47,7 +47,7 @@ export class LoginFormComponent {
 
   protected forgotPassword(): void {
     // 🔌 Implementar fluxo de recuperação de senha
-    alert("Função de recuperação em breve ♡");
+    alert("função de recuperação em breve ♡");
   }
 
   protected async handleSubmit(e: Event): Promise<void> {
@@ -61,7 +61,7 @@ export class LoginFormComponent {
       await this.auth.signInWithEmail(this.email(), this.password());
       this.success.emit();
     } catch (err) {
-      this.error.set(err instanceof Error ? err.message : "Erro ao fazer login.");
+      this.error.set(err instanceof Error ? err.message : "erro ao fazer login.");
     } finally {
       this.loading.set(false);
     }

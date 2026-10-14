@@ -53,7 +53,7 @@ export class RoleChangeDialogComponent {
     const pending = this.pending();
     if (!pending) return;
     if (!this.senha().trim()) {
-      this.erro.set("Digite sua senha de administrador.");
+      this.erro.set("digite sua senha de administrador.");
       return;
     }
     // 🔌 Validar hash da senha via POST /api/admin/verify-password antes de aplicar

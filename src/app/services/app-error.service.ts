@@ -8,7 +8,7 @@ export class AppErrorService {
   readonly error = this._error.asReadonly();
 
   set(error: unknown): void {
-    this._error.set(error ?? new Error("Erro desconhecido."));
+    this._error.set(error ?? new Error("erro desconhecido."));
   }
 
   reset(): void {

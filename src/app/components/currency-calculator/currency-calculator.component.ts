@@ -1,7 +1,7 @@
 // =====================================================================
 // COMPONENTE B) Formulário de Solicitação do Joiner — JPY → BRL
 // =====================================================================
-import { Component, computed, signal } from "@angular/core";
+import { Component, computed, inject, signal } from "@angular/core";
 import {
   AlertCircle,
   ArrowRight,
@@ -15,19 +15,21 @@ import {
 } from "lucide-angular";
 import { IconDirective } from "@/shared/icon.directive";
 import { inputValue } from "@/shared/dom";
+import { AuthService } from "@/services/auth.service";
+import { PedidosMercariService } from "@/services/pedidos-mercari.service";
 
 const TAXA_COMERCIAL_IDR_BRL = 0.000286;
 const SPREAD_WISE = 1.025;
 
 // Configuração das taxas internas por tipo de item (agora ocultas para o usuário)
 const ITEM_TYPES = {
-  photocard: { label: "Photocard", taxa: 2.5 },
-  postcard: { label: "Postcard", taxa: 2.5 },
-  adesivo: { label: "Adesivo (Cartela)", taxa: 2.5 },
-  pequeno: { label: "Item Peq. (Outros Merchs)", taxa: 8.0 },
-  pelucia_pequena: { label: "Pelúcia Pequena", taxa: 10.0 },
-  album: { label: "Álbum", taxa: 15.0 },
-  grande: { label: "Item Grande (> 15cm)", taxa: 25.0 },
+  photocard: { label: "photocard", taxa: 2.5 },
+  postcard: { label: "postcard", taxa: 2.5 },
+  adesivo: { label: "adesivo (cartela)", taxa: 2.5 },
+  pequeno: { label: "item peq. (outros merchs)", taxa: 8.0 },
+  pelucia_pequena: { label: "pelúcia pequena", taxa: 10.0 },
+  album: { label: "álbum", taxa: 15.0 },
+  grande: { label: "item grande (> 15cm)", taxa: 25.0 },
 };
 
 type ItemChave = keyof typeof ITEM_TYPES;
@@ -44,13 +46,13 @@ const TAXAS_CARTAO: Record<number, number> = {
 };
 
 const PARCELAS_OPCOES = [
-  { value: 1, label: "1x (Taxa de 4,98%)" },
-  { value: 2, label: "2x (Taxa de 9,64%)" },
-  { value: 3, label: "3x (Taxa de 11,23%)" },
-  { value: 4, label: "4x (Taxa de 11,36%)" },
-  { value: 5, label: "5x (Taxa de 14,31%)" },
-  { value: 6, label: "6x (Taxa de 14,32%)" },
-  { value: 7, label: "7x (Taxa de 16,72%)" },
+  { value: 1, label: "1x (taxa de 4,98%)" },
+  { value: 2, label: "2x (taxa de 9,64%)" },
+  { value: 3, label: "3x (taxa de 11,23%)" },
+  { value: 4, label: "4x (taxa de 11,36%)" },
+  { value: 5, label: "5x (taxa de 14,31%)" },
+  { value: 6, label: "6x (taxa de 14,32%)" },
+  { value: 7, label: "7x (taxa de 16,72%)" },
 ];
 
 const QUANTIDADES_ZERADAS: Record<ItemChave, number> = {
@@ -92,6 +94,9 @@ export class CurrencyCalculatorComponent {
   protected readonly parcelasOpcoes = PARCELAS_OPCOES;
   protected readonly brl = brl;
   protected readonly val = inputValue;
+
+  private readonly auth = inject(AuthService);
+  private readonly fila = inject(PedidosMercariService);
 
   protected readonly valorJpy = signal("");
   protected readonly linkMercari = signal("");
@@ -194,13 +199,13 @@ export class CurrencyCalculatorComponent {
   protected handleSimularCotacao(): void {
     const jpy = parseInt(this.valorJpy().replace(/\D/g, "")) || 0;
     if (jpy <= 0) {
-      alert("Por favor, insira um valor válido em Iene.");
+      alert("por favor, insira um valor válido em iene.");
       return;
     }
 
     const totalItens = Object.values(this.quantidades()).reduce((a, b) => a + b, 0);
     if (totalItens === 0) {
-      alert("Por favor, selecione as quantidades de itens contidos no anúncio antes de simular.");
+      alert("por favor, selecione as quantidades de itens contidos no anúncio antes de simular.");
       return;
     }
 
@@ -211,17 +216,20 @@ export class CurrencyCalculatorComponent {
     e.preventDefault();
     if (!this.simulado() || !this.valorJpy() || !this.linkMercari()) return;
 
+    const user = this.auth.user();
+    if (!user) return;
     const calculo = this.calculo();
-    const novaSolicitacao = {
-      link: this.linkMercari(),
+    this.fila.criar({
+      joinerId: user.id,
+      joinerNome: user.nome,
+      joinerUsername: user.username,
+      linkMercari: this.linkMercari(),
       valorJpy: calculo.jpy,
       valorBrl: calculo.valorFinalBrl,
       itens: this.quantidades(),
-      paymentMethod: this.formaPagamento(),
-      installments: this.formaPagamento() === "cartao" ? this.parcelas() : 1,
-    };
-
-    console.log("Enviando para a fila do GOM:", novaSolicitacao);
+      formaPagamento: this.formaPagamento(),
+      parcelas: this.formaPagamento() === "cartao" ? this.parcelas() : 1,
+    });
     this.enviado.set(true);
   }
 

@@ -68,7 +68,7 @@ export class ControleUsuariosComponent {
   });
 
   protected filterClass(r: RoleFilter): string {
-    return `flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
+    return `flex shrink-0 items-center gap-1.5 rounded-pill px-3 py-1.5 text-xs font-semibold transition-all ${
       this.filtroRole() === r
         ? "bg-primary text-primary-foreground shadow-sm"
         : "text-foreground/60 hover:text-foreground hover:bg-background/60"
@@ -76,7 +76,7 @@ export class ControleUsuariosComponent {
   }
 
   protected filterCountClass(r: RoleFilter): string {
-    return `rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+    return `rounded-pill px-1.5 py-0.5 text-[10px] font-bold ${
       this.filtroRole() === r ? "bg-white/20" : "bg-muted text-muted-foreground"
     }`;
   }

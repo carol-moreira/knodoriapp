@@ -9,7 +9,7 @@
       <input
         [value]="search()"
         (input)="search.set(val($event))"
-        placeholder="Buscar por nome, @ ou e-mail…"
+        placeholder="buscar por nome, @ ou e-mail…"
         class="w-full rounded-2xl border border-border bg-card py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
       />
     </div>
@@ -19,7 +19,7 @@
     >
       @for (r of roleFilters; track r) {
         <button type="button" (click)="filtroRole.set(r)" [class]="filterClass(r)">
-          {{ r === "TODOS" ? "Todos" : r }}
+          {{ r === "TODOS" ? "todos" : r }}
           <span [class]="filterCountClass(r)">{{ contadores()[r] }}</span>
         </button>
       }
@@ -30,7 +30,7 @@
   @if (filtrados().length === 0) {
     <div class="cozy-card flex flex-col items-center gap-2 py-14 text-center">
       <svg [appIcon]="icons.Users" class="h-8 w-8 text-muted-foreground/40"></svg>
-      <p class="text-sm text-muted-foreground">Nenhum usuário encontrado.</p>
+      <p class="text-sm text-muted-foreground">nenhum usuário encontrado.</p>
     </div>
   } @else {
     <div class="cozy-card overflow-hidden p-0">
@@ -38,12 +38,12 @@
         <table class="w-full text-sm">
           <thead class="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
             <tr>
-              <th class="px-5 py-3.5 text-left font-semibold">Usuário</th>
-              <th class="px-4 py-3.5 text-left font-semibold hidden sm:table-cell">E-mail</th>
-              <th class="px-4 py-3.5 text-left font-semibold">Cargo</th>
-              <th class="px-4 py-3.5 text-left font-semibold">Status</th>
-              <th class="px-4 py-3.5 text-left font-semibold hidden md:table-cell">Ativo em</th>
-              <th class="px-5 py-3.5 text-right font-semibold">Ações</th>
+              <th class="px-5 py-3.5 text-left font-semibold">usuário</th>
+              <th class="px-4 py-3.5 text-left font-semibold hidden sm:table-cell">e-mail</th>
+              <th class="px-4 py-3.5 text-left font-semibold">cargo</th>
+              <th class="px-4 py-3.5 text-left font-semibold">status</th>
+              <th class="px-4 py-3.5 text-left font-semibold hidden md:table-cell">ativo em</th>
+              <th class="px-5 py-3.5 text-right font-semibold">ações</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-border/60">
@@ -90,7 +90,7 @@
                       <svg
                         [appIcon]="icons.Lock"
                         class="h-3 w-3 text-muted-foreground/50"
-                        aria-label="Requer senha"
+                        aria-label="requer senha"
                       ></svg>
                     }
                   </div>
@@ -116,7 +116,7 @@
                     <button
                       type="button"
                       (click)="editTarget.set(u)"
-                      title="Editar usuário"
+                      title="editar usuário"
                       class="rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted hover:text-foreground"
                     >
                       <svg [appIcon]="icons.Pencil" class="h-3.5 w-3.5"></svg>
@@ -126,12 +126,12 @@
                       <button
                         type="button"
                         (click)="toggleStatus(u.id)"
-                        [title]="u.status === 'ATIVO' ? 'Banir usuário' : 'Reativar usuário'"
+                        [title]="u.status === 'ATIVO' ? 'banir usuário' : 'reativar usuário'"
                         [class]="
                           'rounded-lg p-1.5 transition ' +
                           (u.status === 'ATIVO'
                             ? 'text-muted-foreground hover:bg-destructive/10 hover:text-destructive'
-                            : 'text-emerald-600 hover:bg-emerald-50')
+                            : 'text-lime-600 hover:bg-lime-50')
                         "
                       >
                         <svg

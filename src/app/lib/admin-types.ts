@@ -72,12 +72,12 @@ export interface ApiKey {
 // ===========================================================================
 
 export const MOCK_CHART_DATA: ChartPoint[] = [
-  { mes: "Jan", faturamento: 3_200, vendas: 18, solicitacoes: 45 },
-  { mes: "Fev", faturamento: 4_100, vendas: 22, solicitacoes: 58 },
-  { mes: "Mar", faturamento: 3_800, vendas: 19, solicitacoes: 51 },
-  { mes: "Abr", faturamento: 5_600, vendas: 31, solicitacoes: 72 },
-  { mes: "Mai", faturamento: 5_100, vendas: 28, solicitacoes: 65 },
-  { mes: "Jun", faturamento: 6_400, vendas: 35, solicitacoes: 83 },
+  { mes: "jan", faturamento: 3_200, vendas: 18, solicitacoes: 45 },
+  { mes: "fev", faturamento: 4_100, vendas: 22, solicitacoes: 58 },
+  { mes: "mar", faturamento: 3_800, vendas: 19, solicitacoes: 51 },
+  { mes: "abr", faturamento: 5_600, vendas: 31, solicitacoes: 72 },
+  { mes: "mai", faturamento: 5_100, vendas: 28, solicitacoes: 65 },
+  { mes: "jun", faturamento: 6_400, vendas: 35, solicitacoes: 83 },
 ];
 
 export const MOCK_USERS: GlobalUser[] = [

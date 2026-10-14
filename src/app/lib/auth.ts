@@ -51,7 +51,7 @@ export function getPasswordStrength(password: string): {
   if (/[A-Z]/.test(password)) score++;
   if (/[0-9]/.test(password)) score++;
   if (/[^A-Za-z0-9]/.test(password)) score++;
-  const labels = ["Muito fraca", "Fraca", "Média", "Forte", "Muito forte"];
+  const labels = ["muito fraca", "fraca", "média", "forte", "muito forte"];
   return { score: score as 0 | 1 | 2 | 3 | 4, label: labels[score] };
 }
 

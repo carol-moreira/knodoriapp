@@ -42,7 +42,7 @@ interface Frete {
 const MOCK_HISTORICO: Transacao[] = [
   {
     id: "trx_01",
-    descricao: "1× Álbum",
+    descricao: "1× álbum",
     valorBrl: 248.0,
     data: "2026-04-10",
     formaPagamento: "pix",
@@ -51,7 +51,7 @@ const MOCK_HISTORICO: Transacao[] = [
   },
   {
     id: "trx_02",
-    descricao: "3× Photocard · 1× Postcard",
+    descricao: "3× photocard · 1× postcard",
     valorBrl: 178.4,
     data: "2026-03-22",
     formaPagamento: "cartao",
@@ -60,7 +60,7 @@ const MOCK_HISTORICO: Transacao[] = [
   },
   {
     id: "trx_03",
-    descricao: "2× Postcard · 1× Adesivo",
+    descricao: "2× postcard · 1× adesivo",
     valorBrl: 89.1,
     data: "2026-02-14",
     formaPagamento: "pix",
@@ -68,7 +68,7 @@ const MOCK_HISTORICO: Transacao[] = [
   },
   {
     id: "trx_04",
-    descricao: "1× Pelúcia Pequena",
+    descricao: "1× pelúcia pequena",
     valorBrl: 152.3,
     data: "2026-01-05",
     formaPagamento: "cartao",
@@ -80,7 +80,7 @@ const MOCK_HISTORICO: Transacao[] = [
 const MOCK_PARCELAS: ParcelaPendente[] = [
   {
     id: "par_01",
-    descricao: "3× Photocard · 1× Postcard",
+    descricao: "3× photocard · 1× postcard",
     parcelaAtual: 2,
     totalParcelas: 3,
     valorParcela: 59.47,
@@ -88,7 +88,7 @@ const MOCK_PARCELAS: ParcelaPendente[] = [
   },
   {
     id: "par_02",
-    descricao: "1× Pelúcia Pequena",
+    descricao: "1× pelúcia pequena",
     parcelaAtual: 1,
     totalParcelas: 2,
     valorParcela: 76.15,

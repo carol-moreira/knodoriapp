@@ -2,9 +2,9 @@
   <!-- Câmbio / Spread -->
   <div class="cozy-card p-5 space-y-4">
     <div>
-      <h3 class="text-sm font-semibold">Câmbio e Conversão</h3>
+      <h3 class="text-sm font-semibold">câmbio e conversão</h3>
       <p class="text-xs text-muted-foreground mt-0.5">
-        Valores ajustados diariamente conforme a taxa do dia.
+        valores ajustados diariamente conforme a taxa do dia.
       </p>
     </div>
     <div class="grid gap-4 sm:grid-cols-2">
@@ -32,9 +32,9 @@
   <!-- Markup por item -->
   <div class="cozy-card p-5 space-y-4">
     <div>
-      <h3 class="text-sm font-semibold">Markup por Tipo de Item</h3>
+      <h3 class="text-sm font-semibold">markup por tipo de item</h3>
       <p class="text-xs text-muted-foreground mt-0.5">
-        Valor em BRL adicionado por unidade (oculto das joiners).
+        valor em BRL adicionado por unidade (oculto das joiners).
       </p>
     </div>
     <div class="grid gap-3 sm:grid-cols-2">
@@ -48,7 +48,7 @@
             <p class="text-[10px] text-muted-foreground">por unidade</p>
           </div>
           <div class="flex items-center gap-1 shrink-0">
-            <span class="text-xs text-muted-foreground">R$</span>
+            <span class="text-xs text-muted-foreground">r$</span>
             <input
               type="number"
               min="0"
@@ -68,15 +68,15 @@
     <div class="flex items-start gap-2.5">
       <svg [appIcon]="icons.Info" class="mt-0.5 h-4 w-4 shrink-0 text-primary"></svg>
       <div class="space-y-1">
-        <p class="text-sm font-semibold">Pré-visualização</p>
+        <p class="text-sm font-semibold">pré-visualização</p>
         <p class="text-xs text-muted-foreground leading-relaxed">
-          Photocard de ¥ 3.000 →
+          photocard de ¥ 3.000 →
           <span class="font-bold text-foreground">{{ brl(preview()) }}</span>
           usando as configurações atuais.
         </p>
         <p class="text-[10px] text-muted-foreground/70 font-mono">
           ((3000 + {{ form().acrescimoBaseJpy }}) × {{ form().fatorIdrJpy }} ×
-          {{ form().taxaIdrBrl }}) × (1 + {{ form().spreadWise }}%) + R$
+          {{ form().taxaIdrBrl }}) × (1 + {{ form().spreadWise }}%) + r$
           {{ form().markupItens.photocard }}
         </p>
       </div>
@@ -98,7 +98,7 @@
       } @else {
         <svg [appIcon]="icons.Save" class="h-4 w-4"></svg>
       }
-      {{ saving() ? "Salvando…" : saved() ? "Salvo!" : "Salvar configurações" }}
+      {{ saving() ? "salvando…" : saved() ? "salvo!" : "salvar configurações" }}
     </button>
 
     <button
@@ -106,7 +106,7 @@
       (click)="handleReset()"
       class="rounded-2xl border border-border px-4 py-2.5 text-sm font-medium text-muted-foreground transition hover:border-foreground/30 hover:text-foreground"
     >
-      Restaurar padrão
+      restaurar padrão
     </button>
   </div>
 </div>

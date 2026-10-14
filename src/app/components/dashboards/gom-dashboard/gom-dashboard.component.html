@@ -3,21 +3,21 @@
   <header class="flex items-start justify-between gap-4">
     <div>
       <h1 class="text-2xl font-bold tracking-tight">
-        Olá, {{ auth.user()?.nome }}
-        <span class="text-base font-normal text-muted-foreground">· GOM</span>
+        olá, {{ auth.user()?.nome }}
+        <span class="text-base font-normal text-muted-foreground">· GOM ── .✦</span>
       </h1>
       <p class="mt-1 text-sm text-muted-foreground">
-        Aqui está o status operacional das suas CEGs.
+        aqui está o status operacional das suas CEGs.
       </p>
     </div>
   </header>
 
   <!-- ── 1. Pipeline de pedidos ───────────────────────────────────────── -->
   <app-dashboard-section
-    title="Pipeline de pedidos"
+    title="pipeline de pedidos"
     [count]="pipeline().total"
     href="/gom/fila"
-    linkLabel="Ver fila"
+    linkLabel="ver fila"
   >
     <div class="space-y-3">
       @for (row of pipelineRows(); track row.label) {
@@ -51,7 +51,7 @@
             [style.width.%]="pct(pipeline().aguardandoPagamento)"
           ></div>
           <div
-            class="bg-emerald-500 transition-all"
+            class="bg-lime-500 transition-all"
             [style.width.%]="pct(pipeline().comprado)"
           ></div>
         </div>
@@ -64,7 +64,7 @@
     title="CEGs em aberto"
     [count]="cegs.length"
     href="/gom/cegs"
-    linkLabel="Ver CEGs"
+    linkLabel="ver CEGs"
   >
     <div class="divide-y divide-border/50">
       @for (ceg of cegs; track ceg.id) {
@@ -103,11 +103,11 @@
 
   <!-- ── 3. Pagamentos a liberar ───────────────────────────────────────── -->
   <app-dashboard-section
-    title="Pagamentos a liberar"
+    title="pagamentos a liberar"
     [count]="pagamentosALiberar().length"
     href="/gom/fila"
-    linkLabel="Ver fila"
-    emptyLabel="Nenhum pagamento aguardando confirmação."
+    linkLabel="ver fila"
+    emptyLabel="nenhum pagamento aguardando confirmação."
     [alert]="pagamentosALiberar().length > 0"
   >
     <div class="divide-y divide-border/50">
@@ -117,7 +117,7 @@
             <p class="text-sm font-semibold">{{ req.joinerNome }}</p>
             <p class="text-xs text-muted-foreground">
               {{ req.joinerUsername }} ·
-              {{ req.formaPagamento === "pix" ? "PIX" : "Cartão " + req.parcelas + "×" }} ·
+              {{ req.formaPagamento === "pix" ? "PIX" : "cartão " + req.parcelas + "×" }} ·
               {{ fmtDate(req.dataSolicitacao) }}
             </p>
           </div>
@@ -126,10 +126,10 @@
             <button
               type="button"
               (click)="handleConfirmarPagamento(req.id)"
-              class="flex items-center gap-1 rounded-xl bg-emerald-600 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-emerald-700"
+              class="flex items-center gap-1 rounded-pill bg-lime-600 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-lime-700"
             >
               <svg [appIcon]="icons.CheckCircle2" class="h-3.5 w-3.5"></svg>
-              Confirmar
+              confirmar
             </button>
           </div>
         </div>
@@ -139,11 +139,11 @@
 
   <!-- ── 4. Repasses pendentes ─────────────────────────────────────────── -->
   <app-dashboard-section
-    title="Repasses pendentes"
+    title="repasses pendentes"
     [count]="repassesPendentes.length"
     href="/gom/joiners"
-    linkLabel="Ver joiners"
-    emptyLabel="Nenhum repasse ou frete pendente."
+    linkLabel="ver joiners"
+    emptyLabel="nenhum repasse ou frete pendente."
     [alert]="algumInadimplente"
   >
     <div class="divide-y divide-border/50">
@@ -180,7 +180,7 @@
                   : 'bg-amber-50 text-amber-700 ring-1 ring-amber-200')
               "
             >
-              {{ joiner.statusConta === "INADIMPLENTE" ? "Inadimplente" : "Pendente" }}
+              {{ joiner.statusConta === "INADIMPLENTE" ? "inadimplente" : "pendente" }}
             </span>
           </div>
         </div>

@@ -54,8 +54,8 @@ export class ProfileSettingsModalComponent {
   protected readonly THEME_META = THEME_META;
   protected readonly val = inputValue;
   protected readonly modes: { value: AppMode; label: string; icon: typeof Sun }[] = [
-    { value: "light", label: "Claro", icon: Sun },
-    { value: "dark", label: "Escuro", icon: Moon },
+    { value: "light", label: "claro", icon: Sun },
+    { value: "dark", label: "escuro", icon: Moon },
   ];
   protected readonly themes = Object.keys(THEME_META) as ColorTheme[];
 
