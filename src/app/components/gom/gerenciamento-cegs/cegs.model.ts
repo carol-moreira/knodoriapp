@@ -210,7 +210,7 @@ export const MOCK_REPASSES: Record<string, Repasse[]> = {
 export const CEG_STATUS_META: Record<CegStatus, { label: string; badge: string; step: number }> = {
   ABERTA: {
     label: "aberta",
-    badge: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
+    badge: "bg-lime-50 text-lime-700 ring-1 ring-lime-200",
     step: 1,
   },
   EM_COMPRA: {
@@ -230,7 +230,7 @@ export const CEG_STATUS_META: Record<CegStatus, { label: string; badge: string; 
 export const REPASSE_META = {
   PENDENTE: { label: "pendente", cls: "bg-amber-50 text-amber-700 ring-1 ring-amber-200" },
   PARCIAL: { label: "parcial", cls: "bg-blue-50 text-blue-700 ring-1 ring-blue-200" },
-  PAGO: { label: "pago", cls: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" },
+  PAGO: { label: "pago", cls: "bg-lime-50 text-lime-700 ring-1 ring-lime-200" },
 };
 
 export const LOJAS = ["Mercari", "Ktown4u", "Weverse", "YesAsia", "Outra"];

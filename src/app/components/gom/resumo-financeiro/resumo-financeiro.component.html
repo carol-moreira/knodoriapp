@@ -59,7 +59,7 @@
           [style.width.%]="pct(resumo().pipeline.aguardandoPagamento)"
         ></div>
         <div
-          class="bg-emerald-500 transition-all"
+          class="bg-lime-500 transition-all"
           [style.width.%]="pct(resumo().pipeline.comprado)"
         ></div>
       }
@@ -91,7 +91,7 @@
 
     @if (aguardando().length === 0) {
       <div class="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
-        <svg [appIcon]="icons.CheckCircle2" class="h-4 w-4 text-emerald-500"></svg>
+        <svg [appIcon]="icons.CheckCircle2" class="h-4 w-4 text-lime-500"></svg>
         nenhum pagamento aguardando confirmação.
       </div>
     } @else {
@@ -114,7 +114,7 @@
                 <button
                   type="button"
                   (click)="liberarPagamento.emit(s.id)"
-                  class="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-emerald-700"
+                  class="flex items-center gap-1.5 rounded-xl bg-lime-600 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-lime-700"
                 >
                   <svg [appIcon]="icons.Send" class="h-3 w-3"></svg>
                   liberar

@@ -25,7 +25,7 @@
       <p
         [class]="
           'mt-1.5 text-3xl font-bold tracking-tight ' +
-          (totalPendente > 0 ? 'text-amber-700' : 'text-emerald-600')
+          (totalPendente > 0 ? 'text-amber-700' : 'text-lime-600')
         "
       >
         {{ totalPendente > 0 ? brl(totalPendente) : "em dia ✓" }}
@@ -59,7 +59,7 @@
                 <span>{{ t.gomUsername }}</span>
               </div>
               @if (t.rastreio) {
-                <div class="flex items-center gap-1 text-[10px] font-medium text-emerald-600">
+                <div class="flex items-center gap-1 text-[10px] font-medium text-lime-600">
                   <svg [appIcon]="icons.Package" class="h-2.5 w-2.5"></svg>
                   {{ t.rastreio }}
                 </div>
@@ -68,7 +68,7 @@
             <div class="flex flex-col items-end gap-1 shrink-0">
               <span class="text-sm font-bold">{{ brl(t.valorBrl) }}</span>
               <span
-                class="cozy-pill bg-emerald-50 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200"
+                class="cozy-pill bg-lime-50 text-[10px] font-semibold text-lime-700 ring-1 ring-lime-200"
               >
                 <svg [appIcon]="icons.CheckCircle2" class="mr-0.5 inline h-2.5 w-2.5"></svg>entregue
               </span>
@@ -140,7 +140,7 @@
                     'cozy-pill text-[10px] font-semibold ' +
                     (f.status === 'PENDENTE'
                       ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-200'
-                      : 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200')
+                      : 'bg-lime-50 text-lime-700 ring-1 ring-lime-200')
                   "
                 >
                   @if (f.status === "PENDENTE") {

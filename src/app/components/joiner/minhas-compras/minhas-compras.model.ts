@@ -144,7 +144,7 @@ export const STATUS_BADGE: Record<PedidoStatus, string> = {
   PAGO: "bg-violet-50 text-violet-700 ring-1 ring-violet-200",
   COMPRADO: "bg-orange-50 text-orange-700 ring-1 ring-orange-200",
   EM_TRANSITO: "bg-sky-50    text-sky-700    ring-1 ring-sky-200",
-  CHEGOU: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
+  CHEGOU: "bg-lime-50 text-lime-700 ring-1 ring-lime-200",
 };
 
 export const STATUS_LABEL: Record<PedidoStatus, string> = {

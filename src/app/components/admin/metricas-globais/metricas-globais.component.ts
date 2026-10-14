@@ -24,7 +24,7 @@ interface Kpi {
 const ICON_CLS: Record<KpiColor, string> = {
   cherry: "text-primary",
   blue: "text-blue-500",
-  emerald: "text-emerald-500",
+  emerald: "text-lime-500",
 };
 
 function brl(v: number) {
@@ -86,7 +86,7 @@ export class MetricasGlobaisComponent {
   }
 
   protected trendClass(kpi: Kpi): string {
-    return `text-[10px] font-semibold ${kpi.trend >= 0 ? "text-emerald-600" : "text-red-500"}`;
+    return `text-[10px] font-semibold ${kpi.trend >= 0 ? "text-lime-600" : "text-red-500"}`;
   }
 
   protected trendText(kpi: Kpi): string {

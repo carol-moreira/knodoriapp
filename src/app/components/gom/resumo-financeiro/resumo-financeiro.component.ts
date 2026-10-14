@@ -43,8 +43,8 @@ type Accent = "emerald" | "blue" | "primary" | "neutral";
 
 const ACCENT_MAP: Record<Accent, { icon: string; badge: string; ring: string }> = {
   emerald: {
-    icon: "text-emerald-600",
-    badge: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
+    icon: "text-lime-600",
+    badge: "bg-lime-50 text-lime-700 ring-1 ring-lime-200",
     ring: "",
   },
   blue: { icon: "text-blue-500", badge: "bg-blue-50 text-blue-700 ring-1 ring-blue-200", ring: "" },
@@ -157,9 +157,9 @@ export class ResumoFinanceiroComponent {
       {
         label: "comprados",
         count: p.comprado,
-        color: "bg-emerald-500",
-        textColor: "text-emerald-700",
-        bgColor: "bg-emerald-50",
+        color: "bg-lime-500",
+        textColor: "text-lime-700",
+        bgColor: "bg-lime-50",
       },
     ];
   });

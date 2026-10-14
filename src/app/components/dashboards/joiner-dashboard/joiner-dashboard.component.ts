@@ -89,7 +89,7 @@ type Accent = "primary" | "blue" | "emerald" | "neutral";
 const ACCENT: Record<Accent, { icon: string }> = {
   primary: { icon: "text-primary" },
   blue: { icon: "text-blue-500" },
-  emerald: { icon: "text-emerald-500" },
+  emerald: { icon: "text-lime-500" },
   neutral: { icon: "text-muted-foreground" },
 };
 

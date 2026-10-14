@@ -58,7 +58,7 @@ const MOCK_CEGS: CegResumo[] = [
 ];
 
 const CEG_STATUS_META: Record<CegStatus, { label: string; badge: string }> = {
-  ABERTA: { label: "aberta", badge: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" },
+  ABERTA: { label: "aberta", badge: "bg-lime-50 text-lime-700 ring-1 ring-lime-200" },
   EM_COMPRA: { label: "em compra", badge: "bg-blue-50 text-blue-700 ring-1 ring-blue-200" },
   TRANSITO: { label: "em trânsito", badge: "bg-sky-50 text-sky-700 ring-1 ring-sky-200" },
   CHEGOU_BR: { label: "chegou BR", badge: "bg-violet-50 text-violet-700 ring-1 ring-violet-200" },
@@ -119,8 +119,8 @@ export class GomDashboardComponent {
       {
         label: "comprados",
         count: p.comprado,
-        color: "bg-emerald-500",
-        textColor: "text-emerald-700",
+        color: "bg-lime-500",
+        textColor: "text-lime-700",
         alert: false,
       },
     ];

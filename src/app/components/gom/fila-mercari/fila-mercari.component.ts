@@ -42,8 +42,8 @@ const STATUS_META: Record<
     label: "comprado",
     icon: CheckCircle2,
     badge:
-      "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-800",
-    btn: "bg-emerald-600 text-white hover:bg-emerald-700",
+      "bg-lime-50 text-lime-700 ring-1 ring-lime-200 dark:bg-lime-950/40 dark:text-lime-300 dark:ring-lime-800",
+    btn: "bg-lime-600 text-white hover:bg-lime-700",
   },
 };
 

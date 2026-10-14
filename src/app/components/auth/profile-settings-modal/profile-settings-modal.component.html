@@ -147,7 +147,7 @@
             (change)="handleWishlistFile($event)"
           />
           @if (wishlistUrl() && !wishlistUrl().startsWith("http")) {
-            <p class="text-[11px] text-emerald-600 flex items-center gap-1">
+            <p class="text-[11px] text-lime-600 flex items-center gap-1">
               <svg [appIcon]="icons.CheckCircle2" class="h-3 w-3"></svg> {{ wishlistUrl() }}
             </p>
           }

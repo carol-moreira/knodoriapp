@@ -86,7 +86,7 @@ const STATUS_CONFIG: Record<RequestStatus, { label: string; cls: string; icon: L
   },
   COMPRADO: {
     label: "comprado ✓",
-    cls: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+    cls: "bg-lime-50 text-lime-700 ring-lime-200",
     icon: CheckCircle,
   },
 };

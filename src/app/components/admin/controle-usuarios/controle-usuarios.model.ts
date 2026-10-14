@@ -12,7 +12,7 @@ export const ROLE_META: Record<UserRole, { label: string; badge: string }> = {
 };
 
 export const STATUS_META: Record<UserStatus, { label: string; badge: string }> = {
-  ATIVO: { label: "ativo", badge: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" },
+  ATIVO: { label: "ativo", badge: "bg-lime-50 text-lime-700 ring-1 ring-lime-200" },
   SUSPENSO: { label: "suspenso", badge: "bg-red-50 text-red-700 ring-1 ring-red-200" },
 };
 

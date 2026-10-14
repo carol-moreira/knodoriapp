@@ -86,7 +86,7 @@ export class ConfiguracoesCoreComponent {
   protected poolBarClass(): string {
     const p = this.pctConexoes();
     return `h-full rounded-full transition-all ${
-      p > 80 ? "bg-red-500" : p > 60 ? "bg-amber-400" : "bg-emerald-500"
+      p > 80 ? "bg-red-500" : p > 60 ? "bg-amber-400" : "bg-lime-500"
     }`;
   }
 

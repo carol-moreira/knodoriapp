@@ -21,8 +21,8 @@ const STRENGTH_COLORS = [
   "bg-red-400",
   "bg-orange-400",
   "bg-amber-400",
-  "bg-emerald-400",
-  "bg-emerald-500",
+  "bg-lime-400",
+  "bg-lime-500",
 ];
 
 @Component({

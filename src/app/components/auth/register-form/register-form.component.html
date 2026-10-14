@@ -72,7 +72,7 @@
           <li
             [class]="
               'flex items-center gap-1 text-[10px] ' +
-              (req.ok ? 'text-emerald-600' : 'text-muted-foreground')
+              (req.ok ? 'text-lime-600' : 'text-muted-foreground')
             "
           >
             @if (req.ok) {
@@ -106,7 +106,7 @@
       </p>
     }
     @if (touched().confirm && !confirmError() && confirm().length > 0) {
-      <p class="flex items-center gap-1 text-[10px] text-emerald-600">
+      <p class="flex items-center gap-1 text-[10px] text-lime-600">
         <svg [appIcon]="icons.CheckCircle2" class="h-3 w-3"></svg> senhas coincidem!
       </p>
     }

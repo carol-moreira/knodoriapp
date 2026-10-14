@@ -144,7 +144,7 @@ const TICKET_STATUS_META: Record<
   },
   RESOLVIDO: {
     label: "resolvido",
-    badge: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
+    badge: "bg-lime-50 text-lime-700 ring-1 ring-lime-200",
     icon: CheckCircle2,
   },
 };

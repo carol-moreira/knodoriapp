@@ -6,8 +6,8 @@
   <!-- Header -->
   <div class="flex items-center justify-between border-b border-border/60 px-6 py-4">
     <div class="flex items-center gap-2.5">
-      <div class="grid h-8 w-8 place-items-center rounded-xl bg-emerald-100">
-        <svg [appIcon]="icons.MessageSquare" class="h-4 w-4 text-emerald-600"></svg>
+      <div class="grid h-8 w-8 place-items-center rounded-xl bg-lime-100">
+        <svg [appIcon]="icons.MessageSquare" class="h-4 w-4 text-lime-600"></svg>
       </div>
       <div>
         <h2 class="text-sm font-bold">liberar pagamento</h2>
@@ -70,7 +70,7 @@
         type="button"
         (click)="handleSend()"
         [disabled]="sending() || sent() || !mensagem().trim()"
-        class="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
+        class="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-lime-600 py-2.5 text-sm font-semibold text-white transition hover:bg-lime-700 disabled:opacity-60"
       >
         @if (sent()) {
           <svg [appIcon]="icons.CheckCircle2" class="h-4 w-4"></svg>

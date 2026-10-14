@@ -26,7 +26,7 @@ import { IconDirective } from "@/shared/icon.directive";
 const CONTA_META: Record<StatusConta, { label: string; badge: string; icon: LucideIconData }> = {
   EM_DIA: {
     label: "em dia",
-    badge: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
+    badge: "bg-lime-50 text-lime-700 ring-1 ring-lime-200",
     icon: CheckCircle2,
   },
   PENDENTE: {
@@ -44,7 +44,7 @@ const CONTA_META: Record<StatusConta, { label: string; badge: string; icon: Luci
 const PEDIDO_BADGE: Record<string, string> = {
   PENDENTE: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
   AGUARDANDO_PAGAMENTO: "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
-  COMPRADO: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
+  COMPRADO: "bg-lime-50 text-lime-700 ring-1 ring-lime-200",
 };
 const PEDIDO_LABEL: Record<string, string> = {
   PENDENTE: "pendente",
