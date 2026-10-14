@@ -1,0 +1,178 @@
+<section class="space-y-4">
+  <!-- Header -->
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h2 class="flex items-center gap-2 text-lg font-bold tracking-tight">
+        <svg [appIcon]="icons.Repeat2" class="h-5 w-5 text-primary"></svg>
+        fila de repasses
+      </h2>
+      <p class="mt-0.5 text-sm text-muted-foreground">
+        {{ repasses.pendentes().length }} pendente{{ repasses.pendentes().length !== 1 ? "s" : "" }}
+        · ao confirmar, o item passa para a joiner destinatária
+      </p>
+    </div>
+    <div class="flex gap-1 rounded-pill bg-muted p-1">
+      @for (s of ["PENDENTE", "CONFIRMADO", "TODOS"]; track s) {
+        <button
+          type="button"
+          (click)="statusFiltro.set($any(s))"
+          [class]="
+            'rounded-pill px-3 py-1 text-xs font-medium transition ' +
+            (statusFiltro() === s
+              ? 'bg-card text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground')
+          "
+        >
+          {{ s === "PENDENTE" ? "pendentes" : s === "CONFIRMADO" ? "confirmados" : "todos" }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Filtro por CEG / consolidado -->
+  <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+    <button
+      type="button"
+      (click)="cegFiltro.set('TODAS')"
+      [class]="chipClass(cegFiltro() === 'TODAS')"
+    >
+      consolidado
+      @if (repasses.pendentes().length > 0) {
+        <span class="text-[10px] font-bold opacity-80">{{ repasses.pendentes().length }}</span>
+      }
+    </button>
+    @for (c of cegsComRepasse(); track c.ceg.id) {
+      <button
+        type="button"
+        (click)="cegFiltro.set(c.ceg.id)"
+        [class]="chipClass(cegFiltro() === c.ceg.id)"
+      >
+        {{ c.ceg.nome }}
+        @if (c.pendentes > 0) {
+          <span class="text-[10px] font-bold opacity-80">{{ c.pendentes }}</span>
+        }
+      </button>
+    }
+  </div>
+
+  <!-- Tabela -->
+  @if (linhas().length === 0) {
+    <div class="cozy-card flex flex-col items-center gap-2 py-12 text-center">
+      <svg [appIcon]="icons.Repeat2" class="h-8 w-8 text-muted-foreground/40"></svg>
+      <p class="text-sm text-muted-foreground">nenhuma solicitação de repasse aqui.</p>
+    </div>
+  } @else {
+    <div class="cozy-card overflow-hidden p-0">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
+            <tr>
+              <th class="px-5 py-3.5 text-left font-semibold">data</th>
+              @if (cegFiltro() === "TODAS") {
+                <th class="px-4 py-3.5 text-left font-semibold">CEG</th>
+              }
+              <th class="px-4 py-3.5 text-left font-semibold">item</th>
+              <th class="px-4 py-3.5 text-left font-semibold">de → para</th>
+              <th class="px-4 py-3.5 text-right font-semibold">valor</th>
+              <th class="px-4 py-3.5 text-left font-semibold">status</th>
+              <th class="px-5 py-3.5 text-right font-semibold">ações</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-border/50">
+            @for (s of linhas(); track s.id) {
+              <tr class="align-top transition hover:bg-muted/30">
+                <td class="whitespace-nowrap px-5 py-3.5 text-xs text-muted-foreground">
+                  {{ fmtDate(s.dataSolicitacao) }}
+                </td>
+                @if (cegFiltro() === "TODAS") {
+                  <td class="whitespace-nowrap px-4 py-3.5 text-xs font-medium">
+                    {{ s.cegNome }}
+                  </td>
+                }
+                <td class="px-4 py-3.5">
+                  <p class="text-xs font-semibold">{{ s.itemDescricao }}</p>
+                  @if (s.observacao) {
+                    <p class="mt-0.5 max-w-56 text-[11px] text-muted-foreground">
+                      “{{ s.observacao }}”
+                    </p>
+                  }
+                </td>
+                <td class="px-4 py-3.5">
+                  <div class="flex items-center gap-1.5 whitespace-nowrap text-xs">
+                    <span class="font-medium">{{ s.remetente.username }}</span>
+                    <svg [appIcon]="icons.ArrowRight" class="h-3 w-3 text-muted-foreground"></svg>
+                    <span class="font-medium">{{ s.destinatario.username }}</span>
+                  </div>
+                  <p class="mt-0.5 font-mono text-[10px] text-muted-foreground">
+                    {{ s.destinatario.codigo }}
+                  </p>
+                </td>
+                <td class="whitespace-nowrap px-4 py-3.5 text-right text-xs font-bold">
+                  {{ brl(s.valorBrl) }}
+                </td>
+                <td class="px-4 py-3.5">
+                  <span
+                    [class]="
+                      'cozy-pill whitespace-nowrap text-[10px] font-semibold ' +
+                      STATUS_META[s.status].cls
+                    "
+                  >
+                    {{ STATUS_META[s.status].label }}
+                  </span>
+                  @if (s.status === "PENDENTE") {
+                    <p class="mt-1 text-[10px] text-muted-foreground">pagamento ✓ remetente</p>
+                  } @else if (s.dataConfirmacao) {
+                    <p class="mt-1 text-[10px] text-muted-foreground">
+                      em {{ fmtDate(s.dataConfirmacao) }}
+                    </p>
+                  }
+                </td>
+                <td class="px-5 py-3.5 text-right">
+                  @if (s.status === "PENDENTE") {
+                    @if (confirmandoId() === s.id) {
+                      <div class="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          (click)="confirmar(s.id)"
+                          class="flex items-center gap-1 rounded-pill bg-lime-600 px-2.5 py-1.5 text-[11px] font-bold text-white transition hover:bg-lime-700"
+                        >
+                          <svg [appIcon]="icons.CheckCircle2" class="h-3 w-3"></svg>
+                          sim, confirmar
+                        </button>
+                        <button
+                          type="button"
+                          (click)="confirmandoId.set(null)"
+                          class="rounded-pill border border-border px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground transition hover:text-foreground"
+                        >
+                          não
+                        </button>
+                      </div>
+                    } @else {
+                      <button
+                        type="button"
+                        (click)="confirmandoId.set(s.id)"
+                        class="whitespace-nowrap rounded-pill bg-primary px-3 py-1.5 text-[11px] font-semibold text-primary-foreground transition hover:opacity-90"
+                      >
+                        confirmar repasse
+                      </button>
+                    }
+                  } @else {
+                    <span class="text-[11px] text-muted-foreground">—</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (totalPendente() > 0) {
+        <div
+          class="flex justify-between border-t border-border/60 bg-muted/30 px-5 py-3 text-xs text-muted-foreground"
+        >
+          <span>total pendente nesta visão</span>
+          <span class="font-bold text-foreground">{{ brl(totalPendente()) }}</span>
+        </div>
+      }
+    </div>
+  }
+</section>

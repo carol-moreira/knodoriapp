@@ -8,7 +8,7 @@ import {
   Wallet,
   type LucideIconData,
 } from "lucide-angular";
-import { ITEM_META, type ItemKey, type SolicitacaoGOM } from "@/lib/gom-types";
+import { ITEM_META, etapaMercari, type ItemKey, type SolicitacaoGOM } from "@/lib/gom-types";
 import { IconDirective } from "@/shared/icon.directive";
 
 // ---------------------------------------------------------------------------
@@ -17,7 +17,8 @@ import { IconDirective } from "@/shared/icon.directive";
 // ---------------------------------------------------------------------------
 
 function calcularResumo(sols: SolicitacaoGOM[]) {
-  const comprados = sols.filter((s) => s.status === "COMPRADO");
+  // Pagos = qualquer pedido que já passou do pagamento
+  const comprados = sols.filter((s) => etapaMercari(s.status) >= etapaMercari("PAGO"));
   const aguardando = sols.filter((s) => s.status === "AGUARDANDO_PAGAMENTO");
   const pendentes = sols.filter((s) => s.status === "PENDENTE");
 
@@ -155,7 +156,7 @@ export class ResumoFinanceiroComponent {
         bgColor: "bg-blue-50",
       },
       {
-        label: "comprados",
+        label: "pagos",
         count: p.comprado,
         color: "bg-lime-500",
         textColor: "text-lime-700",

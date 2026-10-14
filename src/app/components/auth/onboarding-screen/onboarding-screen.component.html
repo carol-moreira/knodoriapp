@@ -47,7 +47,7 @@
             <button
               type="button"
               (click)="fileInput.click()"
-              class="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground transition hover:bg-muted"
+              class="flex items-center gap-2 rounded-pill border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground transition hover:bg-muted"
             >
               <svg [appIcon]="icons.Upload" class="h-3.5 w-3.5"></svg>
               {{ uploadedAvatar() ? "trocar foto" : "fazer upload" }}

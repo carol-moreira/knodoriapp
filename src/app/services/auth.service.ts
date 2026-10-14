@@ -21,6 +21,16 @@ const MOCK_EXISTING_USER: AuthUser = {
   avatarUrl: undefined,
 };
 
+/** Joiner de teste: mesma id ("j1") dos pedidos mock da fila Mercari. */
+const MOCK_JOINER_USER: AuthUser = {
+  id: "j1",
+  email: "bia@knodori.app",
+  username: "@miniheart",
+  nome: "Bia Costa",
+  role: "JOINER",
+  avatarUrl: undefined,
+};
+
 const MOCK_GOOGLE_USER: AuthUser = {
   id: "usr_google_01",
   email: "user@gmail.com",
@@ -56,7 +66,8 @@ export class AuthService {
         : email.startsWith("gom@")
           ? "GOM"
           : "JOINER";
-      this._user.set({ ...MOCK_EXISTING_USER, email, role });
+      const base = role === "JOINER" ? MOCK_JOINER_USER : MOCK_EXISTING_USER;
+      this._user.set({ ...base, email, role });
       this._needsOnboarding.set(false);
       this._status.set("authenticated");
     } catch {

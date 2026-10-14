@@ -225,6 +225,15 @@ export const routes: Routes = [
           ),
       },
       {
+        path: "cegs",
+        title: "minhas CEGs · KNODORI",
+        data: { seo: seo("status, itens e novidades das CEGs que você participa.") },
+        loadComponent: () =>
+          import("./components/joiner/minhas-cegs/minhas-cegs.component").then(
+            (m) => m.MinhasCegsComponent,
+          ),
+      },
+      {
         path: "extrato",
         title: "extrato · KNODORI",
         data: { seo: seo("seu histórico financeiro de compras.") },

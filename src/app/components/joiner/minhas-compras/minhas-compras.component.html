@@ -13,13 +13,25 @@
       <h2 class="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
         em andamento ({{ ativos().length }})
       </h2>
-      <span class="cozy-pill bg-primary/10 text-xs font-semibold text-primary">tracking ativo</span>
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          (click)="abrirRepasse(null)"
+          class="flex items-center gap-1.5 rounded-pill border border-border bg-card px-3 py-1.5 text-xs font-semibold transition hover:bg-muted"
+        >
+          <svg [appIcon]="icons.PackageCheck" class="h-3.5 w-3.5"></svg>
+          solicitar repasse
+        </button>
+        <span class="cozy-pill bg-primary/10 text-xs font-semibold text-primary"
+          >tracking ativo</span
+        >
+      </div>
     </div>
 
     @for (pedido of ativos(); track pedido.id) {
       <app-pedido-card
         [pedido]="pedido"
-        (solicitarRepasse)="repassePedido.set(pedido)"
+        (solicitarRepasse)="abrirRepasse(pedido)"
         (solicitarEnvio)="envioPedido.set(pedido)"
       />
     }
@@ -27,9 +39,10 @@
 
   <!-- Modais fora do container espaçado (equivalente ao portal do Radix: não ocupam o fluxo) -->
   <app-solicitar-repasse-modal
-    [open]="!!repassePedido()"
-    [pedido]="repassePedido()"
-    (closed)="repassePedido.set(null)"
+    [open]="repasseOpen()"
+    [pedidos]="pedidos()"
+    [pedidoInicial]="repassePedido()"
+    (closed)="fecharRepasse()"
   />
   <app-solicitar-envio-modal
     [open]="!!envioPedido()"

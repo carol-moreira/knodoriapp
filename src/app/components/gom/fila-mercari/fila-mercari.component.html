@@ -10,7 +10,7 @@
       <input
         [value]="search()"
         (input)="search.set(val($event))"
-        placeholder="buscar por nome ou @..."
+        placeholder="buscar por nome, @ ou caixa..."
         class="w-full rounded-2xl border border-border bg-background py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground/60"
       />
     </div>
@@ -22,7 +22,7 @@
       @for (tab of filterTabs; track tab.id) {
         <button type="button" (click)="filtroStatus.set(tab.id)" [class]="tabClass(tab.id)">
           {{ tab.label }}
-          <span [class]="tabCountClass(tab.id)">{{ counters()[tab.id] }}</span>
+          <span [class]="tabCountClass(tab.id)">{{ counters()[tab.id] ?? 0 }}</span>
         </button>
       }
     </div>
@@ -47,13 +47,13 @@
     <div class="hidden overflow-x-auto md:block">
       <table class="w-full table-fixed text-sm">
         <colgroup>
-          <!-- Joiner | Itens | Valores | Pgto | Status | Ações -->
-          <col class="w-[22%]" />
-          <col class="w-[26%]" />
-          <col class="w-[14%]" />
-          <col class="w-[11%]" />
-          <col class="w-[16%]" />
-          <col class="w-[11%]" />
+          <!-- Joiner | Itens | Valores | Pgto | Status | Caixa -->
+          <col class="w-[19%]" />
+          <col class="w-[23%]" />
+          <col class="w-[13%]" />
+          <col class="w-[10%]" />
+          <col class="w-[18%]" />
+          <col class="w-[17%]" />
         </colgroup>
         <thead class="bg-muted/50">
           <tr
@@ -64,7 +64,7 @@
             <th class="px-3 py-3">valores</th>
             <th class="px-3 py-3">pgto</th>
             <th class="px-3 py-3">status</th>
-            <th class="py-3 pl-3 pr-5 text-right">ações</th>
+            <th class="py-3 pl-3 pr-5">caixa</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-border/50">
@@ -112,43 +112,63 @@
                 }
               </td>
 
-              <!-- Status -->
+              <!-- Status (alterado aqui mesmo) -->
               <td class="px-3 py-4">
-                <span
-                  [class]="
-                    'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ' +
-                    STATUS_META[req.status].badge
-                  "
-                >
-                  <svg [appIcon]="STATUS_META[req.status].icon" class="h-3 w-3 shrink-0"></svg>
-                  {{ STATUS_META[req.status].label }}
-                </span>
-                @if (req.status === "COMPRADO" && req.rastreio) {
-                  <p
-                    class="mt-1.5 flex items-center gap-1 text-[10px] text-lime-600 dark:text-lime-400"
+                @if (gerenciadoPelaCaixa(req)) {
+                  <span
+                    [class]="
+                      'inline-flex items-center gap-1 rounded-pill px-2.5 py-1 text-[11px] font-semibold ' +
+                      STATUS_META[req.status].badge
+                    "
                   >
-                    <svg [appIcon]="icons.Package" class="h-2.5 w-2.5 shrink-0"></svg>
-                    <span class="truncate font-mono">{{ req.rastreio }}</span>
-                  </p>
+                    <svg [appIcon]="icons.Lock" class="h-3 w-3 shrink-0"></svg>
+                    {{ STATUS_META[req.status].label }}
+                  </span>
+                  <p class="mt-1 text-[10px] text-muted-foreground">controlado pela caixa</p>
+                } @else {
+                  <div class="relative">
+                    <select
+                      [attr.aria-label]="'status do pedido de ' + req.joinerUsername"
+                      (change)="onStatusSelect(req, $event)"
+                      [class]="selectClass(req)"
+                    >
+                      @for (op of etapasPedido; track op) {
+                        <option
+                          [value]="op"
+                          [selected]="op === req.status"
+                          [disabled]="opcaoBloqueada(req, op)"
+                        >
+                          {{ STATUS_META[op].label }}
+                        </option>
+                      }
+                    </select>
+                    <svg
+                      [appIcon]="icons.ChevronDown"
+                      class="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 opacity-70"
+                    ></svg>
+                  </div>
                 }
               </td>
 
-              <!-- Ações -->
+              <!-- Caixa + proof -->
               <td class="py-4 pl-3 pr-5">
-                <div class="flex flex-col items-end gap-1.5">
-                  @for (next of NEXT_STATUS[req.status]; track next) {
+                @if (req.cegNome) {
+                  <p class="truncate text-xs font-semibold">{{ req.cegNome }}</p>
+                  @if (req.proofs?.length) {
                     <button
                       type="button"
-                      (click)="change(req.id, next)"
-                      [class]="
-                        'w-full rounded-lg px-2.5 py-1.5 text-center text-[11px] font-semibold transition-colors ' +
-                        STATUS_META[next].btn
-                      "
+                      (click)="verProof.emit(req)"
+                      class="mt-1 inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline underline-offset-2"
                     >
-                      {{ STATUS_META[next].label }}
+                      <svg [appIcon]="icons.Image" class="h-2.5 w-2.5"></svg>
+                      proof ({{ req.proofs?.length }})
                     </button>
                   }
-                </div>
+                } @else {
+                  <p class="text-[11px] text-muted-foreground">
+                    entra na caixa ao confirmar a compra
+                  </p>
+                }
               </td>
             </tr>
           }
@@ -179,11 +199,10 @@
             <div class="flex shrink-0 flex-col items-end gap-2 pt-0.5">
               <span
                 [class]="
-                  'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold ' +
+                  'inline-flex items-center gap-1 rounded-pill px-2.5 py-1 text-[10px] font-semibold ' +
                   STATUS_META[req.status].badge
                 "
               >
-                <svg [appIcon]="STATUS_META[req.status].icon" class="h-2.5 w-2.5 shrink-0"></svg>
                 {{ STATUS_META[req.status].label }}
               </span>
               <svg
@@ -217,20 +236,50 @@
                 ver no mercari <svg [appIcon]="icons.ExternalLink" class="h-3 w-3"></svg>
               </a>
 
-              <div class="flex flex-wrap gap-2">
-                @for (next of NEXT_STATUS[req.status]; track next) {
-                  <button
-                    type="button"
-                    (click)="change(req.id, next)"
-                    [class]="
-                      'rounded-xl px-3 py-1.5 text-xs font-semibold transition ' +
-                      STATUS_META[next].btn
-                    "
+              @if (req.cegNome) {
+                <div class="flex items-center gap-2 text-xs">
+                  <span class="font-semibold">{{ req.cegNome }}</span>
+                  @if (req.proofs?.length) {
+                    <button
+                      type="button"
+                      (click)="verProof.emit(req)"
+                      class="inline-flex items-center gap-1 font-medium text-primary hover:underline underline-offset-2"
+                    >
+                      <svg [appIcon]="icons.Image" class="h-3 w-3"></svg>
+                      proof
+                    </button>
+                  }
+                </div>
+              }
+
+              @if (gerenciadoPelaCaixa(req)) {
+                <p class="flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <svg [appIcon]="icons.Lock" class="h-3 w-3"></svg>
+                  etapa controlada pela caixa
+                </p>
+              } @else {
+                <div class="relative">
+                  <select
+                    [attr.aria-label]="'status do pedido de ' + req.joinerUsername"
+                    (change)="onStatusSelect(req, $event)"
+                    [class]="selectClass(req)"
                   >
-                    → {{ STATUS_META[next].label }}
-                  </button>
-                }
-              </div>
+                    @for (op of etapasPedido; track op) {
+                      <option
+                        [value]="op"
+                        [selected]="op === req.status"
+                        [disabled]="opcaoBloqueada(req, op)"
+                      >
+                        {{ STATUS_META[op].label }}
+                      </option>
+                    }
+                  </select>
+                  <svg
+                    [appIcon]="icons.ChevronDown"
+                    class="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 opacity-70"
+                  ></svg>
+                </div>
+              }
             </div>
           }
         </div>

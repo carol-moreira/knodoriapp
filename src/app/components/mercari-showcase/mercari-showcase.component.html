@@ -88,7 +88,7 @@
               <td class="px-4 py-4">
                 <span
                   [class]="
-                    'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ' +
+                    'inline-flex items-center gap-1.5 rounded-pill px-3 py-1.5 text-xs font-semibold ring-1 ' +
                     statusConfig[req.status].cls
                   "
                 >
@@ -102,19 +102,19 @@
                 <div class="flex justify-end gap-1.5">
                   <button
                     (click)="alterarStatus(req.id, 'PENDENTE')"
-                    class="px-3 py-1.5 text-xs bg-amber-100 text-amber-800 rounded-lg font-medium hover:opacity-80 transition-opacity"
+                    class="px-3 py-1.5 text-xs bg-amber-100 text-amber-800 rounded-pill font-medium hover:opacity-80 transition-opacity"
                   >
                     pendente
                   </button>
                   <button
                     (click)="alterarStatus(req.id, 'AGUARDANDO_PAGAMENTO')"
-                    class="px-3 py-1.5 text-xs bg-blue-100 text-blue-800 rounded-lg font-medium hover:opacity-80 transition-opacity"
+                    class="px-3 py-1.5 text-xs bg-blue-100 text-blue-800 rounded-pill font-medium hover:opacity-80 transition-opacity"
                   >
                     aguardar pgto
                   </button>
                   <button
                     (click)="alterarStatus(req.id, 'COMPRADO')"
-                    class="px-3 py-1.5 text-xs bg-lime-600 text-white rounded-lg font-medium hover:bg-lime-700 transition-colors shadow-sm"
+                    class="px-3 py-1.5 text-xs bg-lime-600 text-white rounded-pill font-medium hover:bg-lime-700 transition-colors shadow-sm"
                   >
                     comprado
                   </button>

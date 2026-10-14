@@ -36,7 +36,7 @@
 
     <!-- Step bar -->
     <div class="flex items-start">
-      @for (step of steps; track step.key; let i = $index, last = $last) {
+      @for (step of steps; track step.label; let i = $index, last = $last) {
         <div class="flex flex-1 items-start last:flex-none">
           <div class="flex flex-col items-center gap-1">
             <div [class]="stepCircleClass(i)">
@@ -126,7 +126,7 @@
             <div class="border-t border-border/60 pt-2.5">
               <div class="space-y-2">
                 <p class="font-semibold text-foreground/80">
-                  fotos da GOM
+                  proof da compra
                   <span class="ml-1.5 font-normal text-muted-foreground"
                     >({{ imagens().length }})</span
                   >
@@ -167,20 +167,36 @@
 
     <!-- Alertas e ações -->
     <div class="flex flex-wrap gap-2 pt-0.5">
-      @if (pedido().status === "AGUARDANDO_PIX") {
+      @if (pedido().status === "AGUARDANDO_PAGAMENTO") {
         <div
-          class="flex items-center gap-1.5 rounded-xl bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 ring-1 ring-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:ring-blue-800"
+          class="flex items-center gap-1.5 rounded-pill bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 ring-1 ring-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:ring-blue-800"
         >
           <svg [appIcon]="icons.AlertCircle" class="h-3.5 w-3.5"></svg>
           aguardando seu PIX — confirme com a GOM
         </div>
       }
 
-      @if (pedido().pagamentoConfirmado) {
+      @if (pedido().cobrancaCaixa; as valor) {
+        <div
+          class="flex items-center gap-1.5 rounded-pill bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 ring-1 ring-sky-200"
+        >
+          <svg [appIcon]="icons.Truck" class="h-3.5 w-3.5"></svg>
+          frete + taxas da {{ pedido().cegNome }}: {{ brl(valor) }}
+        </div>
+      }
+
+      @if (repassePendente(); as rep) {
+        <div
+          class="flex items-center gap-1.5 rounded-pill bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 ring-1 ring-amber-200"
+        >
+          <svg [appIcon]="icons.PackageCheck" class="h-3.5 w-3.5"></svg>
+          repasse para {{ rep.destinatario.username }} em análise pela GOM
+        </div>
+      } @else if (pedido().pagamentoConfirmado) {
         <button
           type="button"
           (click)="solicitarRepasse.emit()"
-          class="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
+          class="flex items-center gap-1.5 rounded-pill bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
         >
           <svg [appIcon]="icons.PackageCheck" class="h-3.5 w-3.5"></svg>
           solicitar repasse
@@ -191,7 +207,7 @@
         <button
           type="button"
           (click)="solicitarEnvio.emit()"
-          class="flex items-center gap-1.5 rounded-xl bg-lime-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-lime-700"
+          class="flex items-center gap-1.5 rounded-pill bg-lime-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-lime-700"
         >
           <svg [appIcon]="icons.Home" class="h-3.5 w-3.5"></svg>
           solicitar envio nacional

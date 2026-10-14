@@ -1,4 +1,4 @@
-import { Component, computed, input, output, signal } from "@angular/core";
+import { Component, computed, inject, input, output, signal } from "@angular/core";
 import {
   AlertCircle,
   ChevronDown,
@@ -11,6 +11,7 @@ import {
   ZoomIn,
 } from "lucide-angular";
 import { IconDirective } from "@/shared/icon.directive";
+import { RepassesService } from "@/services/repasses.service";
 import { ImageLightboxComponent } from "../image-lightbox/image-lightbox.component";
 import {
   BAR_COLOR,
@@ -54,6 +55,12 @@ export class PedidoCardComponent {
   protected readonly brl = brl;
   protected readonly fmtDate = fmtDate;
 
+  private readonly repasses = inject(RepassesService);
+  /** Repasse aguardando confirmação da GOM para este pedido. */
+  protected readonly repassePendente = computed(
+    () => this.repasses.pendentePorPedido().get(this.pedido().id) ?? null,
+  );
+
   protected readonly detalhesOpen = signal(false);
   protected readonly lightboxIndex = signal<number | null>(null);
 
@@ -70,7 +77,7 @@ export class PedidoCardComponent {
   );
 
   protected cardClass(): string {
-    return `cozy-card overflow-hidden ${this.pedido().status === "AGUARDANDO_PIX" ? "border-blue-200/60" : ""}`;
+    return `cozy-card overflow-hidden ${this.pedido().status === "AGUARDANDO_PAGAMENTO" ? "border-blue-200/60" : ""}`;
   }
 
   protected barClass(): string {

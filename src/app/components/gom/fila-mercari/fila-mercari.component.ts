@@ -1,64 +1,28 @@
 import { Component, computed, input, output, signal } from "@angular/core";
+import { ChevronDown, ChevronUp, ExternalLink, Image, Lock, Package, Search } from "lucide-angular";
 import {
-  CheckCircle2,
-  ChevronDown,
-  ChevronUp,
-  Clock,
-  DollarSign,
-  ExternalLink,
-  Package,
-  Search,
-  type LucideIconData,
-} from "lucide-angular";
-import { ITEM_META, type MercariStatus, type SolicitacaoGOM } from "@/lib/gom-types";
+  ITEM_META,
+  MERCARI_ETAPAS_PEDIDO,
+  MERCARI_STATUS_META,
+  etapaMercari,
+  type MercariStatus,
+  type SolicitacaoGOM,
+} from "@/lib/gom-types";
 import { IconDirective } from "@/shared/icon.directive";
 import { inputValue } from "@/shared/dom";
 
 // ---------------------------------------------------------------------------
-// Config de status
+// Filtros
 // ---------------------------------------------------------------------------
 
-type StatusFilter = "TODOS" | MercariStatus;
-
-const STATUS_META: Record<
-  MercariStatus,
-  { label: string; icon: LucideIconData; badge: string; btn: string }
-> = {
-  PENDENTE: {
-    label: "pendente",
-    icon: Clock,
-    badge:
-      "bg-amber-50 text-amber-700 ring-1 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-800",
-    btn: "bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-900/60",
-  },
-  AGUARDANDO_PAGAMENTO: {
-    label: "aguard. pgto",
-    icon: DollarSign,
-    badge:
-      "bg-blue-50 text-blue-700 ring-1 ring-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:ring-blue-800",
-    btn: "bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60",
-  },
-  COMPRADO: {
-    label: "comprado",
-    icon: CheckCircle2,
-    badge:
-      "bg-lime-50 text-lime-700 ring-1 ring-lime-200 dark:bg-lime-950/40 dark:text-lime-300 dark:ring-lime-800",
-    btn: "bg-lime-600 text-white hover:bg-lime-700",
-  },
-};
+/** "EM_CAIXA" agrupa as etapas controladas pela caixa (fechada → envio liberado). */
+type StatusFilter = "TODOS" | "EM_CAIXA" | MercariStatus;
 
 const FILTER_TABS: { id: StatusFilter; label: string }[] = [
   { id: "TODOS", label: "todos" },
-  { id: "PENDENTE", label: "pendentes" },
-  { id: "AGUARDANDO_PAGAMENTO", label: "aguard. pgto" },
-  { id: "COMPRADO", label: "comprados" },
+  ...MERCARI_ETAPAS_PEDIDO.map((id) => ({ id, label: MERCARI_STATUS_META[id].label })),
+  { id: "EM_CAIXA", label: "caixa fechada+" },
 ];
-
-const NEXT_STATUS: Record<MercariStatus, MercariStatus[]> = {
-  PENDENTE: ["AGUARDANDO_PAGAMENTO", "COMPRADO"],
-  AGUARDANDO_PAGAMENTO: ["PENDENTE", "COMPRADO"],
-  COMPRADO: ["PENDENTE"],
-};
 
 export interface StatusChange {
   id: string;
@@ -73,11 +37,13 @@ export interface StatusChange {
 })
 export class FilaMercariComponent {
   readonly solicitacoes = input.required<SolicitacaoGOM[]>();
+  /** Pedido de mudança de etapa. "COMPRADO" deve abrir a confirmação de compra (proof + caixa). */
   readonly statusChange = output<StatusChange>();
+  readonly verProof = output<SolicitacaoGOM>();
 
-  protected readonly icons = { ChevronDown, ChevronUp, ExternalLink, Package, Search };
-  protected readonly STATUS_META = STATUS_META;
-  protected readonly NEXT_STATUS = NEXT_STATUS;
+  protected readonly icons = { ChevronDown, ChevronUp, ExternalLink, Image, Lock, Package, Search };
+  protected readonly STATUS_META = MERCARI_STATUS_META;
+  protected readonly etapasPedido = MERCARI_ETAPAS_PEDIDO;
   protected readonly filterTabs = FILTER_TABS;
   protected readonly val = inputValue;
 
@@ -85,14 +51,16 @@ export class FilaMercariComponent {
   protected readonly filtroStatus = signal<StatusFilter>("TODOS");
   protected readonly expandedId = signal<string | null>(null);
 
-  protected readonly counters = computed<Record<StatusFilter, number>>(() => {
-    const sols = this.solicitacoes();
-    return {
-      TODOS: sols.length,
-      PENDENTE: sols.filter((s) => s.status === "PENDENTE").length,
-      AGUARDANDO_PAGAMENTO: sols.filter((s) => s.status === "AGUARDANDO_PAGAMENTO").length,
-      COMPRADO: sols.filter((s) => s.status === "COMPRADO").length,
+  protected readonly counters = computed(() => {
+    const counts: Partial<Record<string, number>> = {
+      TODOS: this.solicitacoes().length,
+      EM_CAIXA: 0,
     };
+    for (const s of this.solicitacoes()) {
+      const key = this.gerenciadoPelaCaixa(s) ? "EM_CAIXA" : s.status;
+      counts[key] = (counts[key] ?? 0) + 1;
+    }
+    return counts;
   });
 
   protected readonly filtradas = computed(() => {
@@ -100,8 +68,13 @@ export class FilaMercariComponent {
     const filtro = this.filtroStatus();
     return this.solicitacoes().filter((s) => {
       const matchSearch =
-        !q || s.joinerNome.toLowerCase().includes(q) || s.joinerUsername.toLowerCase().includes(q);
-      const matchStatus = filtro === "TODOS" || s.status === filtro;
+        !q ||
+        s.joinerNome.toLowerCase().includes(q) ||
+        s.joinerUsername.toLowerCase().includes(q) ||
+        (s.cegNome ?? "").toLowerCase().includes(q);
+      const matchStatus =
+        filtro === "TODOS" ||
+        (filtro === "EM_CAIXA" ? this.gerenciadoPelaCaixa(s) : s.status === filtro);
       return matchSearch && matchStatus;
     });
   });
@@ -115,7 +88,7 @@ export class FilaMercariComponent {
   });
 
   protected tabClass(id: StatusFilter): string {
-    return `flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
+    return `flex shrink-0 items-center gap-1.5 rounded-pill px-3 py-1.5 text-xs font-semibold transition-all ${
       this.filtroStatus() === id
         ? "bg-primary text-primary-foreground shadow-sm"
         : "text-foreground/60 hover:bg-background/60 hover:text-foreground"
@@ -123,17 +96,39 @@ export class FilaMercariComponent {
   }
 
   protected tabCountClass(id: StatusFilter): string {
-    return `min-w-4.5 rounded-full px-1.5 py-0.5 text-center text-[10px] font-bold ${
+    return `min-w-4.5 rounded-pill px-1.5 py-0.5 text-center text-[10px] font-bold ${
       this.filtroStatus() === id ? "bg-white/25 text-inherit" : "bg-muted text-muted-foreground"
     }`;
   }
 
-  protected toggle(id: string): void {
-    this.expandedId.set(this.expandedId() === id ? null : id);
+  protected selectClass(s: SolicitacaoGOM): string {
+    return `w-full cursor-pointer appearance-none rounded-pill border-0 py-1.5 pl-2.5 pr-6 text-[11px] font-semibold outline-none transition focus:ring-2 focus:ring-primary/30 ${MERCARI_STATUS_META[s.status].badge}`;
   }
 
-  protected change(id: string, novoStatus: MercariStatus): void {
-    this.statusChange.emit({ id, novoStatus });
+  /** Etapas a partir de "caixa fechada" são alteradas pelas ações da caixa. */
+  protected gerenciadoPelaCaixa(s: SolicitacaoGOM): boolean {
+    return etapaMercari(s.status) > etapaMercari("NA_WAREHOUSE");
+  }
+
+  /** Mesmas regras do PedidosMercariService: não volta para antes da compra, warehouse exige caixa. */
+  protected opcaoBloqueada(s: SolicitacaoGOM, opcao: MercariStatus): boolean {
+    if (opcao === s.status) return false;
+    if (s.cegId && etapaMercari(opcao) < etapaMercari("COMPRADO")) return true;
+    if (opcao === "COMPRADO" && s.cegId) return true;
+    if (opcao === "NA_WAREHOUSE" && !s.cegId) return true;
+    return false;
+  }
+
+  protected onStatusSelect(s: SolicitacaoGOM, e: Event): void {
+    const select = e.target as HTMLSelectElement;
+    const novoStatus = select.value as MercariStatus;
+    // Controlado: a mudança só aparece quando o estado for atualizado (a compra pode ser cancelada)
+    select.value = s.status;
+    this.statusChange.emit({ id: s.id, novoStatus });
+  }
+
+  protected toggle(id: string): void {
+    this.expandedId.set(this.expandedId() === id ? null : id);
   }
 
   protected resumoItens(req: SolicitacaoGOM): string {

@@ -1,7 +1,7 @@
 // =====================================================================
 // COMPONENTE B) Formulário de Solicitação do Joiner — JPY → BRL
 // =====================================================================
-import { Component, computed, signal } from "@angular/core";
+import { Component, computed, inject, signal } from "@angular/core";
 import {
   AlertCircle,
   ArrowRight,
@@ -15,6 +15,8 @@ import {
 } from "lucide-angular";
 import { IconDirective } from "@/shared/icon.directive";
 import { inputValue } from "@/shared/dom";
+import { AuthService } from "@/services/auth.service";
+import { PedidosMercariService } from "@/services/pedidos-mercari.service";
 
 const TAXA_COMERCIAL_IDR_BRL = 0.000286;
 const SPREAD_WISE = 1.025;
@@ -92,6 +94,9 @@ export class CurrencyCalculatorComponent {
   protected readonly parcelasOpcoes = PARCELAS_OPCOES;
   protected readonly brl = brl;
   protected readonly val = inputValue;
+
+  private readonly auth = inject(AuthService);
+  private readonly fila = inject(PedidosMercariService);
 
   protected readonly valorJpy = signal("");
   protected readonly linkMercari = signal("");
@@ -211,17 +216,20 @@ export class CurrencyCalculatorComponent {
     e.preventDefault();
     if (!this.simulado() || !this.valorJpy() || !this.linkMercari()) return;
 
+    const user = this.auth.user();
+    if (!user) return;
     const calculo = this.calculo();
-    const novaSolicitacao = {
-      link: this.linkMercari(),
+    this.fila.criar({
+      joinerId: user.id,
+      joinerNome: user.nome,
+      joinerUsername: user.username,
+      linkMercari: this.linkMercari(),
       valorJpy: calculo.jpy,
       valorBrl: calculo.valorFinalBrl,
       itens: this.quantidades(),
-      paymentMethod: this.formaPagamento(),
-      installments: this.formaPagamento() === "cartao" ? this.parcelas() : 1,
-    };
-
-    console.log("enviando para a fila do GOM:", novaSolicitacao);
+      formaPagamento: this.formaPagamento(),
+      parcelas: this.formaPagamento() === "cartao" ? this.parcelas() : 1,
+    });
     this.enviado.set(true);
   }
 

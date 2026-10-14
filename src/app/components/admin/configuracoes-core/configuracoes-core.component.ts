@@ -111,7 +111,7 @@ export class ConfiguracoesCoreComponent {
   });
 
   protected levelClass(l: LevelFilter): string {
-    return `rounded-lg px-2.5 py-1 text-[10px] font-bold transition-all ${
+    return `rounded-pill px-2.5 py-1 text-[10px] font-bold transition-all ${
       this.filtroLevel() === l
         ? "bg-primary text-primary-foreground"
         : "text-muted-foreground hover:text-foreground"

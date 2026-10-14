@@ -1,12 +1,8 @@
 import { Component, computed, inject, signal } from "@angular/core";
 import { AlertCircle, CheckCircle2, Clock, Layers, Package, Users } from "lucide-angular";
-import {
-  MOCK_JOINERS,
-  MOCK_SOLICITACOES,
-  type MercariStatus,
-  type SolicitacaoGOM,
-} from "@/lib/gom-types";
+import { MOCK_JOINERS, etapaMercari } from "@/lib/gom-types";
 import { AuthService } from "@/services/auth.service";
+import { PedidosMercariService } from "@/services/pedidos-mercari.service";
 import { IconDirective } from "@/shared/icon.directive";
 import { DashboardSectionComponent } from "./dashboard-section/dashboard-section.component";
 
@@ -85,8 +81,8 @@ export class GomDashboardComponent {
   protected readonly cegs = MOCK_CEGS;
   protected readonly CEG_STATUS_META = CEG_STATUS_META;
 
-  // 🔌 substituir por HttpClient.get(`/api/gom/${gomId}/solicitacoes`)
-  protected readonly solicitacoes = signal<SolicitacaoGOM[]>(MOCK_SOLICITACOES);
+  private readonly pedidos = inject(PedidosMercariService);
+  protected readonly solicitacoes = this.pedidos.solicitacoes;
 
   // Derivados do estado vivo — atualizam quando statuses mudam
   protected readonly pipeline = computed(() => {
@@ -94,7 +90,7 @@ export class GomDashboardComponent {
     return {
       pendente: sols.filter((s) => s.status === "PENDENTE").length,
       aguardandoPagamento: sols.filter((s) => s.status === "AGUARDANDO_PAGAMENTO").length,
-      comprado: sols.filter((s) => s.status === "COMPRADO").length,
+      comprado: sols.filter((s) => etapaMercari(s.status) >= etapaMercari("PAGO")).length,
       total: sols.length,
     };
   });
@@ -117,7 +113,7 @@ export class GomDashboardComponent {
         alert: p.aguardandoPagamento > 0,
       },
       {
-        label: "comprados",
+        label: "pagos",
         count: p.comprado,
         color: "bg-lime-500",
         textColor: "text-lime-700",
@@ -139,10 +135,7 @@ export class GomDashboardComponent {
   );
 
   protected handleConfirmarPagamento(id: string): void {
-    // 🔌 await fetch(`/api/gom/${gomId}/solicitacoes/${id}`, { method: "PATCH", body: JSON.stringify({ status: "COMPRADO" }) })
-    this.solicitacoes.update((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, status: "COMPRADO" as MercariStatus } : s)),
-    );
+    this.pedidos.alterarStatus(id, "PAGO");
   }
 
   protected pct(count: number): number {

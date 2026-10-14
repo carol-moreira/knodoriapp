@@ -109,7 +109,7 @@
                 <button
                   type="button"
                   (click)="handleTicketStatus(ticket.id, 'EM_ATENDIMENTO')"
-                  class="rounded-xl bg-blue-100 px-3 py-1.5 text-[11px] font-semibold text-blue-800 transition hover:bg-blue-200"
+                  class="rounded-pill bg-blue-100 px-3 py-1.5 text-[11px] font-semibold text-blue-800 transition hover:bg-blue-200"
                 >
                   iniciar atendimento
                 </button>
@@ -118,7 +118,7 @@
                 <button
                   type="button"
                   (click)="handleTicketStatus(ticket.id, 'RESOLVIDO')"
-                  class="rounded-xl bg-lime-100 px-3 py-1.5 text-[11px] font-semibold text-lime-800 transition hover:bg-lime-200"
+                  class="rounded-pill bg-lime-100 px-3 py-1.5 text-[11px] font-semibold text-lime-800 transition hover:bg-lime-200"
                 >
                   marcar como resolvido
                 </button>
@@ -126,7 +126,7 @@
               <button
                 type="button"
                 (click)="handleTicketStatus(ticket.id, 'RESOLVIDO')"
-                class="rounded-xl border border-border px-3 py-1.5 text-[11px] font-medium text-muted-foreground transition hover:bg-muted"
+                class="rounded-pill border border-border px-3 py-1.5 text-[11px] font-medium text-muted-foreground transition hover:bg-muted"
               >
                 fechar
               </button>
@@ -211,7 +211,7 @@
               <button
                 type="button"
                 (click)="handleAprovacao(sol.id, 'APROVADO')"
-                class="flex items-center gap-1.5 rounded-xl bg-lime-600 px-4 py-2 text-[11px] font-bold text-white transition hover:bg-lime-700"
+                class="flex items-center gap-1.5 rounded-pill bg-lime-600 px-4 py-2 text-[11px] font-bold text-white transition hover:bg-lime-700"
               >
                 <svg [appIcon]="icons.CheckCircle2" class="h-3.5 w-3.5"></svg>
                 aprovar acesso GOM
@@ -219,7 +219,7 @@
               <button
                 type="button"
                 (click)="handleAprovacao(sol.id, 'REJEITADO')"
-                class="flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-[11px] font-bold text-red-700 transition hover:bg-red-100"
+                class="flex items-center gap-1.5 rounded-pill border border-red-200 bg-red-50 px-4 py-2 text-[11px] font-bold text-red-700 transition hover:bg-red-100"
               >
                 <svg [appIcon]="icons.XCircle" class="h-3.5 w-3.5"></svg>
                 rejeitar

@@ -14,6 +14,18 @@ export interface CegGOM {
   qtdJoiners: number;
   qtdItens: number;
   moeda: Moeda;
+  /** Caixa mercari: CEG que agrupa os pedidos Mercari confirmados. */
+  tipo?: "CAIXA_MERCARI";
+  /** Frete internacional + taxas cobrados das joiners da caixa (após o fechamento). */
+  cobranca?: CobrancaCaixa;
+}
+
+export interface CobrancaCaixa {
+  freteTotal: number;
+  taxaPorJoiner: number;
+  /** joinerId → valor cobrado (frete rateado + taxa). */
+  porJoiner: Record<string, number>;
+  data: string; // ISO
 }
 
 export interface Repasse {
@@ -31,6 +43,17 @@ export interface Repasse {
 // ---------------------------------------------------------------------------
 
 export const MOCK_CEGS: CegGOM[] = [
+  {
+    id: "ceg_cx1",
+    nome: "caixa mercari 1",
+    loja: "Mercari",
+    prazo: "2026-06-30",
+    status: "ABERTA",
+    qtdJoiners: 3,
+    qtdItens: 8,
+    moeda: "JPY",
+    tipo: "CAIXA_MERCARI",
+  },
   {
     id: "ceg_01",
     nome: "Cherry Haul Jun/26",
@@ -172,6 +195,7 @@ export const MOCK_REPASSES: Record<string, Repasse[]> = {
     },
   ],
   ceg_04: [],
+  ceg_cx1: [],
   ceg_05: [
     {
       id: "r10",

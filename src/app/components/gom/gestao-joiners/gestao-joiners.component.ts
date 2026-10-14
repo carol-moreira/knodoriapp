@@ -12,6 +12,7 @@ import {
   type LucideIconData,
 } from "lucide-angular";
 import {
+  MERCARI_STATUS_META,
   MOCK_HISTORICO,
   type HistoricoPedido,
   type JoinerResumo,
@@ -41,16 +42,12 @@ const CONTA_META: Record<StatusConta, { label: string; badge: string; icon: Luci
   },
 };
 
-const PEDIDO_BADGE: Record<string, string> = {
-  PENDENTE: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
-  AGUARDANDO_PAGAMENTO: "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
-  COMPRADO: "bg-lime-50 text-lime-700 ring-1 ring-lime-200",
-};
-const PEDIDO_LABEL: Record<string, string> = {
-  PENDENTE: "pendente",
-  AGUARDANDO_PAGAMENTO: "aguard. pgto",
-  COMPRADO: "comprado",
-};
+const PEDIDO_BADGE: Record<string, string> = Object.fromEntries(
+  Object.entries(MERCARI_STATUS_META).map(([k, m]) => [k, m.badge]),
+);
+const PEDIDO_LABEL: Record<string, string> = Object.fromEntries(
+  Object.entries(MERCARI_STATUS_META).map(([k, m]) => [k, m.label]),
+);
 
 @Component({
   selector: "app-gestao-joiners",

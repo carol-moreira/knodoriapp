@@ -182,7 +182,7 @@ export class SuperAdminPanelComponent {
   }
 
   protected roleFilterClass(r: RoleFilter): string {
-    return `rounded-full px-4 py-2 text-xs font-semibold transition ${
+    return `rounded-pill px-4 py-2 text-xs font-semibold transition ${
       this.roleFilter() === r
         ? "bg-primary text-primary-foreground shadow"
         : "bg-muted text-foreground/70 hover:bg-primary/10 hover:text-primary"

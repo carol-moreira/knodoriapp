@@ -5,6 +5,7 @@ import { toSignal } from "@angular/core/rxjs-interop";
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from "@angular/router";
 import {
   BarChart2,
+  Bell,
   Calculator,
   FileText,
   Heart,
@@ -20,6 +21,7 @@ import {
 import { filter, map } from "rxjs";
 import type { UserRole } from "@/lib/auth";
 import { AuthService } from "@/services/auth.service";
+import { NotificacoesService } from "@/services/notificacoes.service";
 import { IconDirective } from "@/shared/icon.directive";
 import { ProfileSettingsModalComponent } from "../auth/profile-settings-modal/profile-settings-modal.component";
 
@@ -53,6 +55,7 @@ export const NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
   JOINER: [
     { to: "/joiner", label: "dashboard", icon: LayoutDashboard, exact: true },
     { to: "/joiner/compras", label: "minhas compras", icon: ShoppingBag },
+    { to: "/joiner/cegs", label: "minhas CEGs", icon: Layers },
     { to: "/calculadora", label: "calculadora", icon: Calculator },
     { to: "/joiner/extrato", label: "extrato", icon: FileText },
   ],
@@ -91,7 +94,9 @@ export class LayoutComponent {
   protected readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
-  protected readonly icons = { Heart, Settings, LogOut };
+  protected readonly notificacoes = inject(NotificacoesService);
+
+  protected readonly icons = { Bell, Heart, Settings, LogOut };
   protected readonly menuPosition = MENU_POSITION;
 
   protected readonly profileOpen = signal(false);
@@ -127,6 +132,15 @@ export class LayoutComponent {
     if (presetEmoji) return { kind: "emoji" as const, emoji: presetEmoji };
     return { kind: "initials" as const, initials: user.nome.slice(0, 2).toUpperCase() };
   });
+
+  protected fmtNotificacao(iso: string): string {
+    return new Date(iso).toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
 
   protected isActive(item: NavItem): boolean {
     const path = this.path();

@@ -2,7 +2,7 @@
   [open]="open()"
   (openChange)="onOpenChange($event)"
   overlayClass="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm animate-in fade-in duration-150"
-  contentClass="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 cozy-card shadow-2xl animate-in zoom-in-95 fade-in duration-150"
+  contentClass="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 cozy-card shadow-2xl animate-in zoom-in-95 fade-in duration-150 max-h-[90vh] overflow-y-auto no-scrollbar"
 >
   <div class="flex items-center justify-between border-b border-border/60 px-6 py-4">
     <div class="flex items-center gap-2.5">
@@ -11,7 +11,7 @@
       </div>
       <div>
         <h2 class="text-sm font-bold">solicitar repasse</h2>
-        <p class="text-[11px] text-muted-foreground">{{ pedido()?.cegNome }}</p>
+        <p class="text-[11px] text-muted-foreground">repasse sua claim para outra joiner</p>
       </div>
     </div>
     <button
@@ -25,26 +25,120 @@
   </div>
 
   <div class="space-y-4 px-6 py-5">
-    @if (pedido(); as p) {
-      <div class="rounded-2xl border border-border bg-muted/40 p-4 space-y-1">
-        <p class="text-xs font-semibold">{{ resumoItens() }}</p>
-        <p class="text-xs text-muted-foreground">{{ brl(p.valorBrl) }} · {{ p.gomUsername }}</p>
-      </div>
-    }
-    <p class="text-sm text-muted-foreground">
-      ao solicitar o repasse, sua GOM será notificada e entrará em contato para combinar a entrega.
-    </p>
+    <!-- 1. CEG -->
     <div class="space-y-1.5">
-      <label class="text-xs font-semibold">observação (opcional)</label>
+      <label for="repasse-ceg" class="text-xs font-semibold">CEG</label>
+      <select
+        id="repasse-ceg"
+        (change)="onCegChange($event)"
+        [disabled]="sending() || sent()"
+        [class]="INPUT_CLS"
+      >
+        <option value="" [selected]="!cegId()" disabled>selecione a CEG</option>
+        @for (c of cegs(); track c.id) {
+          <option [value]="c.id" [selected]="c.id === cegId()">{{ c.nome }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- 2. Item -->
+    <div class="space-y-1.5">
+      <label for="repasse-item" class="text-xs font-semibold">item</label>
+      <select
+        id="repasse-item"
+        (change)="pedidoId.set(val($event))"
+        [disabled]="!cegId() || sending() || sent()"
+        [class]="INPUT_CLS + ' disabled:opacity-60'"
+      >
+        <option value="" [selected]="!pedidoId()" disabled>
+          {{ cegId() ? "selecione o item" : "escolha a CEG primeiro" }}
+        </option>
+        @for (p of itensDaCeg(); track p.id) {
+          <option
+            [value]="p.id"
+            [selected]="p.id === pedidoId()"
+            [disabled]="motivoBloqueio(p) !== null"
+          >
+            {{ resumoItens(p) }} — {{ brl(p.valorBrl) }}
+            {{ motivoBloqueio(p) ? "(" + motivoBloqueio(p) + ")" : "" }}
+          </option>
+        }
+      </select>
+      <p class="text-[11px] text-muted-foreground">
+        só itens que você já pagou podem ser repassados.
+      </p>
+    </div>
+
+    <!-- 3. Destinatária -->
+    <div class="space-y-1.5">
+      <label for="repasse-codigo" class="text-xs font-semibold">
+        código de cadastro da joiner que vai receber
+      </label>
+      <input
+        id="repasse-codigo"
+        type="text"
+        autocomplete="off"
+        [value]="codigo()"
+        (input)="codigo.set(val($event))"
+        [disabled]="sending() || sent()"
+        placeholder="ex: KN-2087"
+        [class]="INPUT_CLS + ' uppercase placeholder:normal-case'"
+      />
+      @if (destinatario(); as d) {
+        <p class="flex items-center gap-1.5 text-[11px] font-medium text-lime-700">
+          <svg [appIcon]="icons.UserCheck" class="h-3.5 w-3.5"></svg>
+          {{ d.nome }} · {{ d.username }}
+        </p>
+      } @else if (codigoInvalido()) {
+        <p class="text-[11px] font-medium text-destructive">nenhuma joiner com esse código.</p>
+      }
+    </div>
+
+    <!-- 4. Pagamento -->
+    <label
+      class="flex cursor-pointer items-start gap-2.5 rounded-2xl border border-border bg-muted/40 p-3"
+    >
+      <input
+        type="checkbox"
+        [checked]="pagamentoOk()"
+        (change)="pagamentoOk.set($any($event.target).checked)"
+        [disabled]="sending() || sent()"
+        class="mt-0.5 h-4 w-4 shrink-0 accent-primary"
+      />
+      <span class="text-xs text-muted-foreground">
+        confirmo que já paguei este item à GOM e que vou receber o valor
+        @if (pedidoSelecionado(); as p) {
+          (<strong class="text-foreground">{{ brl(p.valorBrl) }}</strong
+          >)
+        }
+        diretamente da joiner que vai receber o repasse.
+      </span>
+    </label>
+
+    <div class="space-y-1.5">
+      <label for="repasse-obs" class="text-xs font-semibold">observação (opcional)</label>
       <textarea
+        id="repasse-obs"
         [value]="obs()"
         (input)="obs.set(val($event))"
-        rows="3"
+        rows="2"
         [disabled]="sending() || sent()"
-        placeholder="ex: prefiro retirar pessoalmente, qualquer dúvida me chama…"
+        placeholder="ex: já combinamos o PIX entre a gente…"
         [class]="INPUT_CLS + ' resize-none disabled:opacity-60'"
       ></textarea>
     </div>
+
+    @if (erro()) {
+      <p class="flex items-center gap-1.5 text-xs font-medium text-destructive">
+        <svg [appIcon]="icons.AlertCircle" class="h-3.5 w-3.5"></svg>
+        {{ erro() }}
+      </p>
+    }
+
+    <p class="text-[11px] text-muted-foreground">
+      a GOM será notificada. o item só muda de dona depois que ela confirmar o repasse.
+    </p>
+
     <div class="flex gap-2">
       <button
         type="button"
@@ -57,7 +151,7 @@
       <button
         type="button"
         (click)="handleConfirm()"
-        [disabled]="sending() || sent()"
+        [disabled]="!podeEnviar()"
         class="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
       >
         @if (sent()) {
@@ -65,7 +159,7 @@
         } @else if (sending()) {
           enviando…
         } @else {
-          <svg [appIcon]="icons.Send" class="h-4 w-4"></svg> confirmar repasse
+          <svg [appIcon]="icons.Send" class="h-4 w-4"></svg> solicitar repasse
         }
       </button>
     </div>

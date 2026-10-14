@@ -47,7 +47,7 @@ export class RepassesModalComponent {
     const pend = this.pendentes();
     return this.repasses().length > 0
       ? `${pend} pendente${pend !== 1 ? "s" : ""} · ${brl(this.totalPago())} / ${brl(this.totalGeral())}`
-      : "nenhum repasse registrado";
+      : "nenhum pagamento registrado";
   });
 
   protected progresso(rep: Repasse): number {
