@@ -26,6 +26,8 @@ export interface CobrancaCaixa {
   /** joinerId → valor cobrado (frete rateado + taxa). */
   porJoiner: Record<string, number>;
   data: string; // ISO
+  /** Joiners que já pagaram o frete + taxas desta caixa. */
+  pagoPor?: string[];
 }
 
 export interface Repasse {
@@ -45,14 +47,49 @@ export interface Repasse {
 export const MOCK_CEGS: CegGOM[] = [
   {
     id: "ceg_cx1",
-    nome: "caixa mercari 1",
+    nome: "caixa mercari 3",
     loja: "Mercari",
     prazo: "2026-06-30",
     status: "ABERTA",
     qtdJoiners: 3,
-    qtdItens: 8,
+    qtdItens: 11,
     moeda: "JPY",
     tipo: "CAIXA_MERCARI",
+  },
+  {
+    id: "ceg_cx_mai",
+    nome: "caixa mercari 2",
+    loja: "Mercari",
+    prazo: "2026-05-31",
+    status: "TRANSITO",
+    qtdJoiners: 2,
+    qtdItens: 5,
+    moeda: "JPY",
+    tipo: "CAIXA_MERCARI",
+    cobranca: {
+      freteTotal: 96,
+      taxaPorJoiner: 12,
+      porJoiner: { j1: 60, j3: 60 },
+      data: "2026-06-04T15:00:00Z",
+    },
+  },
+  {
+    id: "ceg_cx_abr",
+    nome: "caixa mercari 1",
+    loja: "Mercari",
+    prazo: "2026-04-30",
+    status: "FINALIZADA",
+    qtdJoiners: 2,
+    qtdItens: 9,
+    moeda: "JPY",
+    tipo: "CAIXA_MERCARI",
+    cobranca: {
+      freteTotal: 84,
+      taxaPorJoiner: 10,
+      porJoiner: { j1: 52, j2: 52 },
+      data: "2026-05-06T13:00:00Z",
+      pagoPor: ["j1", "j2"],
+    },
   },
   {
     id: "ceg_01",
