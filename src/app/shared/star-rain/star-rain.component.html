@@ -1,0 +1,24 @@
+@for (star of stars(); track star.id) {
+  <span
+    class="star"
+    [class]="'star--' + star.tone"
+    [style.left.%]="star.left"
+    [style.width.px]="star.size"
+    [style.height.px]="star.size"
+    [style.animation-duration.s]="star.duration"
+    [style.animation-delay.s]="star.delay"
+    [style.--drift]="star.drift + 'px'"
+    [style.--spin]="star.spin + 'deg'"
+  >
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      [style.opacity]="star.opacity"
+      [style.animation-duration.s]="star.twinkle"
+    >
+      <path
+        d="M12 0c.6 6.6 5.4 11.4 12 12-6.6.6-11.4 5.4-12 12-.6-6.6-5.4-11.4-12-12C6.6 11.4 11.4 6.6 12 0Z"
+      />
+    </svg>
+  </span>
+}

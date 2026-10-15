@@ -1,4 +1,5 @@
 import { Component, computed, inject, input, output, signal } from "@angular/core";
+import { RouterLink } from "@angular/router";
 import {
   AlertCircle,
   ChevronDown,
@@ -6,6 +7,7 @@ import {
   ExternalLink,
   Home,
   Images,
+  MessageCircle,
   PackageCheck,
   Truck,
   ZoomIn,
@@ -28,7 +30,7 @@ import {
 
 @Component({
   selector: "app-pedido-card",
-  imports: [IconDirective, ImageLightboxComponent],
+  imports: [IconDirective, ImageLightboxComponent, RouterLink],
   templateUrl: "./pedido-card.component.html",
   styleUrl: "./pedido-card.component.scss",
 })
@@ -44,6 +46,7 @@ export class PedidoCardComponent {
     ExternalLink,
     Home,
     Images,
+    MessageCircle,
     PackageCheck,
     Truck,
     ZoomIn,

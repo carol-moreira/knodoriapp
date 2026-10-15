@@ -1,0 +1,141 @@
+<app-dialog
+  [open]="open()"
+  (openChange)="onOpenChange($event)"
+  contentClass="fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 cozy-card shadow-2xl animate-in zoom-in-95 fade-in duration-150 max-h-[90vh] overflow-y-auto no-scrollbar"
+>
+  <!-- Header -->
+  <div class="flex items-center justify-between border-b border-border/60 px-6 py-4">
+    <div class="flex items-center gap-2.5">
+      <div class="grid h-8 w-8 place-items-center rounded-xl bg-lime-100">
+        <svg [appIcon]="icons.Send" class="h-4 w-4 text-lime-600"></svg>
+      </div>
+      <div>
+        <h2 class="text-sm font-bold">cobrar pelo WhatsApp</h2>
+        <p class="text-[11px] text-muted-foreground">
+          {{ devedor() ? devedor()!.nome + " · " + devedor()!.username : "" }}
+        </p>
+      </div>
+    </div>
+    <button
+      type="button"
+      [disabled]="sending()"
+      (click)="onOpenChange(false)"
+      aria-label="fechar"
+      class="rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted disabled:opacity-40"
+    >
+      <svg [appIcon]="icons.X" class="h-4 w-4"></svg>
+    </button>
+  </div>
+
+  @if (devedor(); as d) {
+    <div class="space-y-5 px-6 py-5">
+      <!-- Telefone -->
+      @if (d.telefone) {
+        <p class="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <svg [appIcon]="icons.Phone" class="h-3.5 w-3.5"></svg>
+          WhatsApp: <span class="font-semibold text-foreground">{{ d.telefone }}</span>
+        </p>
+      } @else {
+        <p
+          class="rounded-xl bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700 ring-1 ring-amber-200"
+        >
+          essa joiner não tem WhatsApp cadastrado. peça para ela preencher o telefone no perfil.
+        </p>
+      }
+
+      <!-- O que cobrar -->
+      <div class="space-y-2">
+        <p class="text-xs font-semibold">o que cobrar</p>
+        <div class="divide-y divide-border/50 rounded-2xl border border-border">
+          @for (debito of d.debitos; track debito.id) {
+            <label
+              class="flex cursor-pointer items-center gap-3 px-4 py-3 transition hover:bg-muted/30"
+            >
+              <input
+                type="checkbox"
+                [checked]="selecionados().has(debito.id)"
+                (change)="toggle(debito.id)"
+                [disabled]="sending() || sent()"
+                class="h-4 w-4 shrink-0 accent-primary"
+              />
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-medium">{{ debito.descricao }}</p>
+                <p class="text-[11px] text-muted-foreground">desde {{ fmtDate(debito.desde) }}</p>
+              </div>
+              <span
+                [class]="
+                  'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ' +
+                  TIPO_META[debito.tipo].badge
+                "
+              >
+                {{ TIPO_META[debito.tipo].label }}
+              </span>
+              <span class="w-20 shrink-0 text-right text-sm font-bold tabular-nums">
+                {{ brl(debito.valor) }}
+              </span>
+            </label>
+          }
+        </div>
+        <p class="text-right text-xs text-muted-foreground">
+          total selecionado: <span class="font-bold text-foreground">{{ brl(total()) }}</span>
+        </p>
+      </div>
+
+      <!-- Mensagem -->
+      <div class="space-y-1.5">
+        <label for="cobranca-mensagem" class="text-xs font-semibold">mensagem</label>
+        <textarea
+          id="cobranca-mensagem"
+          [value]="mensagem()"
+          (input)="mensagem.set(val($event))"
+          rows="9"
+          [disabled]="sending() || sent() || debitosSelecionados().length === 0"
+          placeholder="selecione ao menos um item para cobrar."
+          class="w-full resize-none rounded-xl border border-border bg-muted/40 px-3 py-2.5 text-sm outline-none transition placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
+        ></textarea>
+        <p class="text-[11px] text-muted-foreground">
+          a joiner também recebe um aviso no app. mudar a seleção gera o texto de novo.
+        </p>
+      </div>
+
+      @if (erro()) {
+        <p class="text-xs font-medium text-destructive">{{ erro() }}</p>
+      }
+
+      <!-- Ações -->
+      <div class="space-y-2">
+        <button
+          type="button"
+          (click)="enviar()"
+          [disabled]="sending() || sent() || !podeEnviar()"
+          class="flex w-full items-center justify-center gap-2 rounded-2xl bg-lime-600 py-2.5 text-sm font-semibold text-white transition hover:bg-lime-700 disabled:opacity-60"
+        >
+          @if (sent()) {
+            <svg [appIcon]="icons.CheckCircle2" class="h-4 w-4"></svg>
+            cobrança enviada!
+          } @else if (sending()) {
+            enviando…
+          } @else {
+            <svg [appIcon]="icons.Send" class="h-4 w-4"></svg>
+            enviar cobrança de {{ brl(total()) }}
+          }
+        </button>
+        @if (linkWhatsApp(); as link) {
+          <a
+            [href]="link"
+            target="_blank"
+            rel="noreferrer"
+            (click)="registrarManual()"
+            [class]="
+              'flex w-full items-center justify-center gap-1.5 rounded-2xl border border-border py-2.5 text-xs font-medium text-muted-foreground transition hover:text-foreground ' +
+              (podeEnviar() && !sending() && !sent() ? '' : 'pointer-events-none opacity-50')
+            "
+          >
+            <svg [appIcon]="icons.ExternalLink" class="h-3.5 w-3.5"></svg>
+            prefiro abrir no meu WhatsApp
+          </a>
+        }
+      </div>
+    </div>
+  }
+</app-dialog>

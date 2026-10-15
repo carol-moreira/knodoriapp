@@ -1,6 +1,7 @@
 import { Component, output, signal } from "@angular/core";
 import { Heart } from "lucide-angular";
 import { IconDirective } from "@/shared/icon.directive";
+import { StarRainComponent } from "@/shared/star-rain/star-rain.component";
 import { GoogleButtonComponent } from "../google-button/google-button.component";
 import { LoginFormComponent } from "../login-form/login-form.component";
 import { RegisterFormComponent } from "../register-form/register-form.component";
@@ -9,7 +10,13 @@ type AuthTab = "login" | "register";
 
 @Component({
   selector: "app-auth-screen",
-  imports: [IconDirective, GoogleButtonComponent, LoginFormComponent, RegisterFormComponent],
+  imports: [
+    IconDirective,
+    StarRainComponent,
+    GoogleButtonComponent,
+    LoginFormComponent,
+    RegisterFormComponent,
+  ],
   templateUrl: "./auth-screen.component.html",
   styleUrl: "./auth-screen.component.scss",
 })

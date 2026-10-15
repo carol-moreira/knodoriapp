@@ -1,88 +1,28 @@
-import { Component, inject } from "@angular/core";
+import { Component, computed, effect, inject, signal } from "@angular/core";
 import { RouterLink } from "@angular/router";
 import {
   Calculator,
   ChevronRight,
   CreditCard,
+  Eye,
+  EyeOff,
   FileText,
   Gem,
+  MessageCircle,
   Package,
   ShoppingBag,
   TrendingUp,
   Truck,
   type LucideIconData,
 } from "lucide-angular";
+import { ITEM_META, type ItemKey, type SolicitacaoGOM } from "@/lib/gom-types";
 import { AuthService } from "@/services/auth.service";
+import { CegsService } from "@/services/cegs.service";
+import { PedidosMercariService } from "@/services/pedidos-mercari.service";
 import { IconDirective } from "@/shared/icon.directive";
 
-// ---------------------------------------------------------------------------
-// Mock combinado — 🔌 substituir por HttpClient.get(`/api/joiner/${userId}/resumo`)
-// ---------------------------------------------------------------------------
-
-type StatusSimples = "PENDENTE" | "AGUARDANDO_PIX" | "PAGO" | "COMPRADO" | "EM_TRANSITO" | "CHEGOU";
-
-interface PedidoResumo {
-  id: string;
-  status: StatusSimples;
-  valorBrl: number;
-  descricao: string;
-  gomUsername: string;
-  rastreio?: string;
-}
-
-const MOCK_TODOS: PedidoResumo[] = [
-  {
-    id: "p1",
-    status: "AGUARDANDO_PIX",
-    valorBrl: 142.8,
-    descricao: "2× photocard · 1× adesivo",
-    gomUsername: "@knodori_gom",
-  },
-  {
-    id: "p2",
-    status: "PENDENTE",
-    valorBrl: 79.5,
-    descricao: "3× postcard · 2× adesivo",
-    gomUsername: "@knodori_gom",
-  },
-  {
-    id: "p3",
-    status: "EM_TRANSITO",
-    valorBrl: 248.0,
-    descricao: "1× álbum",
-    gomUsername: "@knodori_gom",
-    rastreio: "JP123456789BR",
-  },
-  {
-    id: "p4",
-    status: "PAGO",
-    valorBrl: 89.9,
-    descricao: "1× photocard · 2× postcard",
-    gomUsername: "@knodori_gom",
-  },
-  {
-    id: "p5",
-    status: "CHEGOU",
-    valorBrl: 315.0,
-    descricao: "3× photocard",
-    gomUsername: "@knodori_gom",
-  },
-  {
-    id: "p6",
-    status: "CHEGOU",
-    valorBrl: 178.4,
-    descricao: "4× postcard · 2× adesivo",
-    gomUsername: "@knodori_gom",
-  },
-];
-
-const ATIVOS_STATUS: StatusSimples[] = [
-  "PENDENTE",
-  "AGUARDANDO_PIX",
-  "PAGO",
-  "COMPRADO",
-  "EM_TRANSITO",
-];
+/** Preferência "esconder valores" da tela inicial, lembrada entre visitas. */
+const OCULTAR_VALORES_KEY = "knodori-ocultar-valores";
 
 type Accent = "primary" | "blue" | "emerald" | "neutral";
 
@@ -97,6 +37,8 @@ interface MetricCard {
   icon: LucideIconData;
   label: string;
   value: string;
+  /** Valor em reais — fica escondido enquanto o olho estiver fechado. */
+  money: boolean;
   to: string;
   accent: Accent;
   alert: boolean;
@@ -114,6 +56,14 @@ function brl(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+function lerOcultarValores(): boolean {
+  try {
+    return localStorage.getItem(OCULTAR_VALORES_KEY) !== "0";
+  } catch {
+    return true;
+  }
+}
+
 @Component({
   selector: "app-joiner-dashboard",
   imports: [IconDirective, RouterLink],
@@ -122,56 +72,85 @@ function brl(v: number) {
 })
 export class JoinerDashboardComponent {
   protected readonly auth = inject(AuthService);
+  private readonly pedidos = inject(PedidosMercariService);
+  private readonly cegs = inject(CegsService);
 
-  protected readonly icons = { ChevronRight, CreditCard, Gem, Package, Truck };
-  protected readonly brl = brl;
+  protected readonly icons = { ChevronRight, CreditCard, Eye, EyeOff, Gem, Package, Truck };
 
-  private readonly ativos = MOCK_TODOS.filter((p) => ATIVOS_STATUS.includes(p.status)).length;
-  private readonly aguardandoPix = MOCK_TODOS.filter((p) => p.status === "AGUARDANDO_PIX").length;
-  private readonly finalizados = MOCK_TODOS.filter((p) => p.status === "CHEGOU").length;
-  private readonly totalMovimentado = MOCK_TODOS.reduce((sum, p) => sum + p.valorBrl, 0);
+  /** Valores em reais escondidos por padrão; o botão de olho alterna. */
+  protected readonly ocultarValores = signal(lerOcultarValores());
 
-  protected readonly pagamentosAguardando = MOCK_TODOS.filter((p) => p.status === "AGUARDANDO_PIX");
-  protected readonly emTransito = MOCK_TODOS.filter((p) => p.status === "EM_TRANSITO");
+  private readonly meusPedidos = computed(() => {
+    const userId = this.auth.user()?.id;
+    return userId ? this.pedidos.solicitacoes().filter((s) => s.joinerId === userId) : [];
+  });
 
-  protected readonly metricCards: MetricCard[] = [
-    {
-      icon: ShoppingBag,
-      label: "ativos",
-      value: String(this.ativos),
-      to: "/joiner/compras",
-      accent: "primary",
-      alert: false,
-      small: false,
-    },
-    {
-      icon: CreditCard,
-      label: "aguardando PIX",
-      value: String(this.aguardandoPix),
-      to: "/joiner/compras",
-      accent: this.aguardandoPix > 0 ? "blue" : "neutral",
-      alert: this.aguardandoPix > 0,
-      small: false,
-    },
-    {
-      icon: Package,
-      label: "finalizados",
-      value: String(this.finalizados),
-      to: "/joiner/extrato",
-      accent: "emerald",
-      alert: false,
-      small: false,
-    },
-    {
-      icon: TrendingUp,
-      label: "total movimentado",
-      value: brl(this.totalMovimentado),
-      to: "/joiner/extrato",
-      accent: "neutral",
-      alert: false,
-      small: true,
-    },
-  ];
+  protected readonly pagamentosAguardando = computed(() =>
+    this.meusPedidos().filter((s) => s.status === "AGUARDANDO_PAGAMENTO"),
+  );
+
+  /** Caixa saiu da warehouse e ainda não foi liberada para envio nacional. */
+  protected readonly emTransito = computed(() =>
+    this.meusPedidos().filter((s) => s.status === "CAIXA_FECHADA" || s.status === "CHEGOU_GOM"),
+  );
+
+  protected readonly metricCards = computed<MetricCard[]>(() => {
+    const pedidos = this.meusPedidos();
+    const userId = this.auth.user()?.id ?? "";
+    const ativos = pedidos.filter((s) => s.status !== "ENVIO_LIBERADO").length;
+    const aguardando = this.pagamentosAguardando().length;
+    const finalizados = pedidos.length - ativos;
+    // Pedidos + frete/taxas de cada caixa em que a joiner tem itens
+    const caixas = new Set(pedidos.map((s) => s.cegId).filter((id): id is string => !!id));
+    const fretes = [...caixas].reduce(
+      (t, id) => t + (this.cegs.porId(id)?.cobranca?.porJoiner[userId] ?? 0),
+      0,
+    );
+    const total = pedidos.reduce((t, s) => t + s.valorBrl, 0) + fretes;
+
+    return [
+      {
+        icon: ShoppingBag,
+        label: "ativos",
+        value: String(ativos),
+        money: false,
+        to: "/joiner/compras",
+        accent: "primary",
+        alert: false,
+        small: false,
+      },
+      {
+        icon: CreditCard,
+        label: "aguardando PIX",
+        value: String(aguardando),
+        money: false,
+        to: "/joiner/compras",
+        accent: aguardando > 0 ? "blue" : "neutral",
+        alert: aguardando > 0,
+        small: false,
+      },
+      {
+        icon: Package,
+        label: "finalizados",
+        value: String(finalizados),
+        money: false,
+        to: "/joiner/extrato",
+        accent: "emerald",
+        alert: false,
+        small: false,
+      },
+      {
+        icon: TrendingUp,
+        label: "total movimentado",
+        value: brl(total),
+        money: true,
+        to: "/joiner/extrato",
+        accent: "neutral",
+        alert: false,
+        small: true,
+      },
+    ];
+  });
 
   protected readonly shortcuts: ShortcutCard[] = [
     {
@@ -186,8 +165,41 @@ export class JoinerDashboardComponent {
       desc: "simule o valor antes de solicitar",
       to: "/calculadora",
     },
+    {
+      icon: MessageCircle,
+      label: "mensagens",
+      desc: "fale com a sua GOM",
+      to: "/joiner/mensagens",
+    },
     { icon: FileText, label: "extrato", desc: "histórico e pendências", to: "/joiner/extrato" },
   ];
+
+  constructor() {
+    effect(() => {
+      const ocultar = this.ocultarValores();
+      try {
+        localStorage.setItem(OCULTAR_VALORES_KEY, ocultar ? "1" : "0");
+      } catch {
+        // storage indisponível (aba anônima etc.) — só não lembra a preferência
+      }
+    });
+  }
+
+  /** Formata em reais, ou devolve a máscara quando os valores estão escondidos. */
+  protected valor(v: number): string {
+    return this.ocultarValores() ? "R$ •••••" : brl(v);
+  }
+
+  protected cardValue(card: MetricCard): string {
+    return card.money && this.ocultarValores() ? "R$ •••••" : card.value;
+  }
+
+  protected descricao(s: SolicitacaoGOM): string {
+    return Object.entries(s.itens)
+      .filter(([, q]) => q > 0)
+      .map(([k, q]) => `${q}× ${ITEM_META[k as ItemKey]?.label ?? k}`)
+      .join(" · ");
+  }
 
   protected metricIconClass(card: MetricCard): string {
     return `grid h-8 w-8 place-items-center rounded-xl bg-muted/60 ${ACCENT[card.accent].icon}`;

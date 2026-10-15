@@ -14,9 +14,7 @@
     <div class="w-full max-w-md space-y-6">
       <!-- Logo mobile -->
       <div class="flex items-center gap-2.5 lg:hidden">
-        <span
-          class="grid h-10 w-10 place-items-center"
-        >
+        <span class="grid h-10 w-10 place-items-center">
           @if (!logoMobileFailed()) {
             <img
               src="/images/init/icon.png"
@@ -25,11 +23,7 @@
               (error)="logoMobileFailed.set(true)"
             />
           } @else {
-            <svg
-              [appIcon]="icons.Heart"
-              class="h-5 w-5 text-primary"
-              fill="currentColor"
-            ></svg>
+            <svg [appIcon]="icons.Heart" class="h-5 w-5 text-primary" fill="currentColor"></svg>
           }
         </span>
         <span class="text-xl font-bold">KNODORI</span>
@@ -111,3 +105,6 @@
     </div>
   </div>
 </div>
+
+<!-- Chuva de estrelinhas (decorativa, não captura cliques) -->
+<app-star-rain aria-hidden="true" />

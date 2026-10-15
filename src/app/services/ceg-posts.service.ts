@@ -27,9 +27,27 @@ const MOCK_POSTS: CegPost[] = [
     cegId: "ceg_cx1",
     tipo: "COMUNICADO",
     texto:
-      "caixa mercari 1 aberta! 🍒 os pedidos com compra confirmada entram aqui. a previsão de fechamento é no fim do mês.",
+      "caixa mercari 3 aberta! 🍒 os pedidos com compra confirmada entram aqui. a previsão de fechamento é no fim do mês.",
     autor: "@knodori_gom",
     data: "2026-05-16T12:00:00Z",
+  },
+  {
+    id: "post_03",
+    cegId: "ceg_cx_mai",
+    tipo: "COMUNICADO",
+    texto:
+      "caixa mercari 2 saiu da warehouse ✈️ a cobrança do frete internacional + taxas já está em minhas compras.",
+    autor: "@knodori_gom",
+    data: "2026-06-04T15:10:00Z",
+  },
+  {
+    id: "post_04",
+    cegId: "ceg_cx_abr",
+    tipo: "COMUNICADO",
+    texto:
+      "caixa mercari 1 chegou e o envio nacional está liberado! 🚚 peçam o envio em minhas compras.",
+    autor: "@knodori_gom",
+    data: "2026-05-20T10:00:00Z",
   },
   {
     id: "post_02",

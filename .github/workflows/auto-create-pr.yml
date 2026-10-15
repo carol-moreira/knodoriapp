@@ -39,5 +39,5 @@ jobs:
           gh pr create \
             --base ${{ steps.target.outputs.branch }} \
             --head ${{ github.ref_name }} \
-            --title "Automated PR: ${{ github.ref_name }} -> ${{ steps.target.outputs.branch }}" \
+            --title "PR created automatically: ${{ github.ref_name }} -> ${{ steps.target.outputs.branch }}" \
             --body "Pull Request criado automaticamente pelo GitHub Actions." || true
