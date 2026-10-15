@@ -6,17 +6,27 @@
     >
       <svg [appIcon]="icons.Gem" class="h-5 w-5" fill="currentColor"></svg>
     </div>
-    <div>
+    <div class="min-w-0 flex-1">
       <h1 class="text-xl font-bold tracking-tight leading-tight">
         olá, {{ auth.user()?.nome ?? "joiner" }} ── .✦
       </h1>
       <p class="text-xs text-muted-foreground">{{ auth.user()?.username }}</p>
     </div>
+    <button
+      type="button"
+      (click)="ocultarValores.set(!ocultarValores())"
+      [attr.aria-pressed]="!ocultarValores()"
+      [attr.aria-label]="ocultarValores() ? 'mostrar valores' : 'esconder valores'"
+      [title]="ocultarValores() ? 'mostrar valores' : 'esconder valores'"
+      class="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition hover:text-foreground active:scale-95"
+    >
+      <svg [appIcon]="ocultarValores() ? icons.EyeOff : icons.Eye" class="h-4.5 w-4.5"></svg>
+    </button>
   </header>
 
   <!-- 4 cards de métricas -->
   <section class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-    @for (card of metricCards; track card.label) {
+    @for (card of metricCards(); track card.label) {
       <a
         [routerLink]="card.to"
         class="cozy-card flex flex-col gap-2 p-4 transition hover:shadow-md active:scale-[0.98]"
@@ -25,7 +35,7 @@
           <svg [appIcon]="card.icon" class="h-4 w-4"></svg>
         </div>
         <div>
-          <p [class]="metricValueClass(card)">{{ card.value }}</p>
+          <p [class]="metricValueClass(card)">{{ cardValue(card) }}</p>
           <p class="mt-0.5 text-xs text-muted-foreground">{{ card.label }}</p>
         </div>
         @if (card.alert) {
@@ -38,7 +48,7 @@
   </section>
 
   <!-- Pagamentos pendentes -->
-  @if (pagamentosAguardando.length > 0) {
+  @if (pagamentosAguardando().length > 0) {
     <section class="cozy-card p-4 space-y-3">
       <div class="flex items-center gap-2">
         <div class="grid h-7 w-7 place-items-center rounded-lg bg-blue-50 text-blue-600">
@@ -48,20 +58,22 @@
         <span
           class="cozy-pill ml-auto bg-blue-50 text-[10px] font-bold text-blue-700 ring-1 ring-blue-200"
         >
-          {{ pagamentosAguardando.length }}
+          {{ pagamentosAguardando().length }}
         </span>
       </div>
       <div class="divide-y divide-border/50">
-        @for (p of pagamentosAguardando; track p.id) {
+        @for (p of pagamentosAguardando(); track p.id) {
           <div
             class="flex flex-wrap items-center justify-between gap-2 py-2.5 first:pt-0 last:pb-0"
           >
             <div class="min-w-0 flex-1">
-              <p class="text-sm font-medium truncate">{{ p.descricao }}</p>
-              <p class="text-xs text-muted-foreground">{{ p.gomUsername }}</p>
+              <p class="text-sm font-medium truncate">{{ descricao(p) }}</p>
+              <p class="text-xs text-muted-foreground">
+                {{ p.formaPagamento === "pix" ? "PIX" : "cartão " + p.parcelas + "×" }}
+              </p>
             </div>
             <div class="flex items-center gap-2 shrink-0">
-              <span class="text-sm font-bold">{{ brl(p.valorBrl) }}</span>
+              <span class="text-sm font-bold tabular-nums">{{ valor(p.valorBrl) }}</span>
               <a
                 routerLink="/joiner/compras"
                 class="rounded-pill bg-primary px-3 py-1.5 text-[11px] font-bold text-primary-foreground transition hover:opacity-90"
@@ -76,7 +88,7 @@
   }
 
   <!-- A caminho -->
-  @if (emTransito.length > 0) {
+  @if (emTransito().length > 0) {
     <section class="cozy-card p-4 space-y-3">
       <div class="flex items-center gap-2">
         <div class="grid h-7 w-7 place-items-center rounded-lg bg-sky-50 text-sky-600">
@@ -86,21 +98,21 @@
         <span
           class="cozy-pill ml-auto bg-sky-50 text-[10px] font-bold text-sky-700 ring-1 ring-sky-200"
         >
-          {{ emTransito.length }}
+          {{ emTransito().length }}
         </span>
       </div>
       <div class="divide-y divide-border/50">
-        @for (p of emTransito; track p.id) {
+        @for (p of emTransito(); track p.id) {
           <div class="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
             <div class="min-w-0 flex-1">
-              <p class="text-sm font-medium truncate">{{ p.descricao }}</p>
+              <p class="text-sm font-medium truncate">{{ descricao(p) }}</p>
               @if (p.rastreio) {
                 <p class="mt-0.5 flex items-center gap-1 font-mono text-[11px] text-sky-700">
                   <svg [appIcon]="icons.Package" class="h-3 w-3"></svg>
                   {{ p.rastreio }}
                 </p>
               } @else {
-                <p class="text-xs text-muted-foreground">{{ p.gomUsername }}</p>
+                <p class="text-xs text-muted-foreground">{{ p.cegNome }}</p>
               }
             </div>
             <span
@@ -119,7 +131,7 @@
     <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
       acesso rápido
     </p>
-    <div class="grid gap-2 sm:grid-cols-3">
+    <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
       @for (s of shortcuts; track s.to) {
         <a
           [routerLink]="s.to"

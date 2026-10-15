@@ -179,6 +179,15 @@ export const routes: Routes = [
         loadComponent: () => import("./pages/gom-fila/gom-fila.page").then((m) => m.GomFilaPage),
       },
       {
+        path: "mensagens",
+        title: "mensagens · KNODORI",
+        data: { seo: seo("converse com suas joiners sobre pedidos, pagamentos e caixas.") },
+        loadComponent: () =>
+          import("./components/mensagens/gom-mensagens/gom-mensagens.component").then(
+            (m) => m.GomMensagensComponent,
+          ),
+      },
+      {
         path: "joiners",
         title: "joiners · KNODORI",
         data: { seo: seo("gestão de joiners e histórico de pedidos."), joiners: MOCK_JOINERS },
@@ -231,6 +240,15 @@ export const routes: Routes = [
         loadComponent: () =>
           import("./components/joiner/minhas-cegs/minhas-cegs.component").then(
             (m) => m.MinhasCegsComponent,
+          ),
+      },
+      {
+        path: "mensagens",
+        title: "mensagens · KNODORI",
+        data: { seo: seo("fale com a sua GOM sobre pedidos, pagamentos e caixas.") },
+        loadComponent: () =>
+          import("./components/mensagens/joiner-mensagens/joiner-mensagens.component").then(
+            (m) => m.JoinerMensagensComponent,
           ),
       },
       {

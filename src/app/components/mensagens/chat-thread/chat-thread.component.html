@@ -1,0 +1,208 @@
+<div class="flex h-full min-h-0 flex-col">
+  <!-- Mensagens -->
+  <div #scroller class="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-4 no-scrollbar">
+    @for (linha of linhas(); track linha.mensagem.id) {
+      @if (linha.dia) {
+        <p class="py-2 text-center text-[11px] font-medium text-muted-foreground">
+          {{ linha.dia }}
+        </p>
+      }
+      <div [class]="'flex ' + (linha.minha ? 'justify-end' : 'justify-start')">
+        <div [class]="'max-w-[85%] px-3.5 py-2.5 sm:max-w-[70%] ' + bolhaClass(linha.minha)">
+          @if (linha.mensagem.pedidoId) {
+            <div
+              [class]="
+                'mb-1.5 flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[11px] ' +
+                (linha.minha ? 'bg-primary-foreground/15' : 'bg-card')
+              "
+            >
+              <svg [appIcon]="icons.Link2" class="h-3 w-3 shrink-0"></svg>
+              @if (linha.pedido; as p) {
+                <span class="min-w-0 truncate font-semibold">{{ resumoItens(p.itens) }}</span>
+                <span
+                  [class]="
+                    'ml-auto shrink-0 rounded-full px-2 py-0.5 text-[9px] font-semibold ' +
+                    STATUS_META[p.status].badge
+                  "
+                >
+                  {{ STATUS_META[p.status].label }}
+                </span>
+              } @else {
+                <span class="font-semibold">pedido {{ linha.mensagem.pedidoId }}</span>
+              }
+            </div>
+          }
+          @if (linha.mensagem.imagens; as imagens) {
+            <div [class]="gradeImagens(imagens.length) + (linha.mensagem.texto ? ' mb-1.5' : '')">
+              @for (src of imagens; track $index; let i = $index) {
+                <button
+                  type="button"
+                  (click)="lightbox.set({ imagens, index: i })"
+                  [attr.aria-label]="'ampliar imagem ' + (i + 1) + ' de ' + imagens.length"
+                  class="block overflow-hidden rounded-xl bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  <img
+                    [src]="src"
+                    alt=""
+                    loading="lazy"
+                    draggable="false"
+                    [class]="
+                      'w-full object-cover transition hover:opacity-90 ' +
+                      (imagens.length === 1 ? 'max-h-72' : 'aspect-square')
+                    "
+                  />
+                </button>
+              }
+            </div>
+          }
+          @if (linha.mensagem.texto) {
+            <p class="whitespace-pre-line wrap-break-word text-sm leading-snug">
+              {{ linha.mensagem.texto }}
+            </p>
+          }
+          <p
+            [class]="
+              'mt-1 text-right text-[10px] ' +
+              (linha.minha ? 'text-primary-foreground/70' : 'text-muted-foreground')
+            "
+          >
+            {{ fmtHora(linha.mensagem.data) }}
+          </p>
+        </div>
+      </div>
+    } @empty {
+      <div class="grid h-full place-items-center py-12 text-center">
+        <div class="space-y-2">
+          <div
+            class="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary"
+          >
+            <svg [appIcon]="icons.MessageCircle" class="h-6 w-6"></svg>
+          </div>
+          <p class="text-sm font-semibold">nenhuma mensagem ainda</p>
+          <p class="text-xs text-muted-foreground">mande um oi ── .✦</p>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Envio -->
+  <form
+    class="space-y-2 border-t border-border/60 bg-card px-3 py-3"
+    (submit)="$event.preventDefault(); submit()"
+  >
+    @if (pedidoSelecionado(); as p) {
+      <div
+        class="flex items-center gap-2 rounded-xl bg-primary/10 px-3 py-1.5 text-xs text-primary"
+      >
+        <svg [appIcon]="icons.Link2" class="h-3.5 w-3.5 shrink-0"></svg>
+        <span class="min-w-0 flex-1 truncate">
+          sobre: <span class="font-semibold">{{ resumoItens(p.itens) }}</span>
+        </span>
+        <button
+          type="button"
+          (click)="pedidoId.set(null)"
+          aria-label="desvincular pedido"
+          class="grid h-5 w-5 place-items-center rounded-full transition hover:bg-primary/15"
+        >
+          <svg [appIcon]="icons.X" class="h-3 w-3"></svg>
+        </button>
+      </div>
+    }
+
+    @if (anexos().length > 0) {
+      <div class="flex gap-2 overflow-x-auto no-scrollbar">
+        @for (src of anexos(); track $index; let i = $index) {
+          <div class="relative h-16 w-16 shrink-0">
+            <img
+              [src]="src"
+              alt=""
+              class="h-full w-full rounded-xl border border-border/60 object-cover"
+            />
+            <button
+              type="button"
+              (click)="removerAnexo(i)"
+              [attr.aria-label]="'remover imagem ' + (i + 1)"
+              class="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-foreground text-background shadow transition hover:opacity-80"
+            >
+              <svg [appIcon]="icons.X" class="h-3 w-3"></svg>
+            </button>
+          </div>
+        }
+      </div>
+    }
+
+    @if (erro()) {
+      <p class="px-1 text-[11px] font-medium text-destructive">{{ erro() }}</p>
+    }
+
+    <div class="flex items-end gap-2">
+      <label
+        [class]="
+          'relative grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-muted/40 text-muted-foreground transition ' +
+          (anexos().length >= MAX_IMAGENS
+            ? 'cursor-not-allowed opacity-40'
+            : 'cursor-pointer hover:text-foreground')
+        "
+        title="anexar imagens"
+      >
+        <svg [appIcon]="icons.ImagePlus" class="h-4 w-4"></svg>
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          class="sr-only"
+          aria-label="anexar imagens"
+          [disabled]="anexos().length >= MAX_IMAGENS"
+          (change)="handleFiles($event)"
+        />
+      </label>
+
+      @if (pedidos().length > 0) {
+        <label
+          class="relative grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-muted/40 text-muted-foreground transition hover:text-foreground"
+          title="vincular a um pedido"
+        >
+          <svg [appIcon]="icons.Link2" class="h-4 w-4"></svg>
+          <select
+            class="absolute inset-0 cursor-pointer opacity-0"
+            aria-label="vincular a um pedido"
+            (change)="selecionarPedido($any($event.target).value)"
+          >
+            <option value="" [selected]="!pedidoId()">sem pedido vinculado</option>
+            @for (p of pedidos(); track p.id) {
+              <option [value]="p.id" [selected]="pedidoId() === p.id">
+                {{ resumoItens(p.itens) }} — {{ STATUS_META[p.status].label }}
+              </option>
+            }
+          </select>
+        </label>
+      }
+
+      <textarea
+        rows="1"
+        [value]="texto()"
+        (input)="texto.set($any($event.target).value)"
+        (keydown)="onKeydown($event)"
+        [placeholder]="placeholder()"
+        aria-label="mensagem"
+        class="max-h-32 min-h-10 flex-1 resize-none rounded-2xl border border-border bg-muted/40 px-3.5 py-2.5 text-sm outline-none transition placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/20 field-sizing-content"
+      ></textarea>
+
+      <button
+        type="submit"
+        [disabled]="!podeEnviar()"
+        aria-label="enviar"
+        class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-sm transition hover:opacity-90 active:scale-95 disabled:opacity-40"
+      >
+        <svg [appIcon]="icons.SendHorizontal" class="h-4 w-4"></svg>
+      </button>
+    </div>
+  </form>
+</div>
+
+<app-image-lightbox
+  [open]="lightbox() !== null"
+  [images]="lightbox()?.imagens ?? []"
+  [initialIndex]="lightbox()?.index ?? 0"
+  (closed)="lightbox.set(null)"
+/>

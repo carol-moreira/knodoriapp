@@ -11,9 +11,7 @@
       >
         <!-- Logo -->
         <a routerLink="/" class="flex shrink-0 items-center gap-2 text-lg font-bold">
-          <span
-            class="grid h-9 w-9 place-items-center"
-          >
+          <span class="grid h-9 w-9 place-items-center">
             @if (!logoFailed()) {
               <img
                 src="/images/init/icon.png"
@@ -22,11 +20,7 @@
                 (error)="logoFailed.set(true)"
               />
             } @else {
-              <svg
-                [appIcon]="icons.Heart"
-                class="h-5 w-5 text-primary"
-                fill="currentColor"
-              ></svg>
+              <svg [appIcon]="icons.Heart" class="h-5 w-5 text-primary" fill="currentColor"></svg>
             }
           </span>
           <span class="hidden sm:inline">KNODORI</span>
@@ -54,139 +48,176 @@
           </nav>
         }
 
-        <!-- Notificações -->
-        @if (auth.user()) {
-          <div class="shrink-0">
-            <button
-              type="button"
-              aria-label="notificações"
-              class="relative grid h-8 w-8 place-items-center rounded-xl text-muted-foreground outline-none transition hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary"
-              [cdkMenuTriggerFor]="notifMenu"
-              [cdkMenuPosition]="menuPosition"
-              (cdkMenuClosed)="notificacoes.marcarTodasLidas()"
-            >
-              <svg [appIcon]="icons.Bell" class="h-4.5 w-4.5"></svg>
-              @if (notificacoes.naoLidas() > 0) {
-                <span
-                  class="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground"
-                >
-                  {{ notificacoes.naoLidas() }}
-                </span>
-              }
-            </button>
-
-            <ng-template #notifMenu>
-              <div
-                cdkMenu
-                class="z-50 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-border bg-card p-1.5 shadow-xl animate-in fade-in zoom-in-95 duration-100"
+        <!-- Ações do usuário: mensagens, notificações e perfil (afastadas da nav) -->
+        @if (auth.user(); as user) {
+          <div class="flex shrink-0 items-center gap-1 pl-1 sm:gap-1.5 sm:pl-4">
+            <!-- Mensagens -->
+            @if (mensagensRota(); as rota) {
+              <a
+                [routerLink]="rota"
+                aria-label="mensagens"
+                title="mensagens"
+                [class]="
+                  'relative grid h-9 w-9 place-items-center rounded-xl outline-none transition focus-visible:ring-2 focus-visible:ring-primary ' +
+                  (path() === rota
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground')
+                "
               >
-                <p class="border-b border-border/60 px-3 py-2 text-xs font-semibold">notificações</p>
-                @if (notificacoes.minhas().length === 0) {
-                  <p class="px-3 py-6 text-center text-xs text-muted-foreground">
-                    nenhuma notificação por aqui.
+                <svg [appIcon]="icons.MessageCircle" class="h-4.5 w-4.5"></svg>
+                @if (mensagens.naoLidas() > 0) {
+                  <span
+                    class="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground"
+                  >
+                    {{ mensagens.naoLidas() }}
+                  </span>
+                }
+              </a>
+            }
+
+            <!-- Notificações -->
+            <div class="shrink-0">
+              <button
+                type="button"
+                aria-label="notificações"
+                title="notificações"
+                class="relative grid h-9 w-9 place-items-center rounded-xl text-muted-foreground outline-none transition hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary"
+                [cdkMenuTriggerFor]="notifMenu"
+                [cdkMenuPosition]="menuPosition"
+                (cdkMenuClosed)="notificacoes.marcarTodasLidas()"
+              >
+                <svg [appIcon]="icons.Bell" class="h-4.5 w-4.5"></svg>
+                @if (notificacoes.naoLidas() > 0) {
+                  <span
+                    class="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground"
+                  >
+                    {{ notificacoes.naoLidas() }}
+                  </span>
+                }
+              </button>
+
+              <ng-template #notifMenu>
+                <div
+                  cdkMenu
+                  class="z-50 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-border bg-card p-1.5 shadow-xl animate-in fade-in zoom-in-95 duration-100"
+                >
+                  <p class="border-b border-border/60 px-3 py-2 text-xs font-semibold">
+                    notificações
                   </p>
-                } @else {
-                  <div class="max-h-80 overflow-y-auto no-scrollbar">
-                    @for (n of notificacoes.minhas(); track n.id) {
-                      <div
-                        cdkMenuItem
-                        [class]="
-                          'block rounded-xl px-3 py-2.5 outline-none transition hover:bg-muted ' +
-                          (n.lida ? '' : 'bg-primary/5')
-                        "
-                      >
-                        <div class="flex items-start gap-2">
-                          @if (!n.lida) {
-                            <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary"></span>
-                          }
-                          <div class="min-w-0">
-                            <p class="text-xs font-semibold">{{ n.titulo }}</p>
-                            <p class="mt-0.5 text-[11px] text-muted-foreground">{{ n.mensagem }}</p>
-                            <p class="mt-1 text-[10px] text-muted-foreground/70">
-                              {{ fmtNotificacao(n.data) }}
-                            </p>
+                  @if (notificacoes.minhas().length === 0) {
+                    <p class="px-3 py-6 text-center text-xs text-muted-foreground">
+                      nenhuma notificação por aqui.
+                    </p>
+                  } @else {
+                    <div class="max-h-80 overflow-y-auto no-scrollbar">
+                      @for (n of notificacoes.minhas(); track n.id) {
+                        <div
+                          cdkMenuItem
+                          [class]="
+                            'block rounded-xl px-3 py-2.5 outline-none transition hover:bg-muted ' +
+                            (n.lida ? '' : 'bg-primary/5')
+                          "
+                        >
+                          <div class="flex items-start gap-2">
+                            @if (!n.lida) {
+                              <span
+                                class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary"
+                              ></span>
+                            }
+                            <div class="min-w-0">
+                              <p class="text-xs font-semibold">{{ n.titulo }}</p>
+                              <p class="mt-0.5 text-[11px] text-muted-foreground">
+                                {{ n.mensagem }}
+                              </p>
+                              <p class="mt-1 text-[10px] text-muted-foreground/70">
+                                {{ fmtNotificacao(n.data) }}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    }
-                  </div>
-                }
-              </div>
-            </ng-template>
-          </div>
-        }
+                      }
+                    </div>
+                  }
+                </div>
+              </ng-template>
+            </div>
 
-        <!-- Dropdown de perfil -->
-        @if (auth.user(); as user) {
-          <div class="shrink-0">
-            <button
-              type="button"
-              class="rounded-xl outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-primary"
-              [cdkMenuTriggerFor]="profileMenu"
-              [cdkMenuPosition]="menuPosition"
-            >
-              <!-- Avatar do usuário no header -->
-              @switch (avatar()?.kind) {
-                @case ("image") {
-                  <div class="h-8 w-8 overflow-hidden rounded-xl ring-2 ring-primary/20">
-                    <img
-                      [src]="user.avatarUrl"
-                      [alt]="user.nome"
-                      class="h-full w-full object-cover"
-                    />
-                  </div>
-                }
-                @case ("emoji") {
-                  <div
-                    class="grid h-8 w-8 place-items-center rounded-xl bg-primary/10 text-sm ring-2 ring-primary/20"
-                  >
-                    {{ avatar()?.emoji }}
-                  </div>
-                }
-                @default {
-                  <div
-                    class="grid h-8 w-8 place-items-center rounded-xl bg-primary text-xs font-bold text-primary-foreground"
-                  >
-                    {{ avatar()?.initials }}
-                  </div>
-                }
-              }
-            </button>
+            <div role="separator" class="mx-1 hidden h-6 w-px bg-border sm:block"></div>
 
-            <ng-template #profileMenu>
-              <div
-                cdkMenu
-                class="z-50 min-w-45 rounded-2xl border border-border bg-card p-1.5 shadow-xl animate-in fade-in zoom-in-95 duration-100"
+            <!-- Dropdown de perfil -->
+            <div class="shrink-0">
+              <button
+                type="button"
+                class="rounded-xl outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-primary"
+                [cdkMenuTriggerFor]="profileMenu"
+                [cdkMenuPosition]="menuPosition"
               >
-                <!-- Info -->
-                <div class="px-3 py-2 mb-1 border-b border-border/60">
-                  <p class="text-xs font-semibold truncate">{{ user.nome }}</p>
-                  <p class="text-[10px] text-muted-foreground truncate">{{ user.username }}</p>
-                </div>
+                <!-- Avatar do usuário no header -->
+                @switch (avatar()?.kind) {
+                  @case ("image") {
+                    <div class="h-8 w-8 overflow-hidden rounded-xl ring-2 ring-primary/20">
+                      <img
+                        [src]="user.avatarUrl"
+                        [alt]="user.nome"
+                        class="h-full w-full object-cover"
+                      />
+                    </div>
+                  }
+                  @case ("emoji") {
+                    <div
+                      class="grid h-8 w-8 place-items-center rounded-xl bg-primary/10 text-sm ring-2 ring-primary/20"
+                    >
+                      {{ avatar()?.emoji }}
+                    </div>
+                  }
+                  @default {
+                    <div
+                      class="grid h-8 w-8 place-items-center rounded-xl bg-primary text-xs font-bold text-primary-foreground"
+                    >
+                      {{ avatar()?.initials }}
+                    </div>
+                  }
+                }
+              </button>
 
+              <ng-template #profileMenu>
                 <div
-                  cdkMenuItem
-                  (cdkMenuItemTriggered)="profileOpen.set(true)"
-                  class="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium outline-none transition hover:bg-muted"
+                  cdkMenu
+                  class="z-50 min-w-45 rounded-2xl border border-border bg-card p-1.5 shadow-xl animate-in fade-in zoom-in-95 duration-100"
                 >
-                  <svg [appIcon]="icons.Settings" class="h-4 w-4 text-muted-foreground"></svg>
-                  configurações de perfil
+                  <!-- Info -->
+                  <div class="px-3 py-2 mb-1 border-b border-border/60">
+                    <p class="text-xs font-semibold truncate">{{ user.nome }}</p>
+                    <p class="text-[10px] text-muted-foreground truncate">{{ user.username }}</p>
+                  </div>
+
+                  <div
+                    cdkMenuItem
+                    (cdkMenuItemTriggered)="profileOpen.set(true)"
+                    class="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium outline-none transition hover:bg-muted"
+                  >
+                    <svg [appIcon]="icons.Settings" class="h-4 w-4 text-muted-foreground"></svg>
+                    configurações de perfil
+                  </div>
+
+                  <div role="separator" class="my-1 h-px bg-border/60"></div>
+
+                  <div
+                    cdkMenuItem
+                    (cdkMenuItemTriggered)="handleSignOut()"
+                    class="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-destructive outline-none transition hover:bg-destructive/10"
+                  >
+                    <svg [appIcon]="icons.LogOut" class="h-4 w-4"></svg>
+                    sair
+                  </div>
                 </div>
+              </ng-template>
 
-                <div role="separator" class="my-1 h-px bg-border/60"></div>
-
-                <div
-                  cdkMenuItem
-                  (cdkMenuItemTriggered)="handleSignOut()"
-                  class="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-destructive outline-none transition hover:bg-destructive/10"
-                >
-                  <svg [appIcon]="icons.LogOut" class="h-4 w-4"></svg>
-                  sair
-                </div>
-              </div>
-            </ng-template>
-
-            <app-profile-settings-modal [open]="profileOpen()" (closed)="profileOpen.set(false)" />
+              <app-profile-settings-modal
+                [open]="profileOpen()"
+                (closed)="profileOpen.set(false)"
+              />
+            </div>
           </div>
         }
       </div>

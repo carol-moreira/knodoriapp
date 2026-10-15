@@ -213,6 +213,15 @@
           solicitar envio nacional
         </button>
       }
+
+      <a
+        routerLink="/joiner/mensagens"
+        [queryParams]="{ pedido: pedido().id }"
+        class="flex items-center gap-1.5 rounded-pill border border-border px-3 py-1.5 text-xs font-semibold text-foreground/80 transition hover:border-primary/40 hover:text-primary"
+      >
+        <svg [appIcon]="icons.MessageCircle" class="h-3.5 w-3.5"></svg>
+        falar com a GOM
+      </a>
     </div>
   </div>
 

@@ -1,0 +1,153 @@
+<div
+  class="cozy-card grid h-[calc(100dvh-11rem)] min-h-112 overflow-hidden md:grid-cols-[18rem_1fr]"
+>
+  <!-- ── Lista de conversas ─────────────────────────────────────────────── -->
+  <aside
+    [class]="
+      'min-h-0 flex-col border-border/60 md:flex md:border-r ' + (selecionada() ? 'hidden' : 'flex')
+    "
+  >
+    <div class="space-y-2 border-b border-border/60 p-3">
+      <div class="flex items-center justify-between px-1">
+        <h1 class="text-sm font-semibold">mensagens</h1>
+        @if (semConversa().length > 0) {
+          <label
+            class="relative grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition hover:bg-muted/60 hover:text-foreground"
+            title="nova conversa"
+          >
+            <svg [appIcon]="icons.SquarePen" class="h-4 w-4"></svg>
+            <select
+              class="absolute inset-0 cursor-pointer opacity-0"
+              aria-label="nova conversa com…"
+              (change)="iniciarConversa($any($event.target).value); $any($event.target).value = ''"
+            >
+              <option value="" selected disabled>nova conversa com…</option>
+              @for (j of semConversa(); track j.id) {
+                <option [value]="j.id">{{ j.nome }} ({{ j.username }})</option>
+              }
+            </select>
+          </label>
+        }
+      </div>
+      <div class="relative">
+        <svg
+          [appIcon]="icons.Search"
+          class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
+        ></svg>
+        <input
+          type="search"
+          [value]="busca()"
+          (input)="busca.set($any($event.target).value)"
+          placeholder="buscar joiner…"
+          aria-label="buscar joiner"
+          class="w-full rounded-xl border border-border bg-muted/40 py-2 pl-8 pr-3 text-sm outline-none transition placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/20"
+        />
+      </div>
+    </div>
+
+    <div class="min-h-0 flex-1 space-y-0.5 overflow-y-auto p-2 no-scrollbar">
+      @for (item of conversas(); track item.conversa.id) {
+        <button
+          type="button"
+          (click)="selecionadaId.set(item.conversa.id)"
+          [class]="itemClass(item)"
+        >
+          <div
+            class="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-primary/15 text-xs font-bold text-primary"
+          >
+            {{ iniciais(item.conversa.joinerNome) }}
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-baseline gap-2">
+              <p class="min-w-0 flex-1 truncate text-sm font-semibold">
+                {{ item.conversa.joinerNome }}
+              </p>
+              @if (item.ultima) {
+                <span class="shrink-0 text-[10px] text-muted-foreground">
+                  {{ fmtQuando(item.ultima.data) }}
+                </span>
+              }
+            </div>
+            <div class="flex items-center gap-2">
+              <p
+                [class]="
+                  'min-w-0 flex-1 truncate text-xs ' +
+                  (item.naoLidas > 0 ? 'font-semibold text-foreground' : 'text-muted-foreground')
+                "
+              >
+                @if (item.ultima?.pedidoId) {
+                  <svg [appIcon]="icons.Link2" class="mr-0.5 inline h-3 w-3 align-[-2px]"></svg>
+                }
+                {{ previa(item) }}
+              </p>
+              @if (item.naoLidas > 0) {
+                <span
+                  class="grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground"
+                >
+                  {{ item.naoLidas }}
+                </span>
+              }
+            </div>
+          </div>
+        </button>
+      } @empty {
+        <p class="px-3 py-8 text-center text-xs text-muted-foreground">
+          {{ busca() ? "nenhuma joiner encontrada." : "nenhuma conversa ainda." }}
+        </p>
+      }
+    </div>
+  </aside>
+
+  <!-- ── Conversa aberta ────────────────────────────────────────────────── -->
+  <section [class]="'min-h-0 flex-col md:flex ' + (selecionada() ? 'flex' : 'hidden')">
+    @if (selecionada(); as c) {
+      <header class="flex items-center gap-3 border-b border-border/60 px-4 py-3">
+        <button
+          type="button"
+          (click)="selecionadaId.set(null)"
+          aria-label="voltar para as conversas"
+          class="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition hover:bg-muted/60 hover:text-foreground md:hidden"
+        >
+          <svg [appIcon]="icons.ArrowLeft" class="h-4 w-4"></svg>
+        </button>
+        <div
+          class="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-primary/15 text-xs font-bold text-primary"
+        >
+          {{ iniciais(c.joinerNome) }}
+        </div>
+        <div class="min-w-0">
+          <p class="truncate text-sm font-semibold">{{ c.joinerNome }}</p>
+          <p class="text-[11px] text-muted-foreground">
+            {{ c.joinerUsername }} · {{ pedidosDaJoiner().length }} pedido{{
+              pedidosDaJoiner().length !== 1 ? "s" : ""
+            }}
+          </p>
+        </div>
+      </header>
+
+      <app-chat-thread
+        class="min-h-0 flex-1"
+        [conversaId]="c.id"
+        [mensagens]="mensagens()"
+        [meuId]="c.gomId"
+        [pedidos]="pedidosDaJoiner()"
+        [placeholder]="'responder ' + c.joinerUsername + '…'"
+        (enviar)="enviar($event)"
+      />
+    } @else {
+      <div class="grid flex-1 place-items-center p-8 text-center">
+        <div class="space-y-2">
+          <div
+            class="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary"
+          >
+            <svg [appIcon]="icons.MessageCircle" class="h-6 w-6"></svg>
+          </div>
+          <p class="text-sm font-semibold">selecione uma conversa</p>
+          <p class="text-xs text-muted-foreground">
+            as mensagens podem ser gerais ou sobre um pedido específico.
+          </p>
+        </div>
+      </div>
+    }
+  </section>
+</div>

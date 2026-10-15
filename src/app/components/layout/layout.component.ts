@@ -12,6 +12,7 @@ import {
   Layers,
   LayoutDashboard,
   LogOut,
+  MessageCircle,
   Settings,
   Settings2,
   ShoppingBag,
@@ -21,6 +22,7 @@ import {
 import { filter, map } from "rxjs";
 import type { UserRole } from "@/lib/auth";
 import { AuthService } from "@/services/auth.service";
+import { MensagensService } from "@/services/mensagens.service";
 import { NotificacoesService } from "@/services/notificacoes.service";
 import { IconDirective } from "@/shared/icon.directive";
 import { ProfileSettingsModalComponent } from "../auth/profile-settings-modal/profile-settings-modal.component";
@@ -36,6 +38,12 @@ const FULL_PAGE_ROUTES = ["/login", "/onboarding"];
 // ---------------------------------------------------------------------------
 
 type NavItem = { to: string; label: string; icon: LucideIconData; exact?: boolean };
+
+/** Mensagens ficam num ícone próprio no header (junto às notificações), fora da nav. */
+const MENSAGENS_POR_ROLE: Partial<Record<UserRole, string>> = {
+  GOM: "/gom/mensagens",
+  JOINER: "/joiner/mensagens",
+};
 
 export const NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
   ADMIN: [
@@ -95,8 +103,9 @@ export class LayoutComponent {
   private readonly router = inject(Router);
 
   protected readonly notificacoes = inject(NotificacoesService);
+  protected readonly mensagens = inject(MensagensService);
 
-  protected readonly icons = { Bell, Heart, Settings, LogOut };
+  protected readonly icons = { Bell, Heart, MessageCircle, Settings, LogOut };
   protected readonly menuPosition = MENU_POSITION;
 
   protected readonly profileOpen = signal(false);
@@ -120,6 +129,11 @@ export class LayoutComponent {
   protected readonly nav = computed(() => {
     const user = this.auth.user();
     return user ? NAV_BY_ROLE[user.role] : [];
+  });
+
+  protected readonly mensagensRota = computed(() => {
+    const user = this.auth.user();
+    return user ? (MENSAGENS_POR_ROLE[user.role] ?? null) : null;
   });
 
   protected readonly avatar = computed(() => {

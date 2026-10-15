@@ -19,6 +19,7 @@ import {
   type StatusConta,
 } from "@/lib/gom-types";
 import { IconDirective } from "@/shared/icon.directive";
+import { DevedoresComponent } from "./devedores/devedores.component";
 
 // ---------------------------------------------------------------------------
 // Status conta
@@ -51,7 +52,7 @@ const PEDIDO_LABEL: Record<string, string> = Object.fromEntries(
 
 @Component({
   selector: "app-gestao-joiners",
-  imports: [IconDirective],
+  imports: [IconDirective, DevedoresComponent],
   templateUrl: "./gestao-joiners.component.html",
   styleUrl: "./gestao-joiners.component.scss",
 })
