@@ -9,6 +9,7 @@ import {
   type SolicitacaoGOM,
 } from "@/lib/gom-types";
 import { IconDirective } from "@/shared/icon.directive";
+import { ComprovanteChipComponent } from "@/shared/comprovante/comprovante-chip.component";
 import { inputValue } from "@/shared/dom";
 import { AssinaturaComponent } from "@/shared/assinatura/assinatura.component";
 
@@ -32,7 +33,7 @@ export interface StatusChange {
 
 @Component({
   selector: "app-fila-mercari",
-  imports: [IconDirective, AssinaturaComponent],
+  imports: [IconDirective, AssinaturaComponent, ComprovanteChipComponent],
   templateUrl: "./fila-mercari.component.html",
   styleUrl: "./fila-mercari.component.scss",
 })

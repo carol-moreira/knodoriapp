@@ -8,6 +8,7 @@ import {
   type MercariStatus,
   type SolicitacaoGOM,
 } from "@/lib/gom-types";
+import type { Comprovante } from "@/lib/comprovante";
 import { CegsService } from "./cegs.service";
 import { AssinaturaService } from "./assinatura.service";
 import { NotificacoesService } from "./notificacoes.service";
@@ -29,6 +30,11 @@ function resumo(s: SolicitacaoGOM): string {
     .filter(([, q]) => q > 0)
     .map(([k, q]) => `${q}× ${ITEM_META[k as ItemKey]?.label ?? k}`)
     .join(", ");
+}
+
+/** Comprovantes do pedido + o anexado agora (se houver). */
+function comAnexo(s: SolicitacaoGOM, comprovante?: Comprovante): Comprovante[] {
+  return [...(s.comprovantes ?? []), ...(comprovante ? [comprovante] : [])];
 }
 
 function brl(v: number): string {
@@ -54,7 +60,7 @@ export class PedidosMercariService {
   criar(
     nova: Omit<
       SolicitacaoGOM,
-      "id" | "status" | "dataSolicitacao" | "cegId" | "cegNome" | "proofs"
+      "id" | "status" | "dataSolicitacao" | "cegId" | "cegNome" | "proofs" | "comprovantes"
     >,
   ): void {
     // 🔌 POST /api/joiner/solicitacoes
@@ -71,8 +77,10 @@ export class PedidosMercariService {
     this._solicitacoes.update((prev) => [solicitacao, ...prev]);
     this.notificacoes.enviar(
       "GOM",
+      "PEDIDO_NOVO",
       "novo pedido mercari 🛒",
       `${nova.joinerUsername} enviou ${resumo(solicitacao)} (${brl(nova.valorBrl)}) para a fila.`,
+      "/gom/fila",
     );
   }
 
@@ -89,33 +97,77 @@ export class PedidosMercariService {
     return this._solicitacoes().filter((s) => s.cegId === cegId);
   }
 
-  /** Muda a etapa de um pedido. "compra confirmada" passa por confirmarCompra (exige proof). */
-  alterarStatus(id: string, status: MercariStatus): void {
+  /** O pedido passa de "aguard. pgto" para "pago" (ou além) com esta mudança. */
+  cruzaPagamento(atual: MercariStatus, novo: MercariStatus): boolean {
+    return etapaMercari(atual) < etapaMercari("PAGO") && etapaMercari(novo) >= etapaMercari("PAGO");
+  }
+
+  /**
+   * Muda a etapa de um pedido. "compra confirmada" passa por confirmarCompra (exige proof).
+   * Chegar em "pago" exige comprovante — o da joiner ou `comprovante`, anexado agora pela GOM.
+   */
+  alterarStatus(id: string, status: MercariStatus, comprovante?: Comprovante): void {
     const atual = this._solicitacoes().find((s) => s.id === id);
     if (!atual || atual.status === status || status === "COMPRADO") return;
     // Depois de confirmada a compra o pedido está numa caixa e não volta para antes disso
     if (atual.cegId && etapaMercari(status) < etapaMercari("COMPRADO")) return;
     if (status === "NA_WAREHOUSE" && !atual.cegId) return;
+    const comprovantes = comAnexo(atual, comprovante);
+    const pagou = this.cruzaPagamento(atual.status, status);
+    if (pagou && comprovantes.length === 0) return;
 
-    // 🔌 PATCH /api/gom/solicitacoes/:id { status }
+    // 🔌 PATCH /api/gom/solicitacoes/:id { status, comprovanteId? }
     const atualizadoPor = this.assinatura.assinar(
       "PEDIDO",
       `mudou o pedido de ${atual.joinerUsername} (${resumo(atual)}) para “${MERCARI_STATUS_META[status].label}”`,
     );
-    this.patch(id, { status, atualizadoPor });
+    this.patch(id, { status, comprovantes, atualizadoPor });
 
+    if (pagou) {
+      this.notificacoes.enviar(
+        atual.joinerId,
+        "PAGAMENTO_CONFIRMADO",
+        "pagamento confirmado ✓",
+        `a GOM conferiu o pagamento de ${resumo(atual)} (${brl(atual.valorBrl)}).`,
+        "/joiner/compras",
+      );
+    }
     const aviso = AVISO_POR_STATUS[status];
     if (aviso && etapaMercari(status) > etapaMercari(atual.status)) {
       const [titulo, mensagem] = aviso({ ...atual, status });
-      this.notificacoes.enviar(atual.joinerId, titulo, mensagem);
+      this.notificacoes.enviar(
+        atual.joinerId,
+        "PEDIDO_STATUS",
+        titulo,
+        mensagem,
+        "/joiner/compras",
+      );
     }
   }
 
+  /** Joiner envia o comprovante do PIX do pedido (a GOM confere e marca "pago"). */
+  enviarComprovante(id: string, comprovante: Comprovante): void {
+    const atual = this._solicitacoes().find((s) => s.id === id);
+    if (!atual || atual.status !== "AGUARDANDO_PAGAMENTO") return;
+    // 🔌 POST /api/joiner/solicitacoes/:id/comprovantes { comprovanteId }
+    this.assinatura.assinar("PAGAMENTO", `enviou o comprovante do pedido mercari ${id}`);
+    this.patch(id, { comprovantes: comAnexo(atual, comprovante) });
+    this.notificacoes.enviar(
+      "GOM",
+      "COMPROVANTE_ENVIADO",
+      "comprovante para conferir 🧾",
+      `${atual.joinerUsername} enviou o comprovante de ${resumo(atual)} (${brl(atual.valorBrl)}).`,
+      "/gom/fila",
+    );
+  }
+
   /** GOM confirma a compra, anexa o proof e direciona o pedido para uma caixa mercari aberta. */
-  confirmarCompra(id: string, proofs: string[], cegId: string): void {
+  confirmarCompra(id: string, proofs: string[], cegId: string, comprovante?: Comprovante): void {
     const atual = this._solicitacoes().find((s) => s.id === id);
     const caixa = this.cegs.porId(cegId);
     if (!atual || !caixa || caixa.status !== "ABERTA" || proofs.length === 0) return;
+    const comprovantes = comAnexo(atual, comprovante);
+    if (this.cruzaPagamento(atual.status, "COMPRADO") && comprovantes.length === 0) return;
 
     // 🔌 POST /api/gom/solicitacoes/:id/confirmar-compra (multipart com as imagens)
     const atualizadoPor = this.assinatura.assinar(
@@ -125,6 +177,7 @@ export class PedidosMercariService {
     this.patch(id, {
       status: "COMPRADO",
       proofs,
+      comprovantes,
       cegId: caixa.id,
       cegNome: caixa.nome,
       atualizadoPor,
@@ -133,8 +186,10 @@ export class PedidosMercariService {
 
     this.notificacoes.enviar(
       atual.joinerId,
+      "PEDIDO_STATUS",
       "compra confirmada ✅",
       `a compra de ${resumo(atual)} foi confirmada e o proof já está disponível. seu pedido entrou na ${caixa.nome}.`,
+      "/joiner/compras",
     );
   }
 
@@ -156,8 +211,10 @@ export class PedidosMercariService {
     for (const joinerId of this.joinersDaCaixa(cegId)) {
       this.notificacoes.enviar(
         joinerId,
+        "CEG_STATUS",
         `${caixa.nome} fechada 📦`,
         `a ${caixa.nome} foi fechada e vai sair da warehouse. em breve você recebe a cobrança do frete internacional e das taxas.`,
+        "/joiner/cegs",
       );
     }
   }
@@ -184,8 +241,10 @@ export class PedidosMercariService {
     for (const joinerId of joiners) {
       this.notificacoes.enviar(
         joinerId,
+        "COBRANCA",
         "frete e taxas da caixa 💸",
         `cobrança da ${caixa.nome}: ${brl(porJoiner[joinerId])} (frete internacional ${brl(parte)} + taxas ${brl(taxaPorJoiner)}).`,
+        "/joiner/compras",
       );
     }
   }
@@ -197,6 +256,75 @@ export class PedidosMercariService {
     const por = this.assinatura.assinar("CAIXA", `marcou que a ${caixa.nome} chegou na GOM`);
     this.patchCaixa(cegId, { status: "CHEGOU_GOM", atualizadoPor: por });
     this.cegs.atualizar(cegId, { status: "CHEGOU_BR", atualizadoPor: por });
+    for (const joinerId of this.joinersDaCaixa(cegId)) {
+      this.notificacoes.enviar(
+        joinerId,
+        "CEG_STATUS",
+        `${caixa.nome} chegou no Brasil 🇧🇷`,
+        "a caixa passou pela alfândega e está com a GOM. o envio nacional é liberado em breve.",
+        "/joiner/cegs",
+      );
+    }
+  }
+
+  // ── Frete internacional + taxas da caixa ─────────────────────────────────
+
+  /** Joiner envia o comprovante do frete + taxas da caixa. */
+  enviarComprovanteCaixa(cegId: string, comprovante: Comprovante): void {
+    const caixa = this.cegs.porId(cegId);
+    const cob = caixa?.cobranca;
+    const joinerId = comprovante.por.id;
+    if (!caixa || !cob || cob.porJoiner[joinerId] === undefined || cob.pagoPor?.includes(joinerId))
+      return;
+    // 🔌 POST /api/joiner/cegs/:id/cobranca/comprovantes { comprovanteId }
+    this.assinatura.assinar("PAGAMENTO", `enviou o comprovante do frete + taxas da ${caixa.nome}`);
+    this.cegs.atualizar(cegId, {
+      cobranca: {
+        ...cob,
+        comprovantes: {
+          ...cob.comprovantes,
+          [joinerId]: [...(cob.comprovantes?.[joinerId] ?? []), comprovante],
+        },
+      },
+    });
+    this.notificacoes.enviar(
+      "GOM",
+      "COMPROVANTE_ENVIADO",
+      "comprovante para conferir 🧾",
+      `${comprovante.por.username} enviou o comprovante do frete + taxas da ${caixa.nome} (${brl(cob.porJoiner[joinerId])}).`,
+      "/gom/cegs",
+    );
+  }
+
+  /** GOM confere o frete + taxas de uma joiner (exige o comprovante dela ou `comprovante`). */
+  confirmarPagamentoCaixa(cegId: string, joinerId: string, comprovante?: Comprovante): void {
+    const caixa = this.cegs.porId(cegId);
+    const cob = caixa?.cobranca;
+    if (!caixa || !cob || cob.porJoiner[joinerId] === undefined || cob.pagoPor?.includes(joinerId))
+      return;
+    const lista = [...(cob.comprovantes?.[joinerId] ?? []), ...(comprovante ? [comprovante] : [])];
+    if (lista.length === 0) return;
+    const joiner = this._solicitacoes().find((s) => s.joinerId === joinerId)?.joinerUsername;
+    // 🔌 POST /api/gom/cegs/:id/cobranca/:joinerId/pago { comprovanteId? }
+    const por = this.assinatura.assinar(
+      "PAGAMENTO",
+      `confirmou o frete + taxas da ${caixa.nome} de ${joiner ?? joinerId}`,
+    );
+    this.cegs.atualizar(cegId, {
+      cobranca: {
+        ...cob,
+        pagoPor: [...(cob.pagoPor ?? []), joinerId],
+        comprovantes: { ...cob.comprovantes, [joinerId]: lista },
+      },
+      atualizadoPor: por,
+    });
+    this.notificacoes.enviar(
+      joinerId,
+      "PAGAMENTO_CONFIRMADO",
+      "frete + taxas confirmados ✓",
+      `${por?.username ?? "a GOM"} conferiu o pagamento do frete internacional + taxas da ${caixa.nome}.`,
+      "/joiner/compras",
+    );
   }
 
   liberarEnvio(cegId: string): void {
@@ -209,8 +337,10 @@ export class PedidosMercariService {
     for (const joinerId of this.joinersDaCaixa(cegId)) {
       this.notificacoes.enviar(
         joinerId,
+        "CEG_STATUS",
         "envio nacional liberado 🚚",
         `seus itens da ${caixa.nome} chegaram na GOM! já pode solicitar o envio nacional em minhas compras.`,
+        "/joiner/envios",
       );
     }
   }

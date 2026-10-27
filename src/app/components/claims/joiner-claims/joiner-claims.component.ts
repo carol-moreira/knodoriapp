@@ -1,8 +1,10 @@
 import { Component, computed, inject, input, linkedSignal, signal } from "@angular/core";
-import { ArrowLeft, Hand, IdCard } from "lucide-angular";
-import { CLAIM_STATUS_META, telefoneDaJoiner } from "@/lib/claims-types";
+import { ArrowLeft, Hand, IdCard, Receipt } from "lucide-angular";
+import { CLAIM_STATUS_META, telefoneDaJoiner, type CegItem } from "@/lib/claims-types";
 import { AuthService } from "@/services/auth.service";
 import { ClaimsService, type ResultadoEnvio } from "@/services/claims.service";
+import { ComprovanteChipComponent } from "@/shared/comprovante/comprovante-chip.component";
+import { ComprovanteService } from "@/shared/comprovante/comprovante.service";
 import { IconDirective } from "@/shared/icon.directive";
 import { brl } from "@/components/gom/gerenciamento-cegs/cegs.model";
 import { ClaimChatComponent } from "../claim-chat/claim-chat.component";
@@ -11,7 +13,7 @@ import { RodadaStatusComponent } from "../rodada-status/rodada-status.component"
 /** Rota "/joiner/claims" — rodadas de claims: chat + status dos meus claims. */
 @Component({
   selector: "app-joiner-claims",
-  imports: [IconDirective, ClaimChatComponent, RodadaStatusComponent],
+  imports: [IconDirective, ClaimChatComponent, RodadaStatusComponent, ComprovanteChipComponent],
   templateUrl: "./joiner-claims.component.html",
   styleUrl: "./joiner-claims.component.scss",
 })
@@ -21,8 +23,9 @@ export class JoinerClaimsComponent {
 
   protected readonly auth = inject(AuthService);
   protected readonly claims = inject(ClaimsService);
+  private readonly comprovantes = inject(ComprovanteService);
 
-  protected readonly icons = { ArrowLeft, Hand, IdCard };
+  protected readonly icons = { ArrowLeft, Hand, IdCard, Receipt };
   protected readonly CLAIM_META = CLAIM_STATUS_META;
   protected readonly brl = brl;
 
@@ -75,6 +78,22 @@ export class JoinerClaimsComponent {
 
   /** Retorno do último envio (claims criados / itens ignorados). */
   protected readonly feedback = signal<{ tipo: "ok" | "aviso"; texto: string } | null>(null);
+
+  /** Pagamento do item ganho: pix para a GOM + comprovante (ela confere e marca pago). */
+  protected async enviarComprovante(item: CegItem): Promise<void> {
+    const r = await this.comprovantes.pedir({
+      titulo: `pagar #${item.codigo} ${item.nome}`,
+      mensagem: "faça o pix para a GOM e anexe o comprovante — ela confere e confirma o pagamento.",
+      valor: item.valor,
+    });
+    if (!r?.comprovante) return;
+    const erro = this.claims.enviarComprovante(item.id, r.comprovante);
+    this.feedback.set(
+      erro
+        ? { tipo: "aviso", texto: erro }
+        : { tipo: "ok", texto: "comprovante enviado! a GOM confere e confirma o pagamento." },
+    );
+  }
 
   protected selecionar(id: string | null): void {
     this.selecionadaId.set(id);

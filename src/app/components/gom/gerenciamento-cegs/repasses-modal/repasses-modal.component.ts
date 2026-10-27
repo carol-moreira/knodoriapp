@@ -1,6 +1,8 @@
-import { Component, computed, input, output, signal } from "@angular/core";
+import { Component, computed, inject, input, output, signal } from "@angular/core";
 import { CheckCircle2, CreditCard, Plus, X } from "lucide-angular";
 import { AutofocusDirective } from "@/shared/autofocus.directive";
+import { ComprovanteChipComponent } from "@/shared/comprovante/comprovante-chip.component";
+import { ComprovanteService } from "@/shared/comprovante/comprovante.service";
 import { DialogComponent } from "@/shared/dialog.component";
 import { IconDirective } from "@/shared/icon.directive";
 import { inputValue } from "@/shared/dom";
@@ -13,7 +15,7 @@ export interface RepasseUpdate {
 
 @Component({
   selector: "app-repasses-modal",
-  imports: [DialogComponent, IconDirective, AutofocusDirective],
+  imports: [DialogComponent, IconDirective, AutofocusDirective, ComprovanteChipComponent],
   templateUrl: "./repasses-modal.component.html",
   styleUrl: "./repasses-modal.component.scss",
 })
@@ -23,6 +25,8 @@ export class RepassesModalComponent {
   readonly repasses = input.required<Repasse[]>();
   readonly closed = output<void>();
   readonly updated = output<RepasseUpdate>();
+
+  private readonly comprovantes = inject(ComprovanteService);
 
   protected readonly icons = { CheckCircle2, CreditCard, Plus, X };
   protected readonly REPASSE_META = REPASSE_META;
@@ -70,7 +74,8 @@ export class RepassesModalComponent {
     this.valor.set((rep.valorTotal - rep.valorPago).toFixed(2));
   }
 
-  protected handleConfirmar(): void {
+  /** Cada pagamento registrado leva o comprovante. */
+  protected async handleConfirmar(): Promise<void> {
     const ceg = this.ceg();
     const registrandoId = this.registrandoId();
     if (!ceg || !registrandoId) return;
@@ -78,12 +83,24 @@ export class RepassesModalComponent {
     if (pago <= 0) return;
     const rep = this.repasses().find((r) => r.id === registrandoId);
     if (!rep) return;
+    const r = await this.comprovantes.pedir({
+      titulo: `pagamento de ${rep.joinerUsername}`,
+      mensagem: `${ceg.nome} — anexe o comprovante do valor recebido.`,
+      valor: pago,
+      confirmar: "registrar pagamento",
+    });
+    if (!r?.comprovante) return;
     const novoPago = Math.min(rep.valorPago + pago, rep.valorTotal);
     const novoStatus: Repasse["status"] =
       novoPago >= rep.valorTotal ? "PAGO" : novoPago > 0 ? "PARCIAL" : "PENDENTE";
     this.updated.emit({
       cegId: ceg.id,
-      updated: { ...rep, valorPago: novoPago, status: novoStatus },
+      updated: {
+        ...rep,
+        valorPago: novoPago,
+        status: novoStatus,
+        comprovantes: [...(rep.comprovantes ?? []), r.comprovante],
+      },
     });
     this.registrandoId.set(null);
     this.valor.set("");

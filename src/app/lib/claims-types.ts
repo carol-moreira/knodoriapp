@@ -11,6 +11,7 @@
  */
 
 import type { Autoria } from "./autoria";
+import type { Comprovante } from "./comprovante";
 import { MOCK_JOINERS } from "./gom-types";
 
 // ---------------------------------------------------------------------------
@@ -35,6 +36,8 @@ export interface CegItem {
   claimId?: string;
   /** Só existe depois do claim confirmado. */
   pagamento?: PagamentoItem;
+  /** Comprovantes do pagamento (enviados pela joiner ou anexados pela GOM ao marcar pago). */
+  comprovantes?: Comprovante[];
   /** Item chegou avariado (amassado, riscado, faltando parte…). */
   avaria?: boolean;
   /** O que aconteceu com o item — visível para a dona do claim. */

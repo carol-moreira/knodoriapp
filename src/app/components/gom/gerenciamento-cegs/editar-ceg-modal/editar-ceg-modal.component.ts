@@ -1,5 +1,6 @@
 import { Component, computed, effect, inject, input, output, signal } from "@angular/core";
 import { X } from "lucide-angular";
+import { CegPostsService } from "@/services/ceg-posts.service";
 import { CegsService } from "@/services/cegs.service";
 import { DialogComponent } from "@/shared/dialog.component";
 import { IconDirective } from "@/shared/icon.directive";
@@ -27,6 +28,7 @@ export class EditarCegModalComponent {
   readonly closed = output<void>();
 
   private readonly cegs = inject(CegsService);
+  private readonly posts = inject(CegPostsService);
 
   protected readonly icons = { X };
   protected readonly INPUT_CLS = INPUT_CLS;
@@ -77,6 +79,7 @@ export class EditarCegModalComponent {
       prazo: this.prazo(),
       status: this.status(),
     });
+    this.posts.avisarStatus(ceg.id, ceg.status);
     this.closed.emit();
   }
 }

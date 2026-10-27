@@ -79,8 +79,10 @@ export class ModeracaoService {
     ]);
     this.notificacoes.enviar(
       "ADMIN",
+      "MODERACAO",
       `pedido de ${meta.label} 🛡️`,
       `${solicitadoPor.username} (${user.comunidadeNome}) pediu ${meta.label} de ${joiner.username}.`,
+      "/admin/usuarios",
     );
     return null;
   }
@@ -105,14 +107,18 @@ export class ModeracaoService {
 
     this.notificacoes.enviar(
       "GOM",
+      "MODERACAO",
       `${meta.label} aprovada`,
       `o admin aprovou a ${meta.label} de ${s.joinerUsername}.${resposta.trim() ? ` “${resposta.trim()}”` : ""}`,
+      "/gom/joiners",
     );
     if (s.tipo === "REMOCAO") {
       this.notificacoes.enviar(
         s.joinerId,
+        "MODERACAO",
         `você saiu da comunidade ${s.comunidadeNome}`,
         "a GOM e o admin removeram sua participação. as CEGs dessa comunidade não aparecem mais pra você.",
+        "/joiner",
       );
     }
   }
@@ -129,8 +135,10 @@ export class ModeracaoService {
     this.decidir(id, "RECUSADA", decididoPor, resposta);
     this.notificacoes.enviar(
       "GOM",
+      "MODERACAO",
       `${meta.label} recusada`,
       `o admin recusou a ${meta.label} de ${s.joinerUsername}.${resposta.trim() ? ` “${resposta.trim()}”` : ""}`,
+      "/gom/joiners",
     );
   }
 

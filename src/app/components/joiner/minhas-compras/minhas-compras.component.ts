@@ -34,8 +34,18 @@ export class MinhasComprasComponent {
       .solicitacoes()
       .filter((s) => s.joinerId === userId)
       .map((s) => {
-        const cobranca = s.cegId ? this.cegs.porId(s.cegId)?.cobranca : undefined;
-        return toPedidoJoiner(s, cobranca?.porJoiner[userId]);
+        const cob = s.cegId ? this.cegs.porId(s.cegId)?.cobranca : undefined;
+        const valor = cob?.porJoiner[userId];
+        return toPedidoJoiner(
+          s,
+          cob && valor !== undefined
+            ? {
+                valor,
+                pago: cob.pagoPor?.includes(userId) ?? false,
+                comprovantes: cob.comprovantes?.[userId] ?? [],
+              }
+            : undefined,
+        );
       });
   });
   protected readonly repasseOpen = signal(false);

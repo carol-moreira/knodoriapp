@@ -1,7 +1,10 @@
 import { Component, computed, inject, input, linkedSignal, signal } from "@angular/core";
-import { CheckCircle2, Hourglass, Package, Truck, X } from "lucide-angular";
+import { CheckCircle2, Hourglass, Package, Receipt, Star, Truck, X } from "lucide-angular";
+import type { EnvioNacional } from "@/lib/envios-types";
 import { EnviosService } from "@/services/envios.service";
+import { ComprovanteService } from "@/shared/comprovante/comprovante.service";
 import { ConfirmService } from "@/shared/confirm-dialog/confirm.service";
+import { inputValue } from "@/shared/dom";
 import { IconDirective } from "@/shared/icon.directive";
 import { EnvioCardComponent } from "../envio-card/envio-card.component";
 import { SolicitarEnvioModalComponent } from "../solicitar-envio-modal/solicitar-envio-modal.component";
@@ -21,8 +24,11 @@ export class JoinerEnviosComponent {
 
   protected readonly envios = inject(EnviosService);
   private readonly confirm = inject(ConfirmService);
+  private readonly comprovantes = inject(ComprovanteService);
 
-  protected readonly icons = { CheckCircle2, Hourglass, Package, Truck, X };
+  protected readonly icons = { CheckCircle2, Hourglass, Package, Receipt, Star, Truck, X };
+  protected readonly estrelas = [1, 2, 3, 4, 5];
+  protected readonly val = inputValue;
 
   /** refIds selecionados (por padrão: todos os prontos, ou só o pedido que veio na URL). */
   protected readonly selecionados = linkedSignal<ReadonlySet<string>>(() => {
@@ -37,15 +43,16 @@ export class JoinerEnviosComponent {
   protected readonly modalAberto = signal(false);
   protected readonly aba = signal<Aba>("ATIVOS");
   protected readonly aviso = signal("");
+  /** Feedback sendo escrito, por envio. */
+  protected readonly notas = signal<Partial<Record<string, number>>>({});
+  protected readonly textos = signal<Partial<Record<string, string>>>({});
+  protected readonly erros = signal<Partial<Record<string, string>>>({});
 
   protected readonly lista = computed(() =>
     this.envios
       .meus()
-      .filter((e) =>
-        this.aba() === "ATIVOS"
-          ? !["ENTREGUE", "CANCELADO"].includes(e.status)
-          : ["ENTREGUE", "CANCELADO"].includes(e.status),
-      ),
+      // Entregue sem feedback continua "em andamento" (falta a avaliação dela)
+      .filter((e) => (this.aba() === "ATIVOS") === (e.status !== "FEEDBACK_FEITO")),
   );
 
   protected alternar(refId: string): void {
@@ -59,6 +66,33 @@ export class JoinerEnviosComponent {
   protected onEnviado(): void {
     this.aba.set("ATIVOS");
     this.aviso.set("pedido de envio enviado! a GOM te avisa o frete por aqui e nas notificações.");
+  }
+
+  /** Paga o frete: o comprovante é obrigatório. */
+  protected async pagarFrete(e: EnvioNacional): Promise<void> {
+    const r = await this.comprovantes.pedir({
+      titulo: "pagar frete do envio",
+      mensagem: "faça o pix para a GOM e anexe o comprovante — ela confere e posta o pacote.",
+      valor: e.frete,
+    });
+    if (!r?.comprovante) return;
+    const erro = this.envios.pagarFrete(e.id, r.comprovante);
+    this.erros.update((x) => ({ ...x, [e.id]: erro ?? undefined }));
+    if (!erro) this.aviso.set("comprovante enviado! a GOM confere e te avisa quando postar.");
+  }
+
+  protected enviarFeedback(e: EnvioNacional): void {
+    const erro = this.envios.darFeedback(e.id, this.notas()[e.id] ?? 0, this.textos()[e.id] ?? "");
+    this.erros.update((x) => ({ ...x, [e.id]: erro ?? undefined }));
+    if (!erro) this.aviso.set("obrigada pelo feedback! 💖");
+  }
+
+  protected setNota(id: string, nota: number): void {
+    this.notas.update((n) => ({ ...n, [id]: nota }));
+  }
+
+  protected setTexto(id: string, e: Event): void {
+    this.textos.update((t) => ({ ...t, [id]: inputValue(e) }));
   }
 
   protected async cancelar(id: string): Promise<void> {

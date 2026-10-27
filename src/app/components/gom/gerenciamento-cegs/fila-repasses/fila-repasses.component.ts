@@ -1,5 +1,6 @@
 import { Component, computed, inject, input, model, signal } from "@angular/core";
 import { ArrowRight, CheckCircle2, Repeat2 } from "lucide-angular";
+import { ComprovanteChipComponent } from "@/shared/comprovante/comprovante-chip.component";
 import { IconDirective } from "@/shared/icon.directive";
 import { REPASSE_STATUS_META, type RepasseStatus } from "@/lib/repasse-types";
 import { RepassesService } from "@/services/repasses.service";
@@ -11,7 +12,7 @@ export type FiltroRepasseCeg = string | "TODAS";
 
 @Component({
   selector: "app-fila-repasses",
-  imports: [IconDirective, AssinaturaComponent],
+  imports: [IconDirective, AssinaturaComponent, ComprovanteChipComponent],
   templateUrl: "./fila-repasses.component.html",
   styleUrl: "./fila-repasses.component.scss",
 })

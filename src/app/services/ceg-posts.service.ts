@@ -1,12 +1,17 @@
 import { Injectable, inject, signal } from "@angular/core";
+import { CEG_STATUS_META, type CegStatus } from "@/components/gom/gerenciamento-cegs/cegs.model";
 import type { Autoria } from "@/lib/autoria";
 import { CegsService } from "./cegs.service";
+import { ClaimsService } from "./claims.service";
 import { AssinaturaService } from "./assinatura.service";
 import { NotificacoesService } from "./notificacoes.service";
 import { PedidosMercariService } from "./pedidos-mercari.service";
 
-/** COMUNICADO = novidade geral; AVISO = algo que pede atenção (prazo, pagamento, atraso…). */
-export type CegPostTipo = "COMUNICADO" | "AVISO";
+/**
+ * COMUNICADO = novidade geral; AVISO = algo que pede atenção (prazo, pagamento, atraso…);
+ * TAXACAO = a CEG foi taxada na importação; ALFANDEGA = liberada pela alfândega.
+ */
+export type CegPostTipo = "COMUNICADO" | "AVISO" | "TAXACAO" | "ALFANDEGA";
 
 export interface CegPost {
   id: string;
@@ -22,6 +27,27 @@ export interface CegPost {
 export const CEG_POST_META: Record<CegPostTipo, { label: string; badge: string }> = {
   COMUNICADO: { label: "comunicado", badge: "bg-primary/10 text-primary ring-1 ring-primary/30" },
   AVISO: { label: "aviso", badge: "bg-amber-50 text-amber-700 ring-1 ring-amber-200" },
+  TAXACAO: { label: "taxação", badge: "bg-rose-50 text-rose-700 ring-1 ring-rose-200" },
+  ALFANDEGA: {
+    label: "liberada na alfândega",
+    badge: "bg-teal-50 text-teal-700 ring-1 ring-teal-200",
+  },
+};
+
+/** Título da notificação de cada tipo de postagem. */
+const TITULO_POST: Record<CegPostTipo, (ceg: string) => string> = {
+  COMUNICADO: (ceg) => `novidade na ${ceg}`,
+  AVISO: (ceg) => `aviso na ${ceg}`,
+  TAXACAO: (ceg) => `${ceg} foi taxada 🧾`,
+  ALFANDEGA: (ceg) => `${ceg} liberada na alfândega ✅`,
+};
+
+/** Status da CEG que valem aviso às joiners. */
+const AVISO_STATUS: Partial<Record<CegStatus, string>> = {
+  EM_COMPRA: "a GOM está fazendo as compras 🛍️",
+  TRANSITO: "saiu para o Brasil ✈️",
+  CHEGOU_BR: "chegou no Brasil 🇧🇷",
+  FINALIZADA: "foi finalizada ✨",
 };
 
 // 🔌 Mock — substituir por GET /api/cegs/:id/posts
@@ -69,6 +95,7 @@ const MOCK_POSTS: CegPost[] = [
 export class CegPostsService {
   private readonly cegs = inject(CegsService);
   private readonly pedidos = inject(PedidosMercariService);
+  private readonly claims = inject(ClaimsService);
   private readonly notificacoes = inject(NotificacoesService);
   private readonly assinatura = inject(AssinaturaService);
 
@@ -90,7 +117,7 @@ export class CegPostsService {
     // 🔌 POST /api/gom/cegs/:id/posts
     const por = this.assinatura.assinar(
       "NOVIDADE",
-      `publicou ${tipo === "AVISO" ? "um aviso" : "um comunicado"} em ${ceg.nome}`,
+      `publicou “${CEG_POST_META[tipo].label}” em ${ceg.nome}`,
     );
     const post: CegPost = {
       id: `post_${Date.now()}`,
@@ -104,13 +131,41 @@ export class CegPostsService {
     this._posts.update((prev) => [post, ...prev]);
 
     const resumo = conteudo.length > 90 ? `${conteudo.slice(0, 90)}…` : conteudo;
-    for (const joinerId of this.pedidos.joinersDaCaixa(cegId)) {
+    const statusAlfandega = tipo === "TAXACAO" || tipo === "ALFANDEGA";
+    for (const joinerId of this.joinersDaCeg(cegId)) {
       this.notificacoes.enviar(
         joinerId,
-        `${tipo === "AVISO" ? "aviso" : "novidade"} na ${ceg.nome}`,
+        statusAlfandega ? "CEG_STATUS" : "CEG_NOVIDADE",
+        TITULO_POST[tipo](ceg.nome),
         resumo,
+        "/joiner/cegs",
       );
     }
+  }
+
+  /** Avisa as joiners da CEG quando o status muda (chamado depois de CegsService.editar). */
+  avisarStatus(cegId: string, de: CegStatus): void {
+    const ceg = this.cegs.porId(cegId);
+    const texto = ceg && ceg.status !== de ? AVISO_STATUS[ceg.status] : undefined;
+    if (!ceg || !texto) return;
+    for (const joinerId of this.joinersDaCeg(cegId)) {
+      this.notificacoes.enviar(
+        joinerId,
+        "CEG_STATUS",
+        `${ceg.nome} ${texto}`,
+        `status da CEG: ${CEG_STATUS_META[ceg.status].label}.`,
+        "/joiner/cegs",
+      );
+    }
+  }
+
+  /** Joiners com itens na CEG: pedidos mercari (caixas) + claims confirmados. */
+  joinersDaCeg(cegId: string): string[] {
+    const claims = this.claims
+      .claimsPorJoiner(cegId)
+      .filter((g) => g.claims.some((c) => c.status === "CONFIRMADO"))
+      .map((g) => g.joinerId);
+    return [...new Set([...this.pedidos.joinersDaCaixa(cegId), ...claims])];
   }
 
   remover(id: string): void {
@@ -119,7 +174,7 @@ export class CegPostsService {
     if (!post) return;
     this.assinatura.assinar(
       "NOVIDADE",
-      `excluiu ${post.tipo === "AVISO" ? "um aviso" : "um comunicado"} de ${this.cegs.porId(post.cegId)?.nome ?? "CEG"}`,
+      `excluiu “${CEG_POST_META[post.tipo].label}” de ${this.cegs.porId(post.cegId)?.nome ?? "CEG"}`,
     );
     this._posts.update((prev) => prev.filter((p) => p.id !== id));
   }

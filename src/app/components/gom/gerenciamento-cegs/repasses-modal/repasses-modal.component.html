@@ -87,6 +87,10 @@
               ></div>
             </div>
 
+            @for (c of rep.comprovantes ?? []; track c.id) {
+              <app-comprovante-chip [comprovante]="c" />
+            }
+
             <!-- Inline registro de pagamento -->
             @if (registrandoId() === rep.id) {
               <div class="flex items-center gap-2">

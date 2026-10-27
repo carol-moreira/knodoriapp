@@ -201,8 +201,10 @@ export class CobrancasService {
     ]);
     this.notificacoes.enviar(
       devedor.joinerId,
+      "COBRANCA",
       "pagamento pendente 💸",
       `${por ? por.username : "a GOM"} enviou uma cobrança de ${brl(valor)}: ${debitos.map((d) => d.descricao).join(", ")}.`,
+      "/joiner/compras",
     );
   }
 }
