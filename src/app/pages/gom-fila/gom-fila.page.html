@@ -13,7 +13,7 @@
   [solicitacao]="confirmandoSol()"
   [caixas]="cegs.caixasAbertas()"
   [proximaCaixa]="proximaCaixa()"
-  (closed)="confirmandoId.set(null)"
+  (closed)="fecharCompra()"
   (confirmed)="handleConfirmarCompra($event)"
 />
 <app-image-lightbox

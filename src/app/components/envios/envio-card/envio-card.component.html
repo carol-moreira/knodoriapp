@@ -31,14 +31,40 @@
     </div>
 
     <!-- Progresso -->
-    @if (envio().status !== "CANCELADO") {
+    <div class="space-y-1">
       <div class="flex items-center gap-1" aria-hidden="true">
-        @for (e of etapas; track e; let i = $index) {
+        @for (e of etapas(); track e; let i = $index) {
           <div
-            [class]="'h-1.5 flex-1 rounded-full ' + (i <= passo() ? 'bg-primary' : 'bg-muted')"
+            [class]="
+              'h-1.5 flex-1 rounded-full ' +
+              (i <= passo() ? (aguardando() ? 'bg-orange-400' : 'bg-primary') : 'bg-muted')
+            "
+            [title]="rotulo(e, envio().modalidade)"
           ></div>
         }
       </div>
+      <p class="text-[11px] text-muted-foreground">
+        {{ STATUS[envio().status].descricao }}
+      </p>
+    </div>
+
+    @if (aguardando()) {
+      <div
+        role="status"
+        class="flex items-start gap-2 rounded-2xl border border-orange-200 bg-orange-50/70 p-3 text-xs text-orange-800 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-300"
+      >
+        <svg [appIcon]="icons.TriangleAlert" class="mt-0.5 h-3.5 w-3.5 shrink-0"></svg>
+        <p class="min-w-0 flex-1">
+          <span class="font-semibold">aguardando:</span> {{ motivo() ?? "pendência no envio." }}
+        </p>
+      </div>
+    }
+
+    @if (envio().status === "COTACAO_ENVIADA" && envio().prazoPagamento; as prazo) {
+      <p class="flex items-center gap-1.5 text-[11px] font-medium text-amber-700">
+        <svg [appIcon]="icons.Clock" class="h-3 w-3"></svg>
+        pagar o frete até {{ fmtPrazo(prazo) }}
+      </p>
     }
 
     <!-- Itens -->
@@ -108,6 +134,35 @@
           rastrear
           <svg [appIcon]="icons.ExternalLink" class="h-3 w-3"></svg>
         </a>
+      </div>
+    }
+
+    <!-- Comprovantes do frete -->
+    @if (envio().comprovantes?.length) {
+      <div class="space-y-1.5">
+        @for (c of envio().comprovantes; track c.id) {
+          <app-comprovante-chip [comprovante]="c" />
+        }
+      </div>
+    }
+
+    @if (envio().feedback; as f) {
+      <div class="space-y-1 rounded-2xl bg-primary/5 p-3 text-xs">
+        <p
+          class="flex items-center gap-0.5 text-primary"
+          [attr.aria-label]="f.nota + ' de 5 estrelas'"
+        >
+          @for (n of estrelas; track n) {
+            <svg
+              [appIcon]="icons.Star"
+              [class]="'h-3.5 w-3.5 ' + (n <= f.nota ? '' : 'opacity-25')"
+              fill="currentColor"
+            ></svg>
+          }
+        </p>
+        @if (f.texto) {
+          <p>“{{ f.texto }}”</p>
+        }
       </div>
     }
 

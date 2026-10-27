@@ -1,12 +1,13 @@
 import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from "@angular/cdk/menu";
 import type { ConnectedPosition } from "@angular/cdk/overlay";
-import { Component, computed, inject, signal } from "@angular/core";
+import { Component, ElementRef, computed, effect, inject, signal, viewChild } from "@angular/core";
 import { toSignal } from "@angular/core/rxjs-interop";
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from "@angular/router";
 import {
   BarChart2,
   Bell,
   Calculator,
+  Ellipsis,
   FileText,
   Hand,
   Heart,
@@ -34,6 +35,7 @@ import { NotificacoesService } from "@/services/notificacoes.service";
 import { DialogComponent } from "@/shared/dialog.component";
 import { IconDirective } from "@/shared/icon.directive";
 import { ProfileSettingsModalComponent } from "../auth/profile-settings-modal/profile-settings-modal.component";
+import { CentralNotificacoesComponent } from "./central-notificacoes/central-notificacoes.component";
 
 // ---------------------------------------------------------------------------
 // Rotas que renderizam sem header/footer (tela cheia)
@@ -109,6 +111,16 @@ const MENU_POSITION: ConnectedPosition[] = [
   { originX: "end", originY: "top", overlayX: "end", overlayY: "bottom", offsetY: -8 },
 ];
 
+/** Dropdown "mais" da nav do desktop, alinhado à esquerda do gatilho. */
+const NAV_MAIS_POSITION: ConnectedPosition[] = [
+  { originX: "start", originY: "bottom", overlayX: "start", overlayY: "top", offsetY: 8 },
+  { originX: "end", originY: "bottom", overlayX: "end", overlayY: "top", offsetY: 8 },
+];
+
+/** gap-0.5 entre os itens e p-1 da pílula da nav (px). */
+const NAV_GAP = 2;
+const NAV_PADDING = 8;
+
 @Component({
   selector: "app-layout",
   imports: [
@@ -120,6 +132,7 @@ const MENU_POSITION: ConnectedPosition[] = [
     DialogComponent,
     IconDirective,
     ProfileSettingsModalComponent,
+    CentralNotificacoesComponent,
   ],
   templateUrl: "./layout.component.html",
   styleUrl: "./layout.component.scss",
@@ -134,12 +147,15 @@ export class LayoutComponent {
   private readonly moderacao = inject(ModeracaoService);
   private readonly envios = inject(EnviosService);
 
-  protected readonly icons = { Bell, Heart, Menu, MessageCircle, Settings, LogOut };
+  protected readonly icons = { Bell, Ellipsis, Heart, Menu, MessageCircle, Settings, LogOut };
   protected readonly menuPosition = MENU_POSITION;
+  protected readonly navMaisPosition = NAV_MAIS_POSITION;
 
   protected readonly profileOpen = signal(false);
   /** Sheet "mais" da barra inferior (celular). */
   protected readonly maisOpen = signal(false);
+  /** Central de notificações. */
+  protected readonly notifOpen = signal(false);
   protected readonly logoFailed = signal(false);
 
   /** pathname atual (sem query/hash). */
@@ -175,6 +191,59 @@ export class LayoutComponent {
     () => `repeat(${this.navBarra().length + (this.navMais().length ? 1 : 0)}, minmax(0, 1fr))`,
   );
 
+  // ── Nav do desktop: os itens que não cabem vão para o dropdown "mais" ──
+
+  private readonly navArea = viewChild<ElementRef<HTMLElement>>("navArea");
+  private readonly navMedida = viewChild<ElementRef<HTMLElement>>("navMedida");
+  /** Quantos itens da nav cabem na barra do desktop. */
+  private readonly navCabem = signal(Number.POSITIVE_INFINITY);
+  protected readonly navDesktop = computed(() => this.nav().slice(0, this.navCabem()));
+  protected readonly navDesktopMais = computed(() => this.nav().slice(this.navCabem()));
+  protected readonly desktopMaisAtivo = computed(() =>
+    this.navDesktopMais().some((i) => this.isActive(i)),
+  );
+  protected readonly desktopMaisPendente = computed(() =>
+    this.navDesktopMais().some((i) => this.badge(i) > 0),
+  );
+
+  constructor() {
+    // Remede quando a área muda de largura ou quando os itens mudam (role, badges, breakpoint)
+    effect((onCleanup) => {
+      const area = this.navArea()?.nativeElement;
+      const medida = this.navMedida()?.nativeElement;
+      if (!area || !medida) return;
+      const ro = new ResizeObserver(() => this.medirNav(area, medida));
+      ro.observe(area);
+      ro.observe(medida);
+      onCleanup(() => ro.disconnect());
+    });
+  }
+
+  private medirNav(area: HTMLElement, medida: HTMLElement): void {
+    const itens = [...medida.children] as HTMLElement[];
+    // O último filho da medição é o botão "mais"
+    const mais = itens.pop()?.offsetWidth ?? 0;
+    const larguras = itens.map((el) => el.offsetWidth);
+    const disponivel = area.clientWidth - NAV_PADDING;
+    const ocupa = (n: number) =>
+      larguras.slice(0, n).reduce((t, w) => t + w, 0) + Math.max(0, n - 1) * NAV_GAP;
+    if (ocupa(larguras.length) <= disponivel) {
+      this.navCabem.set(larguras.length);
+      return;
+    }
+    let n = larguras.length - 1;
+    while (n > 0 && ocupa(n) + NAV_GAP + mais > disponivel) n--;
+    this.navCabem.set(n);
+  }
+
+  protected navItemClass(ativo: boolean): string {
+    return `relative flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-pill px-3 py-2 text-[13px] font-medium transition xl:px-3.5 xl:text-sm ${
+      ativo
+        ? "bg-primary text-primary-foreground shadow"
+        : "text-foreground/70 hover:text-foreground"
+    }`;
+  }
+
   /** Título da página no header do celular. */
   protected readonly tituloAtual = computed(() => {
     const item = this.nav().find((i) => this.isActive(i));
@@ -205,15 +274,6 @@ export class LayoutComponent {
     if (item.to === "/gom/envios") return this.envios.pendentesGom().length;
     if (item.to === "/joiner/envios") return this.envios.pendentesJoiner().length;
     return 0;
-  }
-
-  protected fmtNotificacao(iso: string): string {
-    return new Date(iso).toLocaleString("pt-BR", {
-      day: "2-digit",
-      month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
   }
 
   protected isActive(item: NavItem): boolean {

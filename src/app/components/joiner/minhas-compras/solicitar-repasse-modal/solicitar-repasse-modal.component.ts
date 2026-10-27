@@ -1,5 +1,16 @@
 import { Component, computed, effect, inject, input, output, signal } from "@angular/core";
-import { AlertCircle, CheckCircle2, PackageCheck, Send, UserCheck, X } from "lucide-angular";
+import {
+  AlertCircle,
+  CheckCircle2,
+  PackageCheck,
+  Receipt,
+  Send,
+  UserCheck,
+  X,
+} from "lucide-angular";
+import type { Comprovante } from "@/lib/comprovante";
+import { ComprovanteChipComponent } from "@/shared/comprovante/comprovante-chip.component";
+import { ComprovanteService } from "@/shared/comprovante/comprovante.service";
 import { DialogComponent } from "@/shared/dialog.component";
 import { IconDirective } from "@/shared/icon.directive";
 import { inputValue } from "@/shared/dom";
@@ -14,7 +25,7 @@ import {
 
 @Component({
   selector: "app-solicitar-repasse-modal",
-  imports: [DialogComponent, IconDirective],
+  imports: [DialogComponent, IconDirective, ComprovanteChipComponent],
   templateUrl: "./solicitar-repasse-modal.component.html",
   styleUrl: "./solicitar-repasse-modal.component.scss",
 })
@@ -27,8 +38,17 @@ export class SolicitarRepasseModalComponent {
   readonly closed = output<void>();
 
   private readonly repasses = inject(RepassesService);
+  private readonly comprovantes = inject(ComprovanteService);
 
-  protected readonly icons = { AlertCircle, CheckCircle2, PackageCheck, Send, UserCheck, X };
+  protected readonly icons = {
+    AlertCircle,
+    CheckCircle2,
+    PackageCheck,
+    Receipt,
+    Send,
+    UserCheck,
+    X,
+  };
   protected readonly INPUT_CLS = INPUT_CLS;
   protected readonly brl = brl;
   protected readonly val = inputValue;
@@ -38,6 +58,7 @@ export class SolicitarRepasseModalComponent {
   protected readonly codigo = signal("");
   protected readonly pagamentoOk = signal(false);
   protected readonly obs = signal("");
+  protected readonly comprovante = signal<Comprovante | null>(null);
   protected readonly sending = signal(false);
   protected readonly sent = signal(false);
   protected readonly erro = signal("");
@@ -70,6 +91,7 @@ export class SolicitarRepasseModalComponent {
       !!this.pedidoSelecionado() &&
       !!this.destinatario() &&
       this.pagamentoOk() &&
+      !!this.comprovante() &&
       !this.sending() &&
       !this.sent(),
   );
@@ -83,6 +105,7 @@ export class SolicitarRepasseModalComponent {
       this.codigo.set("");
       this.pagamentoOk.set(false);
       this.obs.set("");
+      this.comprovante.set(null);
       this.erro.set("");
       this.sent.set(false);
     });
@@ -101,6 +124,17 @@ export class SolicitarRepasseModalComponent {
     return null;
   }
 
+  /** Comprovante do pix que a destinatária fez para a remetente. */
+  protected async anexarComprovante(): Promise<void> {
+    const r = await this.comprovantes.pedir({
+      titulo: "comprovante do repasse",
+      mensagem: "anexe o pix que a joiner que vai receber o item fez para você.",
+      valor: this.pedidoSelecionado()?.valorBrl,
+      confirmar: "anexar",
+    });
+    if (r?.comprovante) this.comprovante.set(r.comprovante);
+  }
+
   protected onCegChange(e: Event): void {
     this.cegId.set(inputValue(e));
     this.pedidoId.set("");
@@ -113,7 +147,8 @@ export class SolicitarRepasseModalComponent {
   protected async handleConfirm(): Promise<void> {
     const pedido = this.pedidoSelecionado();
     const destinatario = this.destinatario();
-    if (!pedido || !destinatario || !this.pagamentoOk()) return;
+    const comprovante = this.comprovante();
+    if (!pedido || !destinatario || !this.pagamentoOk() || !comprovante) return;
     this.sending.set(true);
     this.erro.set("");
     try {
@@ -125,6 +160,7 @@ export class SolicitarRepasseModalComponent {
         valorBrl: pedido.valorBrl,
         destinatario,
         observacao: this.obs().trim() || undefined,
+        comprovante,
       });
       this.sent.set(true);
       setTimeout(() => {

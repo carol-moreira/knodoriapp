@@ -90,6 +90,9 @@
             @if (s.observacao) {
               <p class="text-[11px] text-muted-foreground">“{{ s.observacao }}”</p>
             }
+            @if (s.comprovante; as c) {
+              <app-comprovante-chip [comprovante]="c" />
+            }
             <div class="flex items-center justify-between gap-2 pt-1">
               <span [class]="'cozy-pill text-[10px] font-semibold ' + STATUS_META[s.status].cls">
                 {{ STATUS_META[s.status].label }}
@@ -167,6 +170,9 @@
                     <p class="mt-0.5 max-w-56 text-[11px] text-muted-foreground">
                       “{{ s.observacao }}”
                     </p>
+                  }
+                  @if (s.comprovante; as c) {
+                    <app-comprovante-chip class="mt-1" [comprovante]="c" [compacto]="true" />
                   }
                 </td>
                 <td class="px-4 py-3.5">

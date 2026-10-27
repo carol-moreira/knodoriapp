@@ -156,6 +156,45 @@
           </p>
         }
       </div>
+      @if (cobrancaJoiners().length > 0) {
+        <ul class="space-y-1.5">
+          @for (l of cobrancaJoiners(); track l.joinerId) {
+            <li class="space-y-1.5 rounded-2xl border border-border/60 bg-card p-3 text-xs">
+              <div class="flex items-center gap-2">
+                <div class="min-w-0 flex-1">
+                  <p class="truncate font-semibold">{{ l.nome }}</p>
+                  <p class="text-[11px] text-muted-foreground">
+                    {{ l.username }} · frete + taxas {{ brl(l.valor) }}
+                  </p>
+                </div>
+                @if (l.pago) {
+                  <span
+                    class="cozy-pill shrink-0 bg-lime-50 text-[10px] font-semibold text-lime-700 ring-1 ring-lime-200"
+                  >
+                    pago
+                  </span>
+                } @else {
+                  <button
+                    type="button"
+                    (click)="confirmarCaixa(l)"
+                    [class]="
+                      'h-8 shrink-0 rounded-lg px-3 text-[11px] font-semibold transition ' +
+                      (l.comprovantes.length
+                        ? 'bg-lime-600 text-white hover:opacity-90'
+                        : 'border border-border text-muted-foreground hover:text-foreground')
+                    "
+                  >
+                    {{ l.comprovantes.length ? "conferir comprovante" : "registrar pagamento" }}
+                  </button>
+                }
+              </div>
+              @for (c of l.comprovantes; track c.id) {
+                <app-comprovante-chip [comprovante]="c" />
+              }
+            </li>
+          }
+        </ul>
+      }
       @if (pedidosDaCaixa().length === 0) {
         <p
           class="rounded-xl border border-dashed border-border py-4 text-center text-xs text-muted-foreground"
@@ -446,7 +485,7 @@
                   }
                   @if (l.item.pagamento) {
                     <select
-                      (change)="onPagamento(l.item.id, $event)"
+                      (change)="onPagamento(l.item, $event)"
                       [attr.aria-label]="'pagamento do item ' + l.item.codigo"
                       [class]="
                         'h-8 rounded-lg border px-2 text-[11px] font-medium outline-none ' +
@@ -460,6 +499,9 @@
                       </option>
                       <option value="PAGO" [selected]="l.item.pagamento === 'PAGO'">pago</option>
                     </select>
+                    @if (l.item.comprovantes?.at(-1); as c) {
+                      <app-comprovante-chip [comprovante]="c" [compacto]="true" />
+                    }
                   }
                 </div>
               }
@@ -564,7 +606,7 @@
                   <td class="px-3 py-2.5">
                     @if (l.item.pagamento) {
                       <select
-                        (change)="onPagamento(l.item.id, $event)"
+                        (change)="onPagamento(l.item, $event)"
                         [attr.aria-label]="'pagamento do item ' + l.item.codigo"
                         [class]="
                           'rounded-lg border px-2 py-1 text-[11px] font-medium outline-none ' +
@@ -578,6 +620,9 @@
                         </option>
                         <option value="PAGO" [selected]="l.item.pagamento === 'PAGO'">pago</option>
                       </select>
+                      @if (l.item.comprovantes?.at(-1); as c) {
+                        <app-comprovante-chip class="mt-1" [comprovante]="c" [compacto]="true" />
+                      }
                     } @else {
                       <span class="text-muted-foreground/60">—</span>
                     }

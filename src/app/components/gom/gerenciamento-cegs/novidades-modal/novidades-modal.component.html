@@ -24,7 +24,11 @@
   <div class="space-y-5 px-6 py-5">
     <!-- Nova postagem -->
     <div class="space-y-2.5">
-      <div class="flex w-fit gap-1 rounded-pill bg-muted p-1" role="radiogroup" aria-label="tipo">
+      <div
+        class="flex w-fit max-w-full flex-wrap gap-1 rounded-3xl bg-muted p-1"
+        role="radiogroup"
+        aria-label="tipo"
+      >
         @for (t of tipos; track t) {
           <button
             type="button"
@@ -33,11 +37,7 @@
             (click)="tipo.set(t)"
             [class]="tipoClass(t)"
           >
-            @if (t === "AVISO") {
-              <svg [appIcon]="icons.TriangleAlert" class="h-3 w-3"></svg>
-            } @else {
-              <svg [appIcon]="icons.Megaphone" class="h-3 w-3"></svg>
-            }
+            <svg [appIcon]="iconeTipo[t]" class="h-3 w-3"></svg>
             {{ POST_META[t].label }}
           </button>
         }
@@ -47,11 +47,7 @@
         (input)="texto.set(val($event))"
         rows="3"
         aria-label="texto da postagem"
-        [placeholder]="
-          tipo() === 'AVISO'
-            ? 'ex: o prazo de pagamento do frete vence sexta!'
-            : 'ex: caixa fechada! já saiu da warehouse 📦'
-        "
+        [placeholder]="placeholder[tipo()]"
         [class]="INPUT_CLS + ' resize-none'"
       ></textarea>
       <div class="flex items-center justify-between gap-3">

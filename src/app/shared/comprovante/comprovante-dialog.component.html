@@ -1,0 +1,108 @@
+<app-dialog
+  [open]="!!comprovantes.pedido()"
+  (openChange)="onOpenChange($event)"
+  overlayClass="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm animate-in fade-in duration-150"
+  contentClass="fixed inset-x-0 bottom-0 z-[60] max-h-[90dvh] overflow-y-auto no-scrollbar rounded-t-3xl border-t border-border bg-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-2xl animate-in slide-in-from-bottom duration-200 sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:w-[calc(100%-2rem)] sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:border sm:pb-5"
+>
+  @if (comprovantes.pedido(); as p) {
+    <div class="space-y-4" role="dialog" aria-labelledby="comprovante-titulo">
+      <div class="mx-auto h-1 w-10 rounded-full bg-border sm:hidden" aria-hidden="true"></div>
+
+      <div class="flex items-start gap-3">
+        <div
+          class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary"
+        >
+          <svg [appIcon]="icons.Receipt" class="h-5 w-5"></svg>
+        </div>
+        <div class="min-w-0 flex-1 space-y-0.5">
+          <h2 id="comprovante-titulo" class="text-base font-bold leading-snug">{{ p.titulo }}</h2>
+          @if (p.mensagem) {
+            <p class="text-xs text-muted-foreground">{{ p.mensagem }}</p>
+          }
+        </div>
+        @if (p.valor !== undefined) {
+          <span class="shrink-0 text-base font-bold tabular-nums">{{ brl(p.valor) }}</span>
+        }
+      </div>
+
+      @if (p.existentes?.length) {
+        <div class="space-y-1.5">
+          <p class="text-xs font-semibold">comprovantes enviados</p>
+          @for (c of p.existentes; track c.id) {
+            <app-comprovante-chip [comprovante]="c" />
+          }
+        </div>
+      }
+
+      <!-- Arquivo -->
+      @if (arquivo(); as f) {
+        <div class="flex items-center gap-3 rounded-2xl border border-primary/40 bg-primary/5 p-3">
+          @if (ehImagem(f) && preview()) {
+            <img [src]="preview()" alt="" class="h-14 w-14 shrink-0 rounded-xl object-cover" />
+          } @else {
+            <div
+              class="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-card text-muted-foreground"
+            >
+              <svg [appIcon]="icons.FileText" class="h-6 w-6"></svg>
+            </div>
+          }
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-semibold">{{ f.name }}</p>
+            <p class="text-[11px] text-muted-foreground">{{ fmtTamanho(f.size) }}</p>
+          </div>
+          <button
+            type="button"
+            (click)="descartar()"
+            aria-label="remover arquivo"
+            class="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-muted-foreground transition hover:bg-card hover:text-foreground"
+          >
+            <svg [appIcon]="icons.X" class="h-4 w-4"></svg>
+          </button>
+        </div>
+      } @else {
+        <label
+          (dragover)="onDragOver($event)"
+          (dragleave)="arrastando.set(false)"
+          (drop)="onDrop($event)"
+          [class]="
+            'flex cursor-pointer flex-col items-center gap-1.5 rounded-2xl border-2 border-dashed px-4 py-7 text-center transition ' +
+            (arrastando()
+              ? 'border-primary bg-primary/5'
+              : 'border-border hover:border-primary/50 hover:bg-muted/40')
+          "
+        >
+          <svg [appIcon]="icons.Upload" class="h-6 w-6 text-primary"></svg>
+          <span class="text-sm font-semibold">
+            {{ p.existentes?.length ? "anexar outro comprovante" : "anexar comprovante" }}
+          </span>
+          <span class="text-[11px] text-muted-foreground">
+            png, jpg, webp ou pdf · até 500 MB
+          </span>
+          <input type="file" [accept]="accept" (change)="onArquivo($event)" class="sr-only" />
+        </label>
+      }
+
+      @if (erro()) {
+        <p role="alert" class="text-xs font-medium text-destructive">{{ erro() }}</p>
+      }
+
+      <div class="flex gap-2">
+        <button
+          type="button"
+          (click)="comprovantes.responder(null)"
+          class="h-11 flex-1 rounded-2xl border border-border text-sm font-medium text-muted-foreground transition hover:text-foreground"
+        >
+          cancelar
+        </button>
+        <button
+          type="button"
+          (click)="confirmar()"
+          [disabled]="!arquivo() && !p.existentes?.length"
+          class="h-11 flex-1 rounded-2xl bg-primary text-sm font-semibold text-primary-foreground transition hover:opacity-90 active:scale-[0.98] disabled:opacity-40"
+        >
+          {{ p.confirmar ?? "enviar comprovante" }}
+        </button>
+      </div>
+    </div>
+  }
+</app-dialog>

@@ -168,20 +168,70 @@
     <!-- Alertas e ações -->
     <div class="flex flex-wrap gap-2 pt-0.5">
       @if (pedido().status === "AGUARDANDO_PAGAMENTO") {
-        <div
-          class="flex items-center gap-1.5 rounded-pill bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 ring-1 ring-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:ring-blue-800"
+        @if (pedido().comprovantes.length > 0) {
+          <div
+            class="flex items-center gap-1.5 rounded-pill bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 ring-1 ring-sky-200"
+          >
+            <svg [appIcon]="icons.Receipt" class="h-3.5 w-3.5"></svg>
+            comprovante enviado — a GOM está conferindo
+          </div>
+        } @else {
+          <div
+            class="flex items-center gap-1.5 rounded-pill bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 ring-1 ring-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:ring-blue-800"
+          >
+            <svg [appIcon]="icons.AlertCircle" class="h-3.5 w-3.5"></svg>
+            aguardando seu PIX
+          </div>
+        }
+        <button
+          type="button"
+          (click)="pagarPedido()"
+          class="flex items-center gap-1.5 rounded-pill bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
         >
-          <svg [appIcon]="icons.AlertCircle" class="h-3.5 w-3.5"></svg>
-          aguardando seu PIX — confirme com a GOM
-        </div>
+          <svg [appIcon]="icons.Receipt" class="h-3.5 w-3.5"></svg>
+          {{ pedido().comprovantes.length ? "enviar outro comprovante" : "enviar comprovante" }}
+        </button>
       }
 
       @if (pedido().cobrancaCaixa; as valor) {
         <div
-          class="flex items-center gap-1.5 rounded-pill bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 ring-1 ring-sky-200"
+          [class]="
+            'flex items-center gap-1.5 rounded-pill px-3 py-1.5 text-xs font-semibold ring-1 ' +
+            (pedido().caixaPaga
+              ? 'bg-lime-50 text-lime-700 ring-lime-200'
+              : 'bg-sky-50 text-sky-700 ring-sky-200')
+          "
         >
           <svg [appIcon]="icons.Truck" class="h-3.5 w-3.5"></svg>
           frete + taxas da {{ pedido().cegNome }}: {{ brl(valor) }}
+          @if (pedido().caixaPaga) {
+            · pago ✓
+          } @else if (pedido().comprovantesCaixa.length) {
+            · em conferência
+          }
+        </div>
+        @if (!pedido().caixaPaga) {
+          <button
+            type="button"
+            (click)="pagarCaixa()"
+            class="flex items-center gap-1.5 rounded-pill border border-sky-300 px-3 py-1.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-50"
+          >
+            <svg [appIcon]="icons.Receipt" class="h-3.5 w-3.5"></svg>
+            {{
+              pedido().comprovantesCaixa.length ? "enviar outro comprovante" : "pagar frete + taxas"
+            }}
+          </button>
+        }
+      }
+
+      @if (pedido().comprovantes.length || pedido().comprovantesCaixa.length) {
+        <div class="grid w-full gap-1.5 sm:grid-cols-2">
+          @for (c of pedido().comprovantes; track c.id) {
+            <app-comprovante-chip [comprovante]="c" />
+          }
+          @for (c of pedido().comprovantesCaixa; track c.id) {
+            <app-comprovante-chip [comprovante]="c" />
+          }
         </div>
       }
 

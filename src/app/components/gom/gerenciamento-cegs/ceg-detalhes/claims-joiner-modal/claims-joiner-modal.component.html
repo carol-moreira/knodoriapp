@@ -127,7 +127,7 @@
                   <div class="flex items-center justify-end gap-2">
                     @if (l.claim.status === "CONFIRMADO" && item.pagamento) {
                       <select
-                        (change)="onPagamento(item.id, $event)"
+                        (change)="onPagamento(item, $event)"
                         [attr.aria-label]="'pagamento do item ' + item.codigo"
                         [class]="
                           'rounded-lg border px-2 py-1 text-[11px] font-medium outline-none ' +
@@ -141,6 +141,9 @@
                         </option>
                         <option value="PAGO" [selected]="item.pagamento === 'PAGO'">pago</option>
                       </select>
+                      @if (item.comprovantes?.at(-1); as c) {
+                        <app-comprovante-chip [comprovante]="c" [compacto]="true" />
+                      }
                     }
                     <button
                       type="button"

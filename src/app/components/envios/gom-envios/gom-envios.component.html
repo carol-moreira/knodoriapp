@@ -2,7 +2,7 @@
   <div>
     <h1 class="sr-only text-2xl font-bold tracking-tight sm:not-sr-only">envios nacionais</h1>
     <p class="text-sm text-muted-foreground">
-      calcule o frete, confira o pagamento, poste com rastreio e acompanhe a entrega.
+      embale, cote o frete, confira o comprovante, poste com rastreio e acompanhe a entrega.
     </p>
   </div>
 
@@ -21,18 +21,31 @@
     />
   </div>
 
-  <div class="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 no-scrollbar sm:mx-0 sm:px-0">
-    @for (a of abas; track a.value) {
-      <button type="button" (click)="aba.set(a.value)" [class]="abaClass(a.value)">
-        {{ a.label }}
-        @if (contagem()[a.value] > 0) {
+  <!-- Filtros por status, na ordem oficial -->
+  <div
+    role="tablist"
+    aria-label="filtrar por status"
+    class="-mx-4 flex snap-x gap-1.5 overflow-x-auto scroll-smooth px-4 pb-1 no-scrollbar sm:mx-0 sm:px-0"
+  >
+    @for (f of filtros; track f.value) {
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="filtro() === f.value"
+        (click)="filtro.set(f.value)"
+        [class]="filtroClass(f.value) + ' snap-start'"
+      >
+        {{ f.label }}
+        @if (contagem()[f.value]; as n) {
           <span
             [class]="
               'rounded-full px-1.5 text-[10px] font-bold ' +
-              (a.value === 'FAZER' ? 'bg-amber-500 text-white' : 'bg-card/30')
+              (f.value === 'A_FAZER' || f.value === 'AGUARDANDO'
+                ? 'bg-amber-500 text-white'
+                : 'bg-card/30')
             "
           >
-            {{ contagem()[a.value] }}
+            {{ n }}
           </span>
         }
       </button>
@@ -43,17 +56,26 @@
     @for (e of lista(); track e.id) {
       <app-envio-card [envio]="e" visao="gom">
         @switch (e.status) {
-          @case ("SOLICITADO") {
+          @case ("PENDENTE") {
+            <button
+              type="button"
+              (click)="envios.embalar(e.id)"
+              class="h-10 w-full rounded-2xl bg-primary text-xs font-semibold text-primary-foreground transition hover:opacity-90"
+            >
+              marcar como embalado
+            </button>
+          }
+          @case ("EMBALADO") {
             @if (e.modalidade === "RETIRADA") {
               <button
                 type="button"
-                (click)="informarFrete(e)"
+                (click)="postar(e)"
                 class="h-10 w-full rounded-2xl bg-primary text-xs font-semibold text-primary-foreground transition hover:opacity-90"
               >
-                aceitar retirada e separar
+                pronto para retirada
               </button>
             } @else {
-              <form class="flex gap-2" (submit)="$event.preventDefault(); informarFrete(e)">
+              <form class="flex gap-2" (submit)="$event.preventDefault(); enviarCotacao(e)">
                 <label class="relative flex-1">
                   <span
                     class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground"
@@ -74,25 +96,25 @@
                   type="submit"
                   class="h-10 shrink-0 rounded-2xl bg-primary px-4 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
                 >
-                  informar frete
+                  enviar cotação
                 </button>
               </form>
             }
           }
-          @case ("AGUARDANDO_PAGAMENTO") {
-            @if (e.pagamentoInformado) {
+          @case ("COTACAO_ENVIADA") {
+            @if (e.comprovantes?.length) {
               <div
                 class="space-y-2 rounded-2xl border border-lime-200 bg-lime-50/70 p-3 dark:border-lime-500/30 dark:bg-lime-500/10"
               >
                 <p class="text-xs text-lime-800 dark:text-lime-300">
-                  {{ e.joinerUsername }} avisou que pagou {{ brl(e.frete ?? 0) }}. confira o pix.
+                  {{ e.joinerUsername }} pagou {{ brl(e.frete ?? 0) }} e enviou o comprovante.
                 </p>
                 <button
                   type="button"
-                  (click)="envios.confirmarPagamento(e.id)"
+                  (click)="confirmarPagamento(e)"
                   class="h-10 w-full rounded-2xl bg-lime-600 text-xs font-semibold text-white transition hover:opacity-90"
                 >
-                  confirmar pagamento
+                  conferir comprovante
                 </button>
               </div>
             } @else {
@@ -102,44 +124,34 @@
                 </p>
                 <button
                   type="button"
-                  (click)="envios.confirmarPagamento(e.id)"
+                  (click)="confirmarPagamento(e)"
                   class="h-9 shrink-0 rounded-pill border border-border px-3 text-xs font-medium transition hover:bg-muted"
                 >
-                  já recebi
+                  registrar pagamento
                 </button>
               </div>
             }
           }
-          @case ("EM_SEPARACAO") {
-            @if (e.modalidade === "RETIRADA") {
+          @case ("FRETE_PAGO") {
+            <form class="flex gap-2" (submit)="$event.preventDefault(); postar(e)">
+              <input
+                [value]="rastreios()[e.id] ?? ''"
+                (input)="setRastreio(e.id, $event)"
+                placeholder="código de rastreio"
+                autocapitalize="characters"
+                [attr.aria-label]="'rastreio do envio de ' + e.joinerNome"
+                class="h-10 min-w-0 flex-1 rounded-2xl border border-border bg-muted/40 px-3 font-mono text-sm uppercase outline-none placeholder:font-sans placeholder:normal-case focus:border-primary"
+              />
               <button
-                type="button"
-                (click)="postar(e)"
-                class="h-10 w-full rounded-2xl bg-primary text-xs font-semibold text-primary-foreground transition hover:opacity-90"
+                type="submit"
+                class="flex h-10 shrink-0 items-center gap-1.5 rounded-2xl bg-primary px-4 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
               >
-                pronto para retirada
+                <svg [appIcon]="icons.Truck" class="h-3.5 w-3.5"></svg>
+                postar
               </button>
-            } @else {
-              <form class="flex gap-2" (submit)="$event.preventDefault(); postar(e)">
-                <input
-                  [value]="rastreios()[e.id] ?? ''"
-                  (input)="setRastreio(e.id, $event)"
-                  placeholder="código de rastreio"
-                  autocapitalize="characters"
-                  [attr.aria-label]="'rastreio do envio de ' + e.joinerNome"
-                  class="h-10 min-w-0 flex-1 rounded-2xl border border-border bg-muted/40 px-3 font-mono text-sm uppercase outline-none placeholder:font-sans placeholder:normal-case focus:border-primary"
-                />
-                <button
-                  type="submit"
-                  class="flex h-10 shrink-0 items-center gap-1.5 rounded-2xl bg-primary px-4 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
-                >
-                  <svg [appIcon]="icons.Truck" class="h-3.5 w-3.5"></svg>
-                  postar
-                </button>
-              </form>
-            }
+            </form>
           }
-          @case ("POSTADO") {
+          @case ("A_CAMINHO") {
             <button
               type="button"
               (click)="envios.marcarEntregue(e.id)"
@@ -148,24 +160,78 @@
               marcar como {{ e.modalidade === "RETIRADA" ? "retirado" : "entregue" }}
             </button>
           }
+          @case ("AGUARDANDO") {
+            <button
+              type="button"
+              (click)="envios.retomar(e.id)"
+              class="h-10 w-full rounded-2xl bg-primary text-xs font-semibold text-primary-foreground transition hover:opacity-90"
+            >
+              pendência resolvida — retomar envio
+            </button>
+          }
+          @case ("ENTREGUE") {
+            <p class="text-[11px] text-muted-foreground">esperando o feedback da joiner.</p>
+          }
+        }
+
+        <!-- Intercorrência -->
+        @if (aguardandoId() === e.id) {
+          <form
+            class="space-y-2 rounded-2xl border border-orange-200 bg-orange-50/50 p-3 dark:border-orange-500/30 dark:bg-orange-500/10"
+            (submit)="$event.preventDefault(); marcarAguardando(e)"
+          >
+            <label class="block space-y-1">
+              <span class="text-xs font-semibold">o que está pendente?</span>
+              <textarea
+                rows="2"
+                [value]="motivos()[e.id] ?? ''"
+                (input)="setMotivo(e.id, $event)"
+                placeholder="ex: transportadora sem coleta, pacote retido, CEP não confere…"
+                class="w-full resize-none rounded-xl border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
+              ></textarea>
+            </label>
+            <div class="flex gap-2">
+              <button
+                type="button"
+                (click)="aguardandoId.set(null)"
+                class="h-9 flex-1 rounded-xl border border-border text-xs font-medium text-muted-foreground"
+              >
+                voltar
+              </button>
+              <button
+                type="submit"
+                class="h-9 flex-1 rounded-xl bg-orange-500 text-xs font-semibold text-white transition hover:opacity-90"
+              >
+                marcar aguardando
+              </button>
+            </div>
+          </form>
         }
 
         @if (erros()[e.id]; as erro) {
           <p class="text-[11px] font-medium text-destructive">{{ erro }}</p>
         }
-        @if (
-          e.status === "SOLICITADO" ||
-          e.status === "AGUARDANDO_PAGAMENTO" ||
-          e.status === "EM_SEPARACAO"
-        ) {
-          <button
-            type="button"
-            (click)="cancelar(e)"
-            class="h-8 text-[11px] font-medium text-muted-foreground transition hover:text-destructive"
-          >
-            cancelar envio
-          </button>
-        }
+        <div class="flex flex-wrap gap-x-4">
+          @if (podeAguardar(e) && aguardandoId() !== e.id) {
+            <button
+              type="button"
+              (click)="aguardandoId.set(e.id)"
+              class="flex h-8 items-center gap-1 text-[11px] font-medium text-muted-foreground transition hover:text-orange-600"
+            >
+              <svg [appIcon]="icons.TriangleAlert" class="h-3 w-3"></svg>
+              marcar aguardando
+            </button>
+          }
+          @if (podeCancelar(e)) {
+            <button
+              type="button"
+              (click)="cancelar(e)"
+              class="h-8 text-[11px] font-medium text-muted-foreground transition hover:text-destructive"
+            >
+              cancelar envio
+            </button>
+          }
+        </div>
       </app-envio-card>
     } @empty {
       <p class="cozy-card py-12 text-center text-xs text-muted-foreground">

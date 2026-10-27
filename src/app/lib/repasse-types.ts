@@ -1,12 +1,13 @@
 import type { Autoria } from "./autoria";
+import type { Comprovante } from "./comprovante";
 // ---------------------------------------------------------------------------
 // Repasse de claim — tipos e mocks (sem estado).
 // O estado vive em RepassesService (src/app/services/repasses.service.ts).
 //
 // Regras:
 //  - só a joiner dona da claim pode repassar, e só itens já pagos por ela;
-//  - a remetente informa o código de cadastro da destinatária e confirma que
-//    já pagou o item (a destinatária é quem paga a remetente);
+//  - a remetente informa o código de cadastro da destinatária, confirma que
+//    já pagou o item e anexa o comprovante do pix que recebeu da destinatária;
 //  - a GOM confirma o repasse → a dona do item passa a ser a destinatária.
 // ---------------------------------------------------------------------------
 
@@ -32,6 +33,8 @@ export interface SolicitacaoRepasse {
   destinatario: JoinerCadastro;
   /** A remetente declarou que já pagou o item. */
   pagamentoConfirmado: true;
+  /** Comprovante do pagamento da destinatária para a remetente (a GOM confere antes de repassar). */
+  comprovante?: Comprovante;
   observacao?: string;
   status: RepasseStatus;
   dataSolicitacao: string; // ISO

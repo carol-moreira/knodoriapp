@@ -1,11 +1,10 @@
 import { Component, computed, effect, inject, input, output, signal } from "@angular/core";
-import { Megaphone, Send, Trash2, TriangleAlert, X } from "lucide-angular";
+import { Landmark, Megaphone, Receipt, Send, Trash2, TriangleAlert, X } from "lucide-angular";
 import { DialogComponent } from "@/shared/dialog.component";
 import { IconDirective } from "@/shared/icon.directive";
 import { inputValue } from "@/shared/dom";
 import { ConfirmService } from "@/shared/confirm-dialog/confirm.service";
 import { CEG_POST_META, CegPostsService, type CegPostTipo } from "@/services/ceg-posts.service";
-import { PedidosMercariService } from "@/services/pedidos-mercari.service";
 import { INPUT_CLS, type CegGOM } from "../cegs.model";
 import { AssinaturaComponent } from "@/shared/assinatura/assinatura.component";
 
@@ -21,14 +20,25 @@ export class NovidadesModalComponent {
   readonly ceg = input.required<CegGOM | null>();
   readonly closed = output<void>();
 
-  private readonly pedidos = inject(PedidosMercariService);
   protected readonly posts = inject(CegPostsService);
   private readonly confirm = inject(ConfirmService);
 
   protected readonly icons = { Megaphone, Send, Trash2, TriangleAlert, X };
+  protected readonly iconeTipo: Record<CegPostTipo, typeof Megaphone> = {
+    COMUNICADO: Megaphone,
+    AVISO: TriangleAlert,
+    TAXACAO: Receipt,
+    ALFANDEGA: Landmark,
+  };
+  protected readonly placeholder: Record<CegPostTipo, string> = {
+    COMUNICADO: "ex: caixa fechada! já saiu da warehouse 📦",
+    AVISO: "ex: o prazo de pagamento do frete vence sexta!",
+    TAXACAO: "ex: a caixa foi taxada em R$ 180 — o rateio sai junto com o frete.",
+    ALFANDEGA: "ex: liberada pela receita! agora é com os correios 🚚",
+  };
   protected readonly INPUT_CLS = INPUT_CLS;
   protected readonly POST_META = CEG_POST_META;
-  protected readonly tipos: CegPostTipo[] = ["COMUNICADO", "AVISO"];
+  protected readonly tipos: CegPostTipo[] = ["COMUNICADO", "AVISO", "TAXACAO", "ALFANDEGA"];
   protected readonly val = inputValue;
 
   protected readonly tipo = signal<CegPostTipo>("COMUNICADO");
@@ -41,7 +51,7 @@ export class NovidadesModalComponent {
 
   protected readonly participantes = computed(() => {
     const ceg = this.ceg();
-    return ceg ? this.pedidos.joinersDaCaixa(ceg.id).length : 0;
+    return ceg ? this.posts.joinersDaCeg(ceg.id).length : 0;
   });
 
   constructor() {

@@ -1,4 +1,5 @@
 import { Injectable, computed, inject, signal } from "@angular/core";
+import type { Comprovante } from "@/lib/comprovante";
 import {
   MOCK_CADASTROS,
   MOCK_SOLICITACOES_REPASSE,
@@ -19,6 +20,7 @@ export interface NovaSolicitacaoRepasse {
   valorBrl: number;
   destinatario: JoinerCadastro;
   observacao?: string;
+  comprovante: Comprovante;
 }
 
 /** Fila de repasses de claim (joiner → joiner), compartilhada entre joiner e GOM. */
@@ -60,6 +62,7 @@ export class RepassesService {
     if (nova.destinatario.id === user.id) throw new Error("você não pode repassar para si mesma.");
     if (this.pendentePorPedido().has(nova.pedidoId))
       throw new Error("este item já tem um repasse em análise.");
+    if (!nova.comprovante) throw new Error("anexe o comprovante do pagamento.");
 
     // 🔌 POST /api/joiner/repasses — o servidor deve validar que o item é da remetente e está pago
     await new Promise((r) => setTimeout(r, 600));
@@ -80,8 +83,10 @@ export class RepassesService {
 
     this.notificacoes.enviar(
       "GOM",
+      "REPASSE",
       "nova solicitação de repasse",
       `${user.username} quer repassar ${nova.itemDescricao} (${nova.cegNome}) para ${nova.destinatario.username}.`,
+      "/gom/cegs",
     );
   }
 
@@ -113,13 +118,17 @@ export class RepassesService {
 
     this.notificacoes.enviar(
       s.destinatario.id,
+      "REPASSE",
       "repasse confirmado 🎉",
       `${s.itemDescricao} da CEG ${s.cegNome} agora é seu! repassado por ${s.remetente.username} e confirmado${quem}.`,
+      "/joiner/compras",
     );
     this.notificacoes.enviar(
       s.remetente.id,
+      "REPASSE",
       "repasse confirmado",
       `o repasse de ${s.itemDescricao} (${s.cegNome}) para ${s.destinatario.username} foi confirmado${quem}.`,
+      "/joiner/compras",
     );
   }
 }

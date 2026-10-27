@@ -34,7 +34,7 @@
       @if (envios.aCaminho() > 0) {
         <span class="flex items-center gap-1 text-[11px] text-muted-foreground">
           <svg [appIcon]="icons.Hourglass" class="h-3 w-3"></svg>
-          {{ envios.aCaminho() }} a caminho
+          {{ envios.aCaminho() }} ainda chegando na GOM
         </span>
       }
     </div>
@@ -98,9 +98,9 @@
     @for (e of lista(); track e.id) {
       <app-envio-card [envio]="e" visao="joiner">
         @switch (e.status) {
-          @case ("SOLICITADO") {
+          @case ("PENDENTE") {
             <div class="flex items-center justify-between gap-2">
-              <p class="text-[11px] text-muted-foreground">aguardando a GOM calcular o frete.</p>
+              <p class="text-[11px] text-muted-foreground">aguardando a GOM embalar.</p>
               <button
                 type="button"
                 (click)="cancelar(e.id)"
@@ -110,30 +110,40 @@
               </button>
             </div>
           }
-          @case ("AGUARDANDO_PAGAMENTO") {
-            @if (e.pagamentoInformado) {
-              <p class="rounded-2xl bg-muted/50 p-3 text-xs text-muted-foreground">
-                pagamento avisado ✓ — a GOM confere e começa a separar.
-              </p>
+          @case ("COTACAO_ENVIADA") {
+            @if (e.comprovantes?.length) {
+              <div class="flex items-center justify-between gap-2 rounded-2xl bg-muted/50 p-3">
+                <p class="text-xs text-muted-foreground">
+                  comprovante enviado ✓ — a GOM confere e posta.
+                </p>
+                <button
+                  type="button"
+                  (click)="pagarFrete(e)"
+                  class="h-8 shrink-0 rounded-pill border border-border px-3 text-[11px] font-medium text-muted-foreground transition hover:text-foreground"
+                >
+                  enviar outro
+                </button>
+              </div>
             } @else {
               <div
                 class="space-y-2 rounded-2xl border border-amber-200 bg-amber-50/70 p-3 dark:border-amber-500/30 dark:bg-amber-500/10"
               >
                 <p class="text-xs text-amber-800 dark:text-amber-300">
                   frete de <span class="font-bold">{{ brl(e.frete ?? 0) }}</span> — pague pelo pix
-                  da GOM e avise aqui.
+                  da GOM e anexe o comprovante.
                 </p>
                 <button
                   type="button"
-                  (click)="envios.informarPagamento(e.id)"
-                  class="h-10 w-full rounded-2xl bg-primary text-xs font-semibold text-primary-foreground transition hover:opacity-90"
+                  (click)="pagarFrete(e)"
+                  class="flex h-10 w-full items-center justify-center gap-1.5 rounded-2xl bg-primary text-xs font-semibold text-primary-foreground transition hover:opacity-90"
                 >
-                  já paguei o frete
+                  <svg [appIcon]="icons.Receipt" class="h-3.5 w-3.5"></svg>
+                  pagar e enviar comprovante
                 </button>
               </div>
             }
           }
-          @case ("POSTADO") {
+          @case ("A_CAMINHO") {
             <button
               type="button"
               (click)="envios.marcarEntregue(e.id)"
@@ -142,6 +152,50 @@
               {{ e.modalidade === "RETIRADA" ? "já retirei" : "recebi o pacote" }} 💖
             </button>
           }
+          @case ("ENTREGUE") {
+            <form
+              class="space-y-2 rounded-2xl border border-primary/30 bg-primary/5 p-3"
+              (submit)="$event.preventDefault(); enviarFeedback(e)"
+            >
+              <p class="text-xs font-semibold">como chegou o pacote?</p>
+              <div class="flex gap-1" role="radiogroup" aria-label="nota do envio">
+                @for (n of estrelas; track n) {
+                  <button
+                    type="button"
+                    role="radio"
+                    [attr.aria-checked]="notas()[e.id] === n"
+                    [attr.aria-label]="n + (n === 1 ? ' estrela' : ' estrelas')"
+                    (click)="setNota(e.id, n)"
+                    class="grid h-10 w-10 place-items-center rounded-xl text-primary transition active:scale-90"
+                  >
+                    <svg
+                      [appIcon]="icons.Star"
+                      [class]="'h-6 w-6 ' + (n <= (notas()[e.id] ?? 0) ? '' : 'opacity-25')"
+                      fill="currentColor"
+                    ></svg>
+                  </button>
+                }
+              </div>
+              <textarea
+                rows="2"
+                [value]="textos()[e.id] ?? ''"
+                (input)="setTexto(e.id, $event)"
+                placeholder="conte pra GOM (opcional)…"
+                aria-label="comentário sobre o envio"
+                class="w-full resize-none rounded-xl border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
+              ></textarea>
+              <button
+                type="submit"
+                [disabled]="!notas()[e.id]"
+                class="h-10 w-full rounded-2xl bg-primary text-xs font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
+              >
+                enviar feedback
+              </button>
+            </form>
+          }
+        }
+        @if (erros()[e.id]; as erro) {
+          <p class="text-[11px] font-medium text-destructive">{{ erro }}</p>
         }
       </app-envio-card>
     } @empty {

@@ -1,9 +1,13 @@
 import { Injectable, computed, inject, signal } from "@angular/core";
 import type { Autoria } from "@/lib/autoria";
+import type { Comprovante } from "@/lib/comprovante";
 import {
+  ANTES_DE_POSTAR,
   MOCK_ENVIOS,
   MODALIDADE_META,
+  PRAZO_PAGAMENTO_DIAS,
   enderecoValido,
+  etapaAntesDeAguardar,
   rotuloEtapa,
   type Endereco,
   type EnvioNacional,
@@ -13,6 +17,7 @@ import {
 } from "@/lib/envios-types";
 import { MOCK_JOINERS } from "@/lib/gom-types";
 import { resumoItens } from "@/lib/mensagens-types";
+import type { TipoNotificacao } from "@/lib/notificacoes-types";
 import { AssinaturaService } from "./assinatura.service";
 import { AuthService } from "./auth.service";
 import { CegsService } from "./cegs.service";
@@ -31,13 +36,17 @@ export interface NovoEnvio {
 /** CEGs cujos itens já estão com a GOM no Brasil. */
 const CEG_CHEGOU = new Set(["CHEGOU_BR", "FINALIZADA"]);
 
+/** Envio que já saiu da GOM (não cancela mais). */
+const CONCLUIDO = new Set<StatusEnvio>(["ENTREGUE", "FEEDBACK_FEITO"]);
+
 function brl(v: number): string {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
 /**
- * Envios nacionais: a joiner junta os itens que já chegaram e pede o envio; a GOM cobra o frete,
- * separa, posta com rastreio e marca a entrega. Cada etapa é assinada e avisa o outro lado.
+ * Envios nacionais: a joiner junta os itens que já chegaram e pede o envio; a GOM embala, cota o
+ * frete, confere o comprovante, posta com rastreio e marca a entrega; a joiner avalia. Qualquer
+ * intercorrência vira "aguardando" com o motivo. Cada etapa é assinada e avisa o outro lado.
  */
 @Injectable({ providedIn: "root" })
 export class EnviosService {
@@ -51,6 +60,7 @@ export class EnviosService {
 
   // 🔌 GET /api/gom/envios (GOM) e /api/joiner/envios (joiner)
   private readonly _envios = signal<EnvioNacional[]>(MOCK_ENVIOS);
+  readonly todos = this._envios.asReadonly();
 
   /** Mais recentes primeiro (pela solicitação). */
   private readonly ordenados = computed(() =>
@@ -69,27 +79,26 @@ export class EnviosService {
     return this.ordenados().filter((e) => e.joinerId === id);
   });
 
-  /** O que espera a GOM (badge): pedidos novos e pagamentos avisados pela joiner. */
+  /** O que espera a GOM (badge): pedidos novos, comprovantes para conferir e pendências. */
   readonly pendentesGom = computed(() =>
     this.daComunidade().filter(
       (e) =>
-        e.status === "SOLICITADO" || (e.status === "AGUARDANDO_PAGAMENTO" && e.pagamentoInformado),
+        e.status === "PENDENTE" ||
+        e.status === "AGUARDANDO" ||
+        (e.status === "COTACAO_ENVIADA" && !!e.comprovantes?.length),
     ),
   );
 
-  /** O que espera a joiner (badge): frete para pagar. */
+  /** O que espera a joiner (badge): frete para pagar e entrega para avaliar. */
   readonly pendentesJoiner = computed(() =>
-    this.meus().filter((e) => e.status === "AGUARDANDO_PAGAMENTO" && !e.pagamentoInformado),
+    this.meus().filter(
+      (e) => (e.status === "COTACAO_ENVIADA" && !e.comprovantes?.length) || e.status === "ENTREGUE",
+    ),
   );
 
-  /** Itens que já estão em algum envio ativo. */
+  /** Itens que já estão em algum envio. */
   private readonly emEnvio = computed(
-    () =>
-      new Set(
-        this._envios()
-          .filter((e) => e.status !== "CANCELADO")
-          .flatMap((e) => e.itens.map((i) => i.refId)),
-      ),
+    () => new Set(this._envios().flatMap((e) => e.itens.map((i) => i.refId))),
   );
 
   /** Itens da joiner logada prontos para envio: Mercari com envio liberado + claims pagos que chegaram. */
@@ -140,11 +149,9 @@ export class EnviosService {
       }).length,
   );
 
-  /** Envio ativo (não cancelado) que contém o item — pedido Mercari ou item de claim. */
+  /** Envio que contém o item — pedido Mercari ou item de claim. */
   envioDoItem(refId: string): EnvioNacional | undefined {
-    return this._envios().find(
-      (e) => e.status !== "CANCELADO" && e.itens.some((i) => i.refId === refId),
-    );
+    return this._envios().find((e) => e.itens.some((i) => i.refId === refId));
   }
 
   /** Último endereço usado pela joiner (pré-preenche o próximo envio). */
@@ -184,85 +191,128 @@ export class EnviosService {
       endereco: novo.modalidade === "RETIRADA" ? undefined : novo.endereco,
       modalidade: novo.modalidade,
       observacao: novo.observacao?.trim() || undefined,
-      status: "SOLICITADO",
-      eventos: [{ status: "SOLICITADO", por }],
+      status: "PENDENTE",
+      eventos: [{ status: "PENDENTE", por }],
     };
     this._envios.update((prev) => [envio, ...prev]);
-    this.notificacoes.enviar(
-      "GOM",
+    this.avisarGom(
+      "PACOTE_NOVO",
       "novo pedido de envio nacional 📦",
       `${user.username} pediu ${MODALIDADE_META[novo.modalidade].label} de ${novo.itens.length} item(ns).`,
     );
     return null;
   }
 
-  /** Joiner avisa que pagou o frete (a GOM confere e confirma). */
-  informarPagamento(id: string): void {
+  /** Joiner paga o frete: o comprovante é obrigatório (a GOM confere e confirma). */
+  pagarFrete(id: string, comprovante: Comprovante): string | null {
     const envio = this.porId(id);
-    if (!envio || envio.status !== "AGUARDANDO_PAGAMENTO" || envio.pagamentoInformado) return;
-    // 🔌 POST /api/joiner/envios/:id/paguei
-    const por = this.assinatura.assinar("ENVIO", `avisou que pagou o frete do envio ${id}`);
-    this.patch(id, { pagamentoInformado: true });
-    this.notificacoes.enviar(
-      "GOM",
-      "frete pago 💸",
-      `${por?.username ?? envio.joinerUsername} avisou que pagou o frete (${brl(envio.frete ?? 0)}). confira e confirme.`,
+    if (!envio || envio.status !== "COTACAO_ENVIADA") return "este envio não espera pagamento.";
+    // 🔌 POST /api/joiner/envios/:id/comprovantes { comprovanteId }
+    const por = this.assinatura.assinar(
+      "PAGAMENTO",
+      `enviou o comprovante do frete do envio ${id}`,
     );
+    this.patch(id, { comprovantes: [...(envio.comprovantes ?? []), comprovante] });
+    this.avisarGom(
+      "COMPROVANTE_ENVIADO",
+      "comprovante de frete para conferir 🧾",
+      `${por?.username ?? envio.joinerUsername} pagou o frete (${brl(envio.frete ?? 0)}) e enviou o comprovante.`,
+    );
+    return null;
+  }
+
+  /** Joiner avalia o recebimento (fecha o envio). */
+  darFeedback(id: string, nota: number, texto: string): string | null {
+    const envio = this.porId(id);
+    if (!envio || envio.status !== "ENTREGUE") return "este envio ainda não foi entregue.";
+    if (envio.joinerId !== this.auth.user()?.id) return "só quem recebeu avalia o envio.";
+    if (!(nota >= 1 && nota <= 5)) return "escolha de 1 a 5 estrelas.";
+    const por = this.avancar(
+      id,
+      "FEEDBACK_FEITO",
+      `${nota}★${texto.trim() ? ` — ${texto.trim()}` : ""}`,
+    );
+    if (!por) return "sessão expirada.";
+    this.patch(id, { feedback: { nota, texto: texto.trim() || undefined, por } });
+    this.avisarGom(
+      "PACOTE_STATUS",
+      `feedback do envio: ${"★".repeat(nota)}`,
+      `${envio.joinerUsername} avaliou o pacote${texto.trim() ? `: “${texto.trim()}”` : "."}`,
+    );
+    return null;
   }
 
   // ── GOM ──────────────────────────────────────────────────────────────────
 
-  /** GOM informa o frete. Retirada (ou frete zero) vai direto para separação. */
-  informarFrete(id: string, valor: number): string | null {
+  embalar(id: string): void {
     const envio = this.porId(id);
-    if (!envio || envio.status !== "SOLICITADO") return "este envio não espera frete.";
-    if (envio.modalidade !== "RETIRADA" && !(valor > 0)) return "informe o valor do frete.";
-    const frete = envio.modalidade === "RETIRADA" ? 0 : valor;
-    if (frete === 0) {
-      const por = this.avancar(id, "EM_SEPARACAO", "sem frete", { frete: 0 });
-      this.avisarJoiner(
-        envio,
-        "envio em separação 📦",
-        `${quem(por)} já está separando seus itens.`,
-      );
-    } else {
-      const por = this.avancar(id, "AGUARDANDO_PAGAMENTO", `frete ${brl(frete)}`, { frete });
-      this.avisarJoiner(
-        envio,
-        "frete do envio nacional 💸",
-        `${quem(por)} informou o frete: ${brl(frete)}. pague e avise em envios.`,
-      );
-    }
+    if (!envio || envio.status !== "PENDENTE") return;
+    const por = this.avancar(id, "EMBALADO");
+    this.avisarJoiner(
+      envio,
+      "PACOTE_STATUS",
+      "pacote embalado 📦",
+      envio.modalidade === "RETIRADA"
+        ? `${quem(por)} embalou seus itens. já já fica pronto para retirada.`
+        : `${quem(por)} embalou seus itens e vai mandar a cotação do frete.`,
+    );
+  }
+
+  /** GOM manda a cotação do frete (abre o prazo de pagamento). */
+  enviarCotacao(id: string, valor: number): string | null {
+    const envio = this.porId(id);
+    if (!envio || envio.status !== "EMBALADO") return "embale o pacote antes de cotar o frete.";
+    if (envio.modalidade === "RETIRADA") return "retirada em mãos não tem frete.";
+    if (!(valor > 0)) return "informe o valor do frete.";
+    const prazo = new Date(Date.now() + PRAZO_PAGAMENTO_DIAS * 86_400_000).toISOString();
+    const por = this.avancar(id, "COTACAO_ENVIADA", `frete ${brl(valor)}`, {
+      frete: valor,
+      prazoPagamento: prazo,
+    });
+    this.avisarJoiner(
+      envio,
+      "COTACAO_FRETE",
+      "cotação de frete disponível 💸",
+      `${quem(por)} cotou o frete em ${brl(valor)}. pague até ${fmtPrazo(prazo)} e anexe o comprovante em envios.`,
+    );
     return null;
   }
 
-  confirmarPagamento(id: string): void {
+  /**
+   * GOM confere o pagamento do frete. Exige comprovante — o da joiner ou `comprovante`, anexado
+   * agora pela GOM (ex.: pix recebido por fora do app).
+   */
+  confirmarPagamento(id: string, comprovante?: Comprovante): string | null {
     const envio = this.porId(id);
-    if (!envio || envio.status !== "AGUARDANDO_PAGAMENTO") return;
-    const por = this.avancar(id, "EM_SEPARACAO", "frete pago");
+    if (!envio || envio.status !== "COTACAO_ENVIADA") return "este envio não espera pagamento.";
+    const comprovantes = [...(envio.comprovantes ?? []), ...(comprovante ? [comprovante] : [])];
+    if (comprovantes.length === 0) return "anexe o comprovante do frete.";
+    const por = this.avancar(id, "FRETE_PAGO", "frete pago", { comprovantes });
     this.avisarJoiner(
       envio,
-      "frete confirmado ✓",
-      `${quem(por)} confirmou o pagamento e vai separar seus itens.`,
+      "PAGAMENTO_CONFIRMADO",
+      "frete pago ✓",
+      `${quem(por)} conferiu o pagamento do frete. seu pacote vai ser postado.`,
     );
+    return null;
   }
 
   /** Retorna uma mensagem de erro, ou null se postou. */
   postar(id: string, rastreio: string): string | null {
     const envio = this.porId(id);
-    if (!envio || envio.status !== "EM_SEPARACAO") return "este envio não está em separação.";
+    const retirada = envio?.modalidade === "RETIRADA";
+    if (!envio || envio.status !== (retirada ? "EMBALADO" : "FRETE_PAGO")) {
+      return retirada ? "embale o pacote antes." : "o frete ainda não foi pago.";
+    }
     const codigo = rastreio.trim().toUpperCase().replace(/\s+/g, "");
-    if (envio.modalidade !== "RETIRADA" && !/^[A-Z]{2}\d{9}[A-Z]{2}$/.test(codigo)) {
+    if (!retirada && !/^[A-Z]{2}\d{9}[A-Z]{2}$/.test(codigo)) {
       return "código de rastreio inválido (ex: AA123456785BR).";
     }
-    const retirada = envio.modalidade === "RETIRADA";
     const por = this.avancar(
       id,
-      "POSTADO",
+      "A_CAMINHO",
       retirada ? "pronto para retirada" : `rastreio ${codigo}`,
-      {
-        rastreio: retirada ? undefined : codigo,
-      },
+      { rastreio: retirada ? undefined : codigo },
     );
     if (!retirada) {
       const pedidos = envio.itens.filter((i) => i.origem === "MERCARI").map((i) => i.refId);
@@ -270,7 +320,8 @@ export class EnviosService {
     }
     this.avisarJoiner(
       envio,
-      retirada ? "pronto para retirada 🎁" : "seu envio foi postado 🚚",
+      "PACOTE_STATUS",
+      retirada ? "pronto para retirada 🎁" : "seu pacote está a caminho 🚚",
       retirada
         ? `${quem(por)} separou seus itens — combine a retirada pelo chat.`
         : `${quem(por)} postou seu pacote. rastreio: ${codigo}`,
@@ -281,41 +332,84 @@ export class EnviosService {
   /** GOM marca entregue, ou a joiner confirma que recebeu. */
   marcarEntregue(id: string): void {
     const envio = this.porId(id);
-    if (!envio || envio.status !== "POSTADO") return;
+    if (!envio || envio.status !== "A_CAMINHO") return;
     const por = this.avancar(id, "ENTREGUE");
     const daJoiner = this.auth.user()?.id === envio.joinerId;
     if (daJoiner) {
-      this.notificacoes.enviar(
-        "GOM",
+      this.avisarGom(
+        "PACOTE_STATUS",
         "envio recebido 💖",
         `${envio.joinerUsername} confirmou que recebeu o pacote.`,
       );
     } else {
       this.avisarJoiner(
         envio,
-        `envio ${rotuloEtapa("ENTREGUE", envio.modalidade)} ✓`,
-        `${quem(por)} marcou seu envio como entregue.`,
+        "PACOTE_STATUS",
+        `pacote ${rotuloEtapa("ENTREGUE", envio.modalidade)} ✓`,
+        `${quem(por)} marcou seu envio como entregue. conta pra gente como chegou!`,
       );
     }
   }
 
-  /** Cancela (joiner: só enquanto solicitado; GOM: antes de postar). Os itens voltam a ficar prontos. */
+  /** Intercorrência (transportadora, retenção, dados pendentes…). O motivo é obrigatório. */
+  marcarAguardando(id: string, motivo: string): string | null {
+    const envio = this.porId(id);
+    const texto = motivo.trim();
+    if (!envio || !(ANTES_DE_POSTAR.includes(envio.status) || envio.status === "A_CAMINHO")) {
+      return "este envio não pode ficar aguardando agora.";
+    }
+    if (texto.length < 5) return "explique o motivo para a joiner.";
+    this.avancar(id, "AGUARDANDO", texto);
+    this.avisarJoiner(
+      envio,
+      "PACOTE_STATUS",
+      "pacote aguardando ⏳",
+      `seu envio está aguardando: ${texto}`,
+    );
+    return null;
+  }
+
+  /** Resolve a pendência: o envio volta para a etapa em que estava. */
+  retomar(id: string): void {
+    const envio = this.porId(id);
+    if (!envio || envio.status !== "AGUARDANDO") return;
+    const etapa = etapaAntesDeAguardar(envio);
+    const por = this.avancar(id, etapa, "pendência resolvida");
+    this.avisarJoiner(
+      envio,
+      "PACOTE_STATUS",
+      "pendência resolvida ✓",
+      `${quem(por)} resolveu a pendência — seu envio voltou para “${rotuloEtapa(etapa, envio.modalidade)}”.`,
+    );
+  }
+
+  /**
+   * Cancela (joiner: só enquanto pendente; GOM: até o frete pago ou durante uma pendência).
+   * O pedido de envio é apagado e os itens voltam a ficar prontos.
+   */
   cancelar(id: string, motivo = ""): void {
     const envio = this.porId(id);
-    if (!envio || ["POSTADO", "ENTREGUE", "CANCELADO"].includes(envio.status)) return;
-    const user = this.auth.user();
-    const daJoiner = user?.id === envio.joinerId;
-    if (daJoiner && envio.status !== "SOLICITADO") return;
-    const por = this.avancar(id, "CANCELADO", motivo.trim() || undefined);
+    if (!envio) return;
+    const etapa = envio.status === "AGUARDANDO" ? etapaAntesDeAguardar(envio) : envio.status;
+    if (etapa === "A_CAMINHO" || CONCLUIDO.has(etapa)) return;
+    const daJoiner = this.auth.user()?.id === envio.joinerId;
+    if (daJoiner && envio.status !== "PENDENTE") return;
+    // 🔌 DELETE /api/{joiner|gom}/envios/:id — o servidor guarda o cancelamento na auditoria
+    const por = this.assinatura.assinar(
+      "ENVIO",
+      `cancelou o envio ${id} de ${envio.joinerUsername}${motivo.trim() ? ` (${motivo.trim()})` : ""}`,
+    );
+    this._envios.update((prev) => prev.filter((e) => e.id !== id));
     if (daJoiner) {
-      this.notificacoes.enviar(
-        "GOM",
+      this.avisarGom(
+        "PACOTE_STATUS",
         "envio cancelado",
         `${envio.joinerUsername} cancelou o pedido de envio.`,
       );
     } else {
       this.avisarJoiner(
         envio,
+        "PACOTE_STATUS",
         "envio cancelado",
         `${quem(por)} cancelou seu envio${motivo.trim() ? `: ${motivo.trim()}` : "."} os itens voltaram para “prontos para envio”.`,
       );
@@ -341,7 +435,7 @@ export class EnviosService {
       `envio ${id} de ${envio?.joinerUsername}: ${rotuloEtapa(status, envio?.modalidade ?? "PAC")}${nota ? ` (${nota})` : ""}`,
     );
     if (!por) return undefined;
-    // 🔌 POST /api/gom/envios/:id/{frete|pagamento|postar|entregue|cancelar}
+    // 🔌 POST /api/gom/envios/:id/{embalar|cotacao|pagamento|postar|entregue|aguardando|retomar}
     this._envios.update((prev) =>
       prev.map((e) =>
         e.id === id
@@ -352,8 +446,17 @@ export class EnviosService {
     return por;
   }
 
-  private avisarJoiner(envio: EnvioNacional, titulo: string, mensagem: string): void {
-    this.notificacoes.enviar(envio.joinerId, titulo, mensagem);
+  private avisarJoiner(
+    envio: EnvioNacional,
+    tipo: TipoNotificacao,
+    titulo: string,
+    mensagem: string,
+  ): void {
+    this.notificacoes.enviar(envio.joinerId, tipo, titulo, mensagem, "/joiner/envios");
+  }
+
+  private avisarGom(tipo: TipoNotificacao, titulo: string, mensagem: string): void {
+    this.notificacoes.enviar("GOM", tipo, titulo, mensagem, "/gom/envios");
   }
 
   private patch(id: string, patch: Partial<EnvioNacional>): void {
@@ -363,4 +466,13 @@ export class EnviosService {
 
 function quem(por: Autoria | undefined): string {
   return por?.username ?? "a GOM";
+}
+
+function fmtPrazo(iso: string): string {
+  return new Date(iso).toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }

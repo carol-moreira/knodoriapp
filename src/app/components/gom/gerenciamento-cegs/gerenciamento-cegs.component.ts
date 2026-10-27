@@ -147,7 +147,9 @@ export class GerenciamentoCegsComponent {
 
   protected onStatusChange(cegId: string, e: Event): void {
     const status = inputValue(e) as CegStatus;
+    const de = this.cegsService.porId(cegId)?.status;
     this.cegsService.editar(cegId, { status });
+    if (de) this.posts.avisarStatus(cegId, de);
   }
 
   /** O modal já criou a CEG (com itens e agenda): abre o card dela já expandido. */

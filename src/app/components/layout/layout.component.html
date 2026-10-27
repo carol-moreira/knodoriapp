@@ -1,9 +1,10 @@
 @if (isFullPage()) {
-  <div class="min-h-screen bg-background">
+  <div class="min-h-dvh bg-background">
     <router-outlet />
   </div>
 } @else {
-  <div class="min-h-screen bg-background text-foreground">
+  <!-- Coluna flex na altura da tela: o <main> cresce e o rodapé fica sempre no fim -->
+  <div class="flex min-h-dvh flex-col bg-background text-foreground">
     <!-- Header -->
     <header
       class="sticky top-0 z-30 border-b border-border/60 bg-background/85 pt-[env(safe-area-inset-top)] backdrop-blur-md"
@@ -33,35 +34,101 @@
         <!-- Título da página (celular — a navegação fica na barra inferior) -->
         <p class="min-w-0 flex-1 truncate text-base font-bold lg:hidden">{{ tituloAtual() }}</p>
 
-        <!-- Nav (desktop) -->
+        <!-- Nav (desktop): o que não cabe na largura vai para o dropdown "mais" -->
         @if (nav().length > 0) {
-          <nav
-            aria-label="navegação principal"
-            class="hidden min-w-0 shrink items-center gap-0.5 overflow-x-auto rounded-full bg-muted/70 p-1 silver-surface no-scrollbar lg:flex"
-          >
-            @for (item of nav(); track item.to) {
-              <a
-                [routerLink]="item.to"
-                [attr.aria-current]="isActive(item) ? 'page' : null"
-                [class]="
-                  'relative flex shrink-0 items-center gap-1.5 rounded-pill px-3 py-2 text-[13px] font-medium transition xl:px-3.5 xl:text-sm ' +
-                  (isActive(item)
-                    ? 'bg-primary text-primary-foreground shadow'
-                    : 'text-foreground/70 hover:text-foreground')
-                "
+          <div #navArea class="relative hidden min-w-0 flex-1 lg:block">
+            <nav
+              aria-label="navegação principal"
+              class="flex w-fit max-w-full items-center gap-0.5 rounded-full bg-muted/70 p-1 silver-surface"
+            >
+              @for (item of navDesktop(); track item.to) {
+                <a
+                  [routerLink]="item.to"
+                  [attr.aria-current]="isActive(item) ? 'page' : null"
+                  [class]="navItemClass(isActive(item))"
+                >
+                  <svg [appIcon]="item.icon" class="h-4 w-4"></svg>
+                  {{ item.label }}
+                  @if (badge(item) > 0) {
+                    <span
+                      class="grid h-4 min-w-4 place-items-center rounded-full bg-amber-500 px-1 text-[9px] font-bold text-white"
+                    >
+                      {{ badge(item) }}
+                    </span>
+                  }
+                </a>
+              }
+              @if (navDesktopMais().length > 0) {
+                <button
+                  type="button"
+                  [cdkMenuTriggerFor]="navMaisMenu"
+                  [cdkMenuPosition]="navMaisPosition"
+                  aria-label="mais páginas"
+                  [class]="navItemClass(desktopMaisAtivo())"
+                >
+                  <svg [appIcon]="icons.Ellipsis" class="h-4 w-4"></svg>
+                  mais
+                  @if (desktopMaisPendente()) {
+                    <span class="h-2 w-2 rounded-full bg-amber-500" aria-hidden="true"></span>
+                  }
+                </button>
+              }
+            </nav>
+
+            <ng-template #navMaisMenu>
+              <div
+                cdkMenu
+                class="z-50 min-w-48 rounded-2xl border border-border bg-card p-1.5 shadow-xl animate-in fade-in zoom-in-95 duration-100"
               >
-                <svg [appIcon]="item.icon" class="h-4 w-4"></svg>
-                {{ item.label }}
-                @if (badge(item) > 0) {
-                  <span
-                    class="grid h-4 min-w-4 place-items-center rounded-full bg-amber-500 px-1 text-[9px] font-bold text-white"
+                @for (item of navDesktopMais(); track item.to) {
+                  <a
+                    cdkMenuItem
+                    [routerLink]="item.to"
+                    [attr.aria-current]="isActive(item) ? 'page' : null"
+                    [class]="
+                      'flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium outline-none transition hover:bg-muted ' +
+                      (isActive(item) ? 'bg-primary/10 text-primary' : '')
+                    "
                   >
-                    {{ badge(item) }}
-                  </span>
+                    <svg [appIcon]="item.icon" class="h-4 w-4"></svg>
+                    <span class="flex-1">{{ item.label }}</span>
+                    @if (badge(item) > 0) {
+                      <span
+                        class="grid h-4 min-w-4 place-items-center rounded-full bg-amber-500 px-1 text-[9px] font-bold text-white"
+                      >
+                        {{ badge(item) }}
+                      </span>
+                    }
+                  </a>
                 }
-              </a>
-            }
-          </nav>
+              </div>
+            </ng-template>
+
+            <!-- Medição (invisível): largura de cada item para decidir quantos cabem -->
+            <div
+              #navMedida
+              aria-hidden="true"
+              inert
+              class="pointer-events-none invisible absolute left-0 top-0 flex gap-0.5 whitespace-nowrap"
+            >
+              @for (item of nav(); track item.to) {
+                <span [class]="navItemClass(true)">
+                  <svg [appIcon]="item.icon" class="h-4 w-4"></svg>
+                  {{ item.label }}
+                  @if (badge(item) > 0) {
+                    <span class="grid h-4 min-w-4 place-items-center px-1 text-[9px] font-bold">
+                      {{ badge(item) }}
+                    </span>
+                  }
+                </span>
+              }
+              <span [class]="navItemClass(true)">
+                <svg [appIcon]="icons.Ellipsis" class="h-4 w-4"></svg>
+                mais
+                <span class="h-2 w-2"></span>
+              </span>
+            </div>
+          </div>
         }
 
         <!-- Ações do usuário: mensagens, notificações e perfil (afastadas da nav) -->
@@ -91,72 +158,34 @@
               </a>
             }
 
-            <!-- Notificações -->
-            <div class="shrink-0">
-              <button
-                type="button"
-                aria-label="notificações"
-                title="notificações"
-                class="relative grid h-10 w-10 place-items-center rounded-xl text-muted-foreground outline-none transition hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary"
-                [cdkMenuTriggerFor]="notifMenu"
-                [cdkMenuPosition]="menuPosition"
-                (cdkMenuClosed)="notificacoes.marcarTodasLidas()"
-              >
-                <svg [appIcon]="icons.Bell" class="h-4.5 w-4.5"></svg>
-                @if (notificacoes.naoLidas() > 0) {
-                  <span
-                    class="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground"
-                  >
-                    {{ notificacoes.naoLidas() }}
-                  </span>
-                }
-              </button>
-
-              <ng-template #notifMenu>
-                <div
-                  cdkMenu
-                  class="z-50 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-border bg-card p-1.5 shadow-xl animate-in fade-in zoom-in-95 duration-100"
+            <!-- Notificações (central: bottom sheet no celular, painel no desktop) -->
+            <button
+              type="button"
+              (click)="notifOpen.set(!notifOpen())"
+              [attr.aria-expanded]="notifOpen()"
+              [attr.aria-label]="
+                notificacoes.naoLidas() > 0
+                  ? 'notificações, ' + notificacoes.naoLidas() + ' não lidas'
+                  : 'notificações'
+              "
+              title="notificações"
+              [class]="
+                'relative grid h-10 w-10 shrink-0 place-items-center rounded-xl outline-none transition focus-visible:ring-2 focus-visible:ring-primary ' +
+                (notifOpen()
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground')
+              "
+            >
+              <svg [appIcon]="icons.Bell" class="h-4.5 w-4.5"></svg>
+              @if (notificacoes.naoLidas() > 0) {
+                <span
+                  class="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground ring-2 ring-background animate-in zoom-in duration-200"
                 >
-                  <p class="border-b border-border/60 px-3 py-2 text-xs font-semibold">
-                    notificações
-                  </p>
-                  @if (notificacoes.minhas().length === 0) {
-                    <p class="px-3 py-6 text-center text-xs text-muted-foreground">
-                      nenhuma notificação por aqui.
-                    </p>
-                  } @else {
-                    <div class="max-h-80 overflow-y-auto no-scrollbar">
-                      @for (n of notificacoes.minhas(); track n.id) {
-                        <div
-                          cdkMenuItem
-                          [class]="
-                            'block rounded-xl px-3 py-2.5 outline-none transition hover:bg-muted ' +
-                            (n.lida ? '' : 'bg-primary/5')
-                          "
-                        >
-                          <div class="flex items-start gap-2">
-                            @if (!n.lida) {
-                              <span
-                                class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary"
-                              ></span>
-                            }
-                            <div class="min-w-0">
-                              <p class="text-xs font-semibold">{{ n.titulo }}</p>
-                              <p class="mt-0.5 text-[11px] text-muted-foreground">
-                                {{ n.mensagem }}
-                              </p>
-                              <p class="mt-1 text-[10px] text-muted-foreground/70">
-                                {{ fmtNotificacao(n.data) }}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      }
-                    </div>
-                  }
-                </div>
-              </ng-template>
-            </div>
+                  {{ notificacoes.naoLidas() > 99 ? "99+" : notificacoes.naoLidas() }}
+                </span>
+              }
+            </button>
+            <app-central-notificacoes [open]="notifOpen()" (closed)="notifOpen.set(false)" />
 
             <div role="separator" class="mx-1 hidden h-6 w-px bg-border lg:block"></div>
 
@@ -248,7 +277,7 @@
     <!-- Conteúdo (no celular, o padding de baixo reserva a barra inferior) -->
     <main
       [class]="
-        'mx-auto max-w-6xl px-4 pt-4 sm:px-6 sm:pt-6 lg:py-10 ' +
+        'mx-auto w-full max-w-6xl flex-1 px-4 pt-4 sm:px-6 sm:pt-6 lg:py-10 ' +
         (nav().length > 0 ? 'pb-[calc(5.25rem+env(safe-area-inset-bottom))]' : 'pb-8')
       "
     >
@@ -331,7 +360,9 @@
       >
         <div class="mx-auto mb-3 h-1 w-10 rounded-full bg-border" aria-hidden="true"></div>
         <p class="mb-2 px-1 text-xs font-semibold text-muted-foreground">mais opções</p>
-        <div class="grid grid-cols-3 gap-2">
+        <div
+          class="grid max-h-[60dvh] grid-cols-3 gap-2 overflow-y-auto overscroll-contain no-scrollbar"
+        >
           @for (item of navMais(); track item.to) {
             <a
               [routerLink]="item.to"

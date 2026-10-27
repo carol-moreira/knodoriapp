@@ -2,23 +2,29 @@ import { Component, computed, input, signal } from "@angular/core";
 import {
   Check,
   ChevronDown,
+  Clock,
   Copy,
   ExternalLink,
   MapPin,
   MessageCircle,
   Package,
+  Star,
+  TriangleAlert,
   Truck,
 } from "lucide-angular";
 import {
-  ETAPAS_ENVIO,
   MODALIDADE_META,
   STATUS_ENVIO_META,
+  etapaAntesDeAguardar,
+  fluxoEnvio,
   formatarEndereco,
   linkRastreio,
+  motivoAguardando,
   rotuloEtapa,
   type EnvioNacional,
 } from "@/lib/envios-types";
 import { AssinaturaComponent } from "@/shared/assinatura/assinatura.component";
+import { ComprovanteChipComponent } from "@/shared/comprovante/comprovante-chip.component";
 import { IconDirective } from "@/shared/icon.directive";
 
 /**
@@ -27,7 +33,7 @@ import { IconDirective } from "@/shared/icon.directive";
  */
 @Component({
   selector: "app-envio-card",
-  imports: [IconDirective, AssinaturaComponent],
+  imports: [IconDirective, AssinaturaComponent, ComprovanteChipComponent],
   templateUrl: "./envio-card.component.html",
   styleUrl: "./envio-card.component.scss",
 })
@@ -39,11 +45,14 @@ export class EnvioCardComponent {
   protected readonly icons = {
     Check,
     ChevronDown,
+    Clock,
     Copy,
     ExternalLink,
     MapPin,
     MessageCircle,
     Package,
+    Star,
+    TriangleAlert,
     Truck,
   };
   protected readonly MODALIDADE = MODALIDADE_META;
@@ -59,9 +68,15 @@ export class EnvioCardComponent {
     return e ? formatarEndereco(e) : "";
   });
 
-  /** Progresso nas 5 etapas (cancelado não tem barra). */
-  protected readonly passo = computed(() => ETAPAS_ENVIO.indexOf(this.envio().status));
-  protected readonly etapas = ETAPAS_ENVIO;
+  /** Etapas lineares da modalidade; "aguardando" mostra a barra parada (em laranja) onde estava. */
+  protected readonly etapas = computed(() => fluxoEnvio(this.envio().modalidade));
+  protected readonly aguardando = computed(() => this.envio().status === "AGUARDANDO");
+  protected readonly motivo = computed(() => motivoAguardando(this.envio()));
+  protected readonly passo = computed(() => {
+    const e = this.envio();
+    return this.etapas().indexOf(e.status === "AGUARDANDO" ? etapaAntesDeAguardar(e) : e.status);
+  });
+  protected readonly estrelas = [1, 2, 3, 4, 5];
 
   protected readonly whatsapp = computed(() => {
     const tel = this.envio().joinerTelefone?.replace(/\D/g, "");
@@ -77,6 +92,15 @@ export class EnvioCardComponent {
     } catch {
       // clipboard bloqueado (ex.: http) — o texto continua visível para copiar à mão
     }
+  }
+
+  protected fmtPrazo(iso: string): string {
+    return new Date(iso).toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   }
 
   protected fmtData(iso: string): string {
