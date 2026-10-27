@@ -52,6 +52,11 @@
                 <svg [appIcon]="icons.Clock" class="h-3 w-3"></svg>
                 última cobrança em {{ fmtDataHora(c.data) }} ({{ brl(c.valor) }})
               </p>
+              @if (c.por; as por) {
+                <p class="text-[10px] text-muted-foreground">
+                  <app-assinatura [por]="por" acao="cobrado por" />
+                </p>
+              }
             }
           </div>
 

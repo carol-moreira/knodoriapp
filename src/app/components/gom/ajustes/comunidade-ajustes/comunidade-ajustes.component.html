@@ -1,0 +1,177 @@
+<div class="space-y-5">
+  <!-- ── Comunidade ────────────────────────────────────────────────────── -->
+  <section class="cozy-card space-y-4 p-5">
+    <div class="flex flex-wrap items-start justify-between gap-2">
+      <div>
+        <h3 class="text-sm font-semibold">comunidade</h3>
+        <p class="mt-0.5 text-xs text-muted-foreground">
+          a conta da GOM e as admins cadastradas acessam os mesmos dados.
+        </p>
+        @if (comunidade().atualizadoPor; as por) {
+          <p class="mt-0.5 text-[10px] text-muted-foreground">
+            <app-assinatura [por]="por" acao="alterado por" />
+          </p>
+        }
+      </div>
+      @if (user()?.papel; as papel) {
+        <span [class]="'cozy-pill text-[10px] font-semibold ' + PAPEL_META[papel].badge">
+          você é {{ PAPEL_META[papel].label }}
+        </span>
+      }
+    </div>
+
+    <form
+      class="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end"
+      (submit)="$event.preventDefault(); salvarComunidade()"
+    >
+      <label class="block space-y-1.5">
+        <span class="text-xs font-semibold">nome da comunidade</span>
+        <input
+          [value]="nomeComunidade()"
+          (input)="nomeComunidade.set(val($event)); comunidadeSalva.set(false)"
+          [disabled]="!ehDona()"
+          [class]="INPUT_CLS + ' disabled:opacity-60'"
+        />
+      </label>
+      <label class="block space-y-1.5">
+        <span class="text-xs font-semibold">instagram</span>
+        <input
+          [value]="instagram()"
+          (input)="instagram.set(val($event)); comunidadeSalva.set(false)"
+          [disabled]="!ehDona()"
+          placeholder="@suacomunidade"
+          [class]="INPUT_CLS + ' disabled:opacity-60'"
+        />
+      </label>
+      @if (ehDona()) {
+        <button
+          type="submit"
+          class="rounded-xl bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
+        >
+          {{ comunidadeSalva() ? "salvo!" : "salvar" }}
+        </button>
+      }
+    </form>
+  </section>
+
+  <!-- ── Membros ───────────────────────────────────────────────────────── -->
+  <section class="cozy-card space-y-4 p-5">
+    <div>
+      <h3 class="flex items-center gap-1.5 text-sm font-semibold">
+        <svg [appIcon]="icons.Users" class="h-4 w-4 text-primary"></svg>
+        admins da comunidade ({{ membros().length }})
+      </h3>
+      <p class="mt-0.5 text-xs text-muted-foreground">
+        cada admin entra com o próprio e-mail e já cai como GOM da {{ comunidade().nome }}.
+      </p>
+    </div>
+
+    <ul class="divide-y divide-border/60 rounded-2xl border border-border/60">
+      @for (m of membros(); track m.id) {
+        <li class="flex flex-wrap items-center gap-3 px-4 py-3">
+          <div
+            class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/15 text-xs font-bold text-primary"
+          >
+            {{ m.nome.slice(0, 2).toUpperCase() }}
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="flex flex-wrap items-center gap-1.5 text-sm font-semibold">
+              {{ m.nome }}
+              <span class="text-xs font-normal text-muted-foreground">{{ m.username }}</span>
+              @if (m.id === user()?.id) {
+                <span class="text-[10px] font-medium text-muted-foreground">(você)</span>
+              }
+            </p>
+            <p class="truncate text-[11px] text-muted-foreground">
+              {{ m.email }} · último acesso: {{ fmtData(m.ultimoAcesso) }}
+            </p>
+            @if (m.adicionadoPor; as por) {
+              <p class="text-[10px] text-muted-foreground">
+                <app-assinatura [por]="por" acao="adicionada por" />
+              </p>
+            }
+          </div>
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span [class]="'cozy-pill text-[10px] font-semibold ' + PAPEL_META[m.papel].badge">
+              {{ PAPEL_META[m.papel].label }}
+            </span>
+            <span [class]="'cozy-pill text-[10px] font-semibold ' + STATUS_META[m.status].badge">
+              {{ STATUS_META[m.status].label }}
+            </span>
+            @if (ehDona() && m.papel !== "DONA") {
+              <button
+                type="button"
+                (click)="remover(m.id, m.nome)"
+                [attr.aria-label]="'remover ' + m.nome"
+                class="rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted hover:text-destructive"
+              >
+                <svg [appIcon]="icons.Trash2" class="h-3.5 w-3.5"></svg>
+              </button>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+
+    @if (ehDona()) {
+      <!-- Nova admin -->
+      <form
+        class="space-y-3 rounded-2xl bg-muted/40 p-4"
+        (submit)="$event.preventDefault(); cadastrar()"
+      >
+        <p class="flex items-center gap-1.5 text-xs font-semibold">
+          <svg [appIcon]="icons.UserPlus" class="h-3.5 w-3.5 text-primary"></svg>
+          cadastrar admin
+        </p>
+        <div class="grid gap-2 sm:grid-cols-3">
+          <input
+            [value]="nome()"
+            (input)="nome.set(val($event))"
+            placeholder="nome"
+            aria-label="nome da admin"
+            [class]="INPUT_CLS"
+          />
+          <input
+            type="email"
+            [value]="email()"
+            (input)="email.set(val($event))"
+            placeholder="email@exemplo.com"
+            aria-label="e-mail de login da admin"
+            [class]="INPUT_CLS"
+          />
+          <input
+            [value]="username()"
+            (input)="username.set(val($event))"
+            placeholder="@usuario"
+            aria-label="@ da admin"
+            [class]="INPUT_CLS"
+          />
+        </div>
+        @if (erro()) {
+          <p class="text-[11px] font-medium text-destructive">{{ erro() }}</p>
+        } @else if (convidada()) {
+          <p class="flex items-center gap-1 text-[11px] text-lime-700">
+            <svg [appIcon]="icons.Mail" class="h-3 w-3"></svg>
+            convite enviado para {{ convidada() }} — é só entrar com esse e-mail.
+          </p>
+        }
+        <div class="flex items-center justify-between gap-3">
+          <p class="text-[11px] text-muted-foreground">
+            admins gerenciam CEGs, fila, claims e mensagens. só a dona cadastra admins.
+          </p>
+          <button
+            type="submit"
+            class="shrink-0 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
+          >
+            cadastrar
+          </button>
+        </div>
+      </form>
+    } @else {
+      <p class="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <svg [appIcon]="icons.ShieldCheck" class="h-3.5 w-3.5"></svg>
+        só a dona da comunidade pode cadastrar ou remover admins.
+      </p>
+    }
+  </section>
+</div>

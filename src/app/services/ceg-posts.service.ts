@@ -1,5 +1,7 @@
 import { Injectable, inject, signal } from "@angular/core";
+import type { Autoria } from "@/lib/autoria";
 import { CegsService } from "./cegs.service";
+import { AssinaturaService } from "./assinatura.service";
 import { NotificacoesService } from "./notificacoes.service";
 import { PedidosMercariService } from "./pedidos-mercari.service";
 
@@ -13,6 +15,8 @@ export interface CegPost {
   texto: string;
   autor: string;
   data: string; // ISO
+  /** Quem publicou (dona ou admin). */
+  por?: Autoria;
 }
 
 export const CEG_POST_META: Record<CegPostTipo, { label: string; badge: string }> = {
@@ -66,6 +70,7 @@ export class CegPostsService {
   private readonly cegs = inject(CegsService);
   private readonly pedidos = inject(PedidosMercariService);
   private readonly notificacoes = inject(NotificacoesService);
+  private readonly assinatura = inject(AssinaturaService);
 
   private readonly _posts = signal<CegPost[]>(MOCK_POSTS);
   readonly posts = this._posts.asReadonly();
@@ -77,19 +82,24 @@ export class CegPostsService {
       .sort((a, b) => b.data.localeCompare(a.data));
   }
 
-  publicar(cegId: string, tipo: CegPostTipo, texto: string, autor: string): void {
+  publicar(cegId: string, tipo: CegPostTipo, texto: string): void {
     const ceg = this.cegs.porId(cegId);
     const conteudo = texto.trim();
     if (!ceg || !conteudo) return;
 
     // 🔌 POST /api/gom/cegs/:id/posts
+    const por = this.assinatura.assinar(
+      "NOVIDADE",
+      `publicou ${tipo === "AVISO" ? "um aviso" : "um comunicado"} em ${ceg.nome}`,
+    );
     const post: CegPost = {
       id: `post_${Date.now()}`,
       cegId,
       tipo,
       texto: conteudo,
-      autor,
+      autor: por?.username ?? "GOM",
       data: new Date().toISOString(),
+      por,
     };
     this._posts.update((prev) => [post, ...prev]);
 
@@ -105,6 +115,12 @@ export class CegPostsService {
 
   remover(id: string): void {
     // 🔌 DELETE /api/gom/cegs/posts/:id
+    const post = this._posts().find((p) => p.id === id);
+    if (!post) return;
+    this.assinatura.assinar(
+      "NOVIDADE",
+      `excluiu ${post.tipo === "AVISO" ? "um aviso" : "um comunicado"} de ${this.cegs.porId(post.cegId)?.nome ?? "CEG"}`,
+    );
     this._posts.update((prev) => prev.filter((p) => p.id !== id));
   }
 }

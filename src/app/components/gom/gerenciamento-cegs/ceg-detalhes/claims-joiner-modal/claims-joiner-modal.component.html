@@ -1,0 +1,162 @@
+<app-dialog
+  [open]="open()"
+  (openChange)="onOpenChange($event)"
+  contentClass="fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-[calc(100%-2rem)] max-w-3xl -translate-x-1/2 -translate-y-1/2 flex-col cozy-card shadow-2xl animate-in zoom-in-95 fade-in duration-150 overflow-hidden"
+>
+  <div class="flex items-center justify-between border-b border-border/60 px-6 py-4">
+    <div>
+      <h2 class="text-sm font-bold">claims por joiner</h2>
+      <p class="text-[11px] text-muted-foreground">{{ cegNome() }}</p>
+    </div>
+    <button
+      type="button"
+      (click)="onOpenChange(false)"
+      aria-label="fechar"
+      class="rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted"
+    >
+      <svg [appIcon]="icons.X" class="h-4 w-4"></svg>
+    </button>
+  </div>
+
+  @if (grupos().length === 0) {
+    <p class="px-6 py-12 text-center text-xs text-muted-foreground">
+      nenhuma joiner deu claim nesta CEG ainda.
+    </p>
+  } @else {
+    <div class="grid min-h-0 flex-1 sm:grid-cols-[13rem_1fr]">
+      <!-- Joiners -->
+      <nav
+        aria-label="joiners"
+        class="flex gap-1 overflow-x-auto border-b border-border/60 p-2 no-scrollbar sm:flex-col sm:overflow-y-auto sm:border-b-0 sm:border-r"
+      >
+        @for (g of grupos(); track g.joinerId) {
+          <button
+            type="button"
+            (click)="selecionadaId.set(g.joinerId)"
+            [attr.aria-current]="selecionadaId() === g.joinerId"
+            [class]="joinerClass(g.joinerId) + ' shrink-0'"
+          >
+            <span class="text-xs font-semibold">{{ g.claims[0].joinerNome }}</span>
+            <span class="text-[10px] text-muted-foreground">{{ resumoJoiner(g.joinerId) }}</span>
+          </button>
+        }
+      </nav>
+
+      <!-- Claims da joiner -->
+      @if (detalhe(); as d) {
+        <div class="min-h-0 space-y-4 overflow-y-auto p-5 no-scrollbar">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p class="text-sm font-bold">{{ d.perfil.joinerNome }}</p>
+              <p class="text-[11px] text-muted-foreground">{{ d.perfil.joinerUsername }}</p>
+              @if (d.perfil.joinerTelefone) {
+                <p class="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <svg [appIcon]="icons.Phone" class="h-3 w-3"></svg>{{ d.perfil.joinerTelefone }}
+                </p>
+              }
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-center">
+              <div class="rounded-xl bg-muted/50 px-3 py-1.5">
+                <p class="text-[10px] text-muted-foreground">confirmado</p>
+                <p class="text-xs font-bold tabular-nums">{{ brl(d.totalConfirmado) }}</p>
+              </div>
+              <div class="rounded-xl bg-muted/50 px-3 py-1.5">
+                <p class="text-[10px] text-muted-foreground">pago</p>
+                <p class="text-xs font-bold tabular-nums">{{ brl(d.totalPago) }}</p>
+              </div>
+              <div class="rounded-xl bg-muted/50 px-3 py-1.5">
+                <p class="text-[10px] text-muted-foreground">pendentes</p>
+                <p class="text-xs font-bold tabular-nums">{{ d.pendentes }}</p>
+              </div>
+            </div>
+          </div>
+
+          <ul class="space-y-2">
+            @for (l of d.linhas; track l.claim.id) {
+              <li class="space-y-1.5 rounded-2xl border border-border/60 p-3">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold">#{{ l.item?.codigo }}</span>
+                  <span class="min-w-0 flex-1 truncate text-xs">{{ l.item?.nome }}</span>
+                  <span class="shrink-0 text-xs tabular-nums">{{ brl(l.item?.valor ?? 0) }}</span>
+                  <span
+                    [class]="
+                      'shrink-0 rounded-full px-2 py-0.5 text-[9px] font-semibold ' +
+                      CLAIM_META[l.claim.status].badge
+                    "
+                  >
+                    {{ CLAIM_META[l.claim.status].label }}
+                  </span>
+                </div>
+
+                <div
+                  class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground"
+                >
+                  <span class="tabular-nums">claim {{ fmtDataHora(l.claim.criadoEm) }}</span>
+                  @if (l.posicao > 0) {
+                    <span>{{ l.posicao }}º na fila</span>
+                  }
+                  @if (l.claim.motivo) {
+                    <span>{{ l.claim.motivo }}</span>
+                  }
+                  @if (l.claim.decididoPor; as por) {
+                    <app-assinatura
+                      [por]="por"
+                      [acao]="
+                        (l.claim.status === 'CONFIRMADO' ? 'confirmado' : 'rejeitado') + ' por'
+                      "
+                    />
+                  }
+                  @if (l.item?.atualizadoPor; as por) {
+                    <app-assinatura [por]="por" acao="item alterado por" />
+                  }
+                  @if (l.claim.status === "CONFIRMADO" && l.item?.avaria) {
+                    <span class="flex items-center gap-1 font-medium text-amber-700">
+                      <svg [appIcon]="icons.ShieldAlert" class="h-3 w-3"></svg>avaria{{
+                        l.item?.avariaNota ? ": " + l.item?.avariaNota : ""
+                      }}
+                    </span>
+                  }
+                  @if (l.claim.status === "CONFIRMADO" && l.item?.abandonado) {
+                    <span class="flex items-center gap-1 font-medium text-rose-700">
+                      <svg [appIcon]="icons.PackageX" class="h-3 w-3"></svg>abandonado
+                    </span>
+                  }
+                </div>
+
+                @if (l.item; as item) {
+                  <div class="flex items-center justify-end gap-2">
+                    @if (l.claim.status === "CONFIRMADO" && item.pagamento) {
+                      <select
+                        (change)="onPagamento(item.id, $event)"
+                        [attr.aria-label]="'pagamento do item ' + item.codigo"
+                        [class]="
+                          'rounded-lg border px-2 py-1 text-[11px] font-medium outline-none ' +
+                          (item.pagamento === 'PAGO'
+                            ? 'border-lime-200 bg-lime-50 text-lime-700'
+                            : 'border-amber-200 bg-amber-50 text-amber-700')
+                        "
+                      >
+                        <option value="PENDENTE" [selected]="item.pagamento === 'PENDENTE'">
+                          pagamento pendente
+                        </option>
+                        <option value="PAGO" [selected]="item.pagamento === 'PAGO'">pago</option>
+                      </select>
+                    }
+                    <button
+                      type="button"
+                      (click)="editarItem.emit(item.id)"
+                      class="flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-[11px] font-medium text-muted-foreground transition hover:text-foreground"
+                    >
+                      <svg [appIcon]="icons.Pencil" class="h-3 w-3"></svg>
+                      editar item
+                    </button>
+                  </div>
+                }
+              </li>
+            }
+          </ul>
+        </div>
+      }
+    </div>
+  }
+</app-dialog>

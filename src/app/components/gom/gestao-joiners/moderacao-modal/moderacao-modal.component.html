@@ -1,0 +1,87 @@
+<app-dialog
+  [open]="true"
+  (openChange)="onOpenChange($event)"
+  contentClass="fixed inset-x-0 bottom-0 z-50 max-h-[92dvh] overflow-y-auto rounded-t-3xl border-t border-border bg-card shadow-2xl no-scrollbar animate-in slide-in-from-bottom duration-200 sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:w-full sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:border"
+>
+  <div class="flex items-center justify-between border-b border-border/60 px-5 py-4">
+    <div>
+      <h2 class="text-sm font-bold">solicitar ao admin</h2>
+      <p class="text-[11px] text-muted-foreground">{{ joiner().nome }} · {{ joiner().username }}</p>
+    </div>
+    <button
+      type="button"
+      (click)="onOpenChange(false)"
+      aria-label="fechar"
+      class="grid h-9 w-9 place-items-center rounded-xl text-muted-foreground transition hover:bg-muted"
+    >
+      <svg [appIcon]="icons.X" class="h-4 w-4"></svg>
+    </button>
+  </div>
+
+  <form
+    class="space-y-4 px-5 pt-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))]"
+    (submit)="$event.preventDefault(); enviar()"
+  >
+    <div class="space-y-2" role="radiogroup" aria-label="o que solicitar">
+      @for (t of tipos; track t.value) {
+        <button
+          type="button"
+          role="radio"
+          [attr.aria-checked]="tipo() === t.value"
+          (click)="tipo.set(t.value)"
+          [class]="tipoClass(t.value)"
+        >
+          <svg [appIcon]="t.icon" class="mt-0.5 h-4 w-4 shrink-0"></svg>
+          <span>
+            <span class="block text-xs font-semibold">{{ META[t.value].acao }}</span>
+            <span class="block text-[11px] opacity-80">{{ META[t.value].descricao }}</span>
+          </span>
+        </button>
+      }
+    </div>
+
+    <label class="block space-y-1.5">
+      <span class="text-xs font-semibold">motivo (obrigatório)</span>
+      <textarea
+        rows="4"
+        [value]="motivo()"
+        (input)="motivo.set(val($event)); erro.set('')"
+        placeholder="explique o que aconteceu — o admin decide com base nisso."
+        [class]="INPUT_CLS + ' resize-none'"
+      ></textarea>
+      <span class="block text-[11px] text-muted-foreground">
+        @if (faltam() > 0) {
+          faltam {{ faltam() }} caractere{{ faltam() !== 1 ? "s" : "" }}
+        } @else {
+          ok ✓
+        }
+      </span>
+    </label>
+
+    <p class="rounded-2xl bg-muted/50 p-3 text-[11px] text-muted-foreground">
+      você só solicita: quem aprova ou recusa é o admin da KNODORI. a resposta chega nas suas
+      notificações.
+    </p>
+
+    @if (erro()) {
+      <p class="text-[11px] font-medium text-destructive">{{ erro() }}</p>
+    }
+
+    <div class="flex gap-2">
+      <button
+        type="button"
+        (click)="onOpenChange(false)"
+        class="h-11 flex-1 rounded-2xl border border-border text-sm font-medium text-muted-foreground transition hover:text-foreground"
+      >
+        cancelar
+      </button>
+      <button
+        type="submit"
+        [disabled]="faltam() > 0"
+        class="h-11 flex-1 rounded-2xl bg-destructive text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-40"
+      >
+        enviar solicitação
+      </button>
+    </div>
+  </form>
+</app-dialog>

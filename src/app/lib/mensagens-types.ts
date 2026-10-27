@@ -3,6 +3,7 @@
  * Uma conversa por par joiner ↔ GOM; cada mensagem pode (ou não) estar vinculada a um pedido.
  */
 
+import type { Autoria } from "./autoria";
 import { ITEM_META, type ItemKey } from "./gom-types";
 
 export interface Conversa {
@@ -26,6 +27,8 @@ export interface Mensagem {
   imagens?: string[];
   /** Lida pelo destinatário. */
   lida: boolean;
+  /** Quem escreveu de fato (dona ou admin, quando a equipe fala como a GOM). */
+  enviadoPor?: Autoria;
 }
 
 /** Resumo curto dos itens de um pedido ("2× photocard · 1× adesivo"). */

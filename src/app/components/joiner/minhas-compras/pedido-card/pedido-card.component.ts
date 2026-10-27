@@ -36,6 +36,8 @@ import {
 })
 export class PedidoCardComponent {
   readonly pedido = input.required<PedidoJoiner>();
+  /** Etapa do envio nacional em que o pedido está (null = ainda não pedido). */
+  readonly envioEtapa = input<string | null>(null);
   readonly solicitarRepasse = output<void>();
   readonly solicitarEnvio = output<void>();
 

@@ -1,3 +1,5 @@
+import type { Autoria } from "@/lib/autoria";
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -7,6 +9,8 @@ export type Moeda = "KRW" | "JPY" | "USD" | "IDR";
 
 export interface CegGOM {
   id: string;
+  /** Comunidade dona da CEG — as joiners dela veem a CEG na vitrine. */
+  comunidadeId: string;
   nome: string;
   loja: string;
   prazo: string;
@@ -18,6 +22,8 @@ export interface CegGOM {
   tipo?: "CAIXA_MERCARI";
   /** Frete internacional + taxas cobrados das joiners da caixa (após o fechamento). */
   cobranca?: CobrancaCaixa;
+  /** Última alteração feita por alguém da equipe (criação, edição, status). */
+  atualizadoPor?: Autoria;
 }
 
 export interface CobrancaCaixa {
@@ -28,6 +34,8 @@ export interface CobrancaCaixa {
   data: string; // ISO
   /** Joiners que já pagaram o frete + taxas desta caixa. */
   pagoPor?: string[];
+  /** Quem lançou a cobrança. */
+  por?: Autoria;
 }
 
 export interface Repasse {
@@ -38,6 +46,8 @@ export interface Repasse {
   valorPago: number;
   status: "PENDENTE" | "PARCIAL" | "PAGO";
   dataVencimento: string;
+  /** Quem registrou o último pagamento. */
+  atualizadoPor?: Autoria;
 }
 
 // ---------------------------------------------------------------------------
@@ -47,6 +57,7 @@ export interface Repasse {
 export const MOCK_CEGS: CegGOM[] = [
   {
     id: "ceg_cx1",
+    comunidadeId: "com_01",
     nome: "caixa mercari 3",
     loja: "Mercari",
     prazo: "2026-06-30",
@@ -58,6 +69,7 @@ export const MOCK_CEGS: CegGOM[] = [
   },
   {
     id: "ceg_cx_mai",
+    comunidadeId: "com_01",
     nome: "caixa mercari 2",
     loja: "Mercari",
     prazo: "2026-05-31",
@@ -75,6 +87,7 @@ export const MOCK_CEGS: CegGOM[] = [
   },
   {
     id: "ceg_cx_abr",
+    comunidadeId: "com_01",
     nome: "caixa mercari 1",
     loja: "Mercari",
     prazo: "2026-04-30",
@@ -93,6 +106,7 @@ export const MOCK_CEGS: CegGOM[] = [
   },
   {
     id: "ceg_01",
+    comunidadeId: "com_01",
     nome: "Cherry Haul Jun/26",
     loja: "Mercari",
     prazo: "2026-06-20",
@@ -103,6 +117,7 @@ export const MOCK_CEGS: CegGOM[] = [
   },
   {
     id: "ceg_02",
+    comunidadeId: "com_01",
     nome: "Spring Box Ktown4u",
     loja: "Ktown4u",
     prazo: "2026-07-05",
@@ -113,6 +128,7 @@ export const MOCK_CEGS: CegGOM[] = [
   },
   {
     id: "ceg_03",
+    comunidadeId: "com_01",
     nome: "WTS Álbuns Dopamine",
     loja: "Mercari",
     prazo: "2026-07-15",
@@ -123,6 +139,7 @@ export const MOCK_CEGS: CegGOM[] = [
   },
   {
     id: "ceg_04",
+    comunidadeId: "com_01",
     nome: "Winter Box Coreia",
     loja: "Weverse",
     prazo: "2026-08-01",
@@ -133,6 +150,7 @@ export const MOCK_CEGS: CegGOM[] = [
   },
   {
     id: "ceg_05",
+    comunidadeId: "com_01",
     nome: "Idol Power CEG",
     loja: "YesAsia",
     prazo: "2026-05-10",

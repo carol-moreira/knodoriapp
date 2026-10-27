@@ -162,6 +162,11 @@
                 cobrado: frete {{ brl(c.cobranca?.freteTotal ?? 0) }} + taxas
                 {{ brl(c.cobranca?.taxaPorJoiner ?? 0) }}/joiner
               </p>
+              @if (c.cobranca?.por; as por) {
+                <p class="text-[10px] text-muted-foreground">
+                  <app-assinatura [por]="por" acao="cobrado por" />
+                </p>
+              }
               @if (estaConfirmando(c.id, "chegou")) {
                 <div class="flex flex-wrap items-center gap-2 text-xs">
                   <span class="text-muted-foreground">a caixa chegou até você?</span>

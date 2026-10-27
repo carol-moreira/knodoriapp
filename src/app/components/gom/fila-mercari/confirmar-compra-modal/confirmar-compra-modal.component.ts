@@ -1,8 +1,9 @@
-import { Component, computed, effect, input, output, signal } from "@angular/core";
+import { Component, computed, effect, inject, input, output, signal } from "@angular/core";
 import { CheckCircle2, ImagePlus, Package, X } from "lucide-angular";
 import { DialogComponent } from "@/shared/dialog.component";
 import { IconDirective } from "@/shared/icon.directive";
 import { inputValue } from "@/shared/dom";
+import { ConfirmService } from "@/shared/confirm-dialog/confirm.service";
 import { ITEM_META, type SolicitacaoGOM } from "@/lib/gom-types";
 import { INPUT_CLS, type CegGOM } from "../../gerenciamento-cegs/cegs.model";
 
@@ -22,6 +23,8 @@ const MAX_PROOF_BYTES = 4 * 1024 * 1024;
   styleUrl: "./confirmar-compra-modal.component.scss",
 })
 export class ConfirmarCompraModalComponent {
+  private readonly confirm = inject(ConfirmService);
+
   readonly open = input.required<boolean>();
   readonly solicitacao = input.required<SolicitacaoGOM | null>();
   /** Caixas mercari abertas (recebendo pedidos). */
@@ -81,8 +84,9 @@ export class ConfirmarCompraModalComponent {
     }
   }
 
-  protected remover(i: number): void {
-    this.proofs.update((p) => p.filter((_, idx) => idx !== i));
+  protected async remover(i: number): Promise<void> {
+    const ok = await this.confirm.confirmar({ titulo: `excluir o proof ${i + 1}?` });
+    if (ok) this.proofs.update((p) => p.filter((_, idx) => idx !== i));
   }
 
   protected handleConfirm(): void {

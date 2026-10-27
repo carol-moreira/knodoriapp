@@ -3,15 +3,16 @@ import { Megaphone, Send, Trash2, TriangleAlert, X } from "lucide-angular";
 import { DialogComponent } from "@/shared/dialog.component";
 import { IconDirective } from "@/shared/icon.directive";
 import { inputValue } from "@/shared/dom";
-import { AuthService } from "@/services/auth.service";
+import { ConfirmService } from "@/shared/confirm-dialog/confirm.service";
 import { CEG_POST_META, CegPostsService, type CegPostTipo } from "@/services/ceg-posts.service";
 import { PedidosMercariService } from "@/services/pedidos-mercari.service";
 import { INPUT_CLS, type CegGOM } from "../cegs.model";
+import { AssinaturaComponent } from "@/shared/assinatura/assinatura.component";
 
 /** GOM publica comunicados e avisos (postagens) para as joiners da CEG. */
 @Component({
   selector: "app-novidades-modal",
-  imports: [DialogComponent, IconDirective],
+  imports: [DialogComponent, IconDirective, AssinaturaComponent],
   templateUrl: "./novidades-modal.component.html",
   styleUrl: "./novidades-modal.component.scss",
 })
@@ -20,9 +21,9 @@ export class NovidadesModalComponent {
   readonly ceg = input.required<CegGOM | null>();
   readonly closed = output<void>();
 
-  private readonly auth = inject(AuthService);
   private readonly pedidos = inject(PedidosMercariService);
   protected readonly posts = inject(CegPostsService);
+  private readonly confirm = inject(ConfirmService);
 
   protected readonly icons = { Megaphone, Send, Trash2, TriangleAlert, X };
   protected readonly INPUT_CLS = INPUT_CLS;
@@ -59,8 +60,16 @@ export class NovidadesModalComponent {
   protected publicar(): void {
     const ceg = this.ceg();
     if (!ceg || !this.texto().trim()) return;
-    this.posts.publicar(ceg.id, this.tipo(), this.texto(), this.auth.user()?.username ?? "GOM");
+    this.posts.publicar(ceg.id, this.tipo(), this.texto());
     this.texto.set("");
+  }
+
+  protected async remover(id: string): Promise<void> {
+    const ok = await this.confirm.confirmar({
+      titulo: "excluir postagem?",
+      mensagem: "ela some do feed das joiners da CEG.",
+    });
+    if (ok) this.posts.remover(id);
   }
 
   protected tipoClass(t: CegPostTipo): string {

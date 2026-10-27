@@ -1,81 +1,241 @@
 <app-dialog
   [open]="open()"
   (openChange)="onOpenChange($event)"
-  contentClass="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 cozy-card shadow-2xl animate-in zoom-in-95 fade-in duration-150"
+  contentClass="fixed inset-x-0 bottom-0 z-50 flex max-h-[92dvh] flex-col overflow-hidden rounded-t-3xl border-t border-border bg-card shadow-2xl animate-in slide-in-from-bottom duration-200 sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:max-h-[90vh] sm:w-full sm:max-w-2xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:border sm:zoom-in-95 sm:fade-in"
 >
-  <div class="flex items-center justify-between border-b border-border/60 px-6 py-4">
+  <!-- Cabeçalho -->
+  <div class="flex items-center justify-between border-b border-border/60 px-5 py-4 sm:px-6">
     <div>
       <h2 class="text-sm font-bold">nova CEG</h2>
-      <p class="text-[11px] text-muted-foreground">crie um novo grupo de pedido</p>
+      <p class="text-[11px] text-muted-foreground">
+        dados, itens e rodada de claims — a CEG já nasce pronta para a vitrine
+      </p>
     </div>
     <button
       type="button"
-      [disabled]="saving()"
       (click)="onOpenChange(false)"
-      class="rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted"
+      aria-label="fechar"
+      class="grid h-9 w-9 place-items-center rounded-xl text-muted-foreground transition hover:bg-muted"
     >
       <svg [appIcon]="icons.X" class="h-4 w-4"></svg>
     </button>
   </div>
 
-  <div class="space-y-4 px-6 py-5">
-    <div class="space-y-1.5">
-      <label class="text-xs font-semibold">nome da CEG</label>
-      <input
-        type="text"
-        [value]="nome()"
-        (input)="nome.set(val($event))"
-        placeholder="ex: summer haul jul/26"
-        [class]="INPUT_CLS"
-      />
-    </div>
-
-    <div class="grid grid-cols-2 gap-3">
-      <div class="space-y-1.5">
-        <label class="text-xs font-semibold">loja</label>
-        <select (change)="loja.set(val($event))" [class]="INPUT_CLS">
-          @for (l of lojas; track l) {
-            <option [selected]="l === loja()">{{ l }}</option>
-          }
-        </select>
+  <form
+    class="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5 no-scrollbar sm:px-6"
+    (submit)="$event.preventDefault(); salvar()"
+    id="form-nova-ceg"
+  >
+    <!-- ── Dados da CEG ──────────────────────────────────────────────── -->
+    <section class="space-y-3">
+      <h3 class="flex items-center gap-1.5 text-xs font-semibold">
+        <svg [appIcon]="icons.Layers" class="h-3.5 w-3.5 text-primary"></svg>
+        dados da CEG
+      </h3>
+      <label class="block space-y-1.5">
+        <span class="text-[11px] font-medium text-muted-foreground">nome</span>
+        <input
+          type="text"
+          [value]="nome()"
+          (input)="nome.set(val($event))"
+          placeholder="ex: summer haul jul/26"
+          [class]="INPUT_CLS"
+        />
+      </label>
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <label class="block space-y-1.5">
+          <span class="text-[11px] font-medium text-muted-foreground">loja</span>
+          <select (change)="loja.set(val($event))" [class]="INPUT_CLS">
+            @for (l of lojas; track l) {
+              <option [selected]="l === loja()">{{ l }}</option>
+            }
+          </select>
+        </label>
+        <label class="block space-y-1.5">
+          <span class="text-[11px] font-medium text-muted-foreground">moeda</span>
+          <select (change)="moeda.set($any(val($event)))" [class]="INPUT_CLS">
+            @for (m of moedas; track m) {
+              <option [selected]="m === moeda()">{{ m }}</option>
+            }
+          </select>
+        </label>
+        <label class="block space-y-1.5">
+          <span class="text-[11px] font-medium text-muted-foreground">prazo</span>
+          <input
+            type="date"
+            [value]="prazo()"
+            (input)="prazo.set(val($event))"
+            [min]="hoje"
+            [class]="INPUT_CLS"
+          />
+        </label>
+        <label class="block space-y-1.5">
+          <span class="text-[11px] font-medium text-muted-foreground">status</span>
+          <select (change)="status.set($any(val($event)))" [class]="INPUT_CLS">
+            @for (s of statusList; track s) {
+              <option [value]="s" [selected]="s === status()">{{ STATUS_META[s].label }}</option>
+            }
+          </select>
+        </label>
       </div>
-      <div class="space-y-1.5">
-        <label class="text-xs font-semibold">moeda</label>
-        <select (change)="moeda.set($any(val($event)))" [class]="INPUT_CLS">
-          @for (m of moedas; track m) {
-            <option [selected]="m === moeda()">{{ m }}</option>
-          }
-        </select>
+      @if (status() !== "ABERTA") {
+        <p class="text-[11px] text-amber-700">
+          só CEGs abertas aparecem na vitrine e aceitam claims.
+        </p>
+      }
+    </section>
+
+    <!-- ── Itens ─────────────────────────────────────────────────────── -->
+    <section class="space-y-3">
+      <div class="flex items-baseline justify-between gap-2">
+        <h3 class="text-xs font-semibold">itens ({{ resumo().qtd }})</h3>
+        @if (resumo().qtd > 0) {
+          <span class="text-[11px] text-muted-foreground">total {{ brl(resumo().total) }}</span>
+        }
       </div>
-    </div>
 
-    <div class="space-y-1.5">
-      <label class="text-xs font-semibold">prazo de encerramento</label>
-      <input
-        type="date"
-        [value]="prazo()"
-        (input)="prazo.set(val($event))"
-        [min]="hoje"
-        [class]="INPUT_CLS"
-      />
-    </div>
-
-    <div class="flex gap-2 pt-1">
+      <ul class="space-y-2">
+        @for (i of itens(); track i.key; let n = $index) {
+          <li
+            class="grid grid-cols-[4.5rem_1fr_auto] gap-2 rounded-2xl border border-border/60 bg-muted/20 p-2.5 sm:grid-cols-[5rem_1fr_7.5rem_auto]"
+          >
+            <input
+              [value]="i.codigo"
+              (input)="atualizarLinha(i.key, { codigo: val($event) })"
+              placeholder="cód."
+              [attr.aria-label]="'código do item ' + (n + 1)"
+              [class]="INPUT_CLS"
+            />
+            <input
+              [value]="i.nome"
+              (input)="atualizarLinha(i.key, { nome: val($event) })"
+              placeholder="nome / descrição"
+              [attr.aria-label]="'nome do item ' + (n + 1)"
+              [class]="INPUT_CLS"
+            />
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              [appNumberValue]="i.valor"
+              (input)="atualizarLinha(i.key, { valor: +val($event) })"
+              placeholder="R$"
+              [attr.aria-label]="'valor do item ' + (n + 1)"
+              [class]="INPUT_CLS + ' col-span-2 sm:col-span-1'"
+            />
+            <button
+              type="button"
+              (click)="removerLinha(i)"
+              [attr.aria-label]="'excluir item ' + (n + 1)"
+              class="row-start-1 col-start-3 grid h-10 w-10 place-items-center self-center rounded-xl text-muted-foreground transition hover:bg-muted hover:text-destructive sm:col-start-4"
+            >
+              <svg [appIcon]="icons.Trash2" class="h-4 w-4"></svg>
+            </button>
+          </li>
+        }
+      </ul>
       <button
         type="button"
-        [disabled]="saving()"
+        (click)="adicionarLinha()"
+        class="flex h-10 w-full items-center justify-center gap-1.5 rounded-2xl border border-dashed border-border text-xs font-medium text-muted-foreground transition hover:border-primary/40 hover:text-primary"
+      >
+        <svg [appIcon]="icons.Plus" class="h-3.5 w-3.5"></svg>
+        adicionar item
+      </button>
+    </section>
+
+    <!-- ── Rodada de claims ──────────────────────────────────────────── -->
+    <section class="space-y-3">
+      <button
+        type="button"
+        role="switch"
+        [attr.aria-checked]="agendar()"
+        (click)="agendar.set(!agendar())"
+        class="flex w-full items-center gap-3 rounded-2xl border border-border/60 p-3 text-left transition hover:bg-muted/40"
+      >
+        <svg [appIcon]="icons.CalendarClock" class="h-4 w-4 shrink-0 text-primary"></svg>
+        <span class="flex-1">
+          <span class="block text-xs font-semibold">agendar a rodada de claims</span>
+          <span class="block text-[11px] text-muted-foreground">
+            as joiners recebem o aviso prévio e o aviso de abertura
+          </span>
+        </span>
+        <span
+          [class]="
+            'relative h-6 w-10 shrink-0 rounded-full transition ' +
+            (agendar() ? 'bg-primary' : 'bg-muted')
+          "
+        >
+          <span
+            [class]="
+              'absolute top-0.5 h-5 w-5 rounded-full bg-card shadow transition-all ' +
+              (agendar() ? 'left-4.5' : 'left-0.5')
+            "
+          ></span>
+        </span>
+      </button>
+
+      @if (agendar()) {
+        <div class="grid gap-3 sm:grid-cols-3">
+          <label class="block space-y-1.5">
+            <span class="text-[11px] font-medium text-muted-foreground">abre em</span>
+            <input
+              type="datetime-local"
+              [value]="abreEm()"
+              (input)="abreEm.set(val($event))"
+              [class]="INPUT_CLS"
+            />
+          </label>
+          <label class="block space-y-1.5">
+            <span class="text-[11px] font-medium text-muted-foreground">fecha em (opcional)</span>
+            <input
+              type="datetime-local"
+              [value]="fechaEm()"
+              (input)="fechaEm.set(val($event))"
+              [class]="INPUT_CLS"
+            />
+          </label>
+          <label class="block space-y-1.5">
+            <span class="text-[11px] font-medium text-muted-foreground">aviso prévio</span>
+            <select (change)="avisoMinutos.set(+val($event))" [class]="INPUT_CLS">
+              @for (m of avisoOpcoes; track m) {
+                <option [value]="m" [selected]="m === avisoMinutos()">
+                  {{ m === 0 ? "sem aviso" : m + " min antes" }}
+                </option>
+              }
+            </select>
+          </label>
+        </div>
+      } @else {
+        <p class="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <svg [appIcon]="icons.Hand" class="h-3 w-3"></svg>
+          dá para agendar depois em “itens & claims” no card da CEG.
+        </p>
+      }
+    </section>
+  </form>
+
+  <!-- Rodapé -->
+  <div
+    class="space-y-2 border-t border-border/60 px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:px-6 sm:pb-4"
+  >
+    @if (erro()) {
+      <p class="text-[11px] font-medium text-destructive">{{ erro() }}</p>
+    }
+    <div class="flex gap-2">
+      <button
+        type="button"
         (click)="onOpenChange(false)"
-        class="flex-1 rounded-2xl border border-border py-2.5 text-sm font-medium text-muted-foreground transition hover:text-foreground disabled:opacity-50"
+        class="h-11 flex-1 rounded-2xl border border-border text-sm font-medium text-muted-foreground transition hover:text-foreground"
       >
         cancelar
       </button>
       <button
-        type="button"
-        (click)="handleSave()"
-        [disabled]="!canSave() || saving()"
-        class="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
+        type="submit"
+        form="form-nova-ceg"
+        class="h-11 flex-1 rounded-2xl bg-primary text-sm font-semibold text-primary-foreground transition hover:opacity-90 active:scale-[0.98]"
       >
-        {{ saving() ? "criando…" : "criar CEG" }}
+        criar CEG
       </button>
     </div>
   </div>

@@ -1,12 +1,13 @@
 import { Component, inject } from "@angular/core";
 import { Router } from "@angular/router";
 import { LayoutComponent } from "./components/layout/layout.component";
+import { ConfirmDialogComponent } from "./shared/confirm-dialog/confirm-dialog.component";
 import { AppErrorService } from "./services/app-error.service";
 import { ThemeService } from "./services/theme.service";
 
 @Component({
   selector: "app-root",
-  imports: [LayoutComponent],
+  imports: [LayoutComponent, ConfirmDialogComponent],
   templateUrl: "./app.html",
   styleUrl: "./app.scss",
 })

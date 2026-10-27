@@ -4,6 +4,8 @@
  * Toda query deve filtrar por gomId — o escopo é sempre o da GOM logada.
  */
 
+import type { Autoria } from "./autoria";
+
 // ---------------------------------------------------------------------------
 // Solicitação Mercari (perspectiva da GOM)
 // ---------------------------------------------------------------------------
@@ -97,6 +99,8 @@ export interface SolicitacaoGOM {
   cegNome?: string;
   /** Imagens de proof da compra anexadas pela GOM. */
   proofs?: string[];
+  /** Última alteração (etapa, compra confirmada, caixa…) e quem fez. */
+  atualizadoPor?: Autoria;
 }
 
 // ---------------------------------------------------------------------------

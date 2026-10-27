@@ -1,4 +1,4 @@
-import { Injectable, computed, signal } from "@angular/core";
+import { Injectable, computed, inject, signal } from "@angular/core";
 import {
   delay,
   type AuthStatus,
@@ -6,6 +6,8 @@ import {
   type OnboardingData,
   type UserRole,
 } from "@/lib/auth";
+import { ComunidadeService } from "./comunidade.service";
+import { UsuariosService } from "./usuarios.service";
 
 // ---------------------------------------------------------------------------
 // Mocks de usuários para desenvolvimento
@@ -43,6 +45,9 @@ const MOCK_GOOGLE_USER: AuthUser = {
 /** Estado global da sessão (substitui o AuthProvider/useAuth do React). */
 @Injectable({ providedIn: "root" })
 export class AuthService {
+  private readonly comunidade = inject(ComunidadeService);
+  private readonly usuarios = inject(UsuariosService);
+
   private readonly _user = signal<AuthUser | null>(null);
   private readonly _status = signal<AuthStatus>("unauthenticated");
   private readonly _needsOnboarding = signal(false);
@@ -57,9 +62,39 @@ export class AuthService {
   // Real: POST /api/auth/login → { token, user }
   // ---------------------------------------------------------------------------
   async signInWithEmail(email: string, _password: string): Promise<void> {
+    // Conta suspensa (banimento aprovado pelo admin) não entra — 🔌 o servidor recusa o login
+    const membro = this.comunidade.membroPorEmail(email);
+    const username =
+      membro?.username ??
+      (email.startsWith("admin@") || email.startsWith("gom@") ? null : MOCK_JOINER_USER.username);
+    if (username && this.usuarios.suspenso(username)) {
+      throw new Error("sua conta está suspensa. fale com o suporte da KNODORI.");
+    }
+
     this._status.set("loading");
     try {
       await delay(700);
+
+      // E-mail cadastrado numa comunidade (dona ou admin) → entra como GOM daquela comunidade
+      if (membro) {
+        const comunidade = this.comunidade.comunidade();
+        this.comunidade.registrarAcesso(membro.id);
+        this._user.set({
+          id: membro.id,
+          email: membro.email,
+          username: membro.username,
+          nome: membro.nome,
+          role: "GOM",
+          gomId: comunidade.gomId,
+          comunidadeId: comunidade.id,
+          comunidadeNome: comunidade.nome,
+          papel: membro.papel,
+        });
+        this._needsOnboarding.set(false);
+        this._status.set("authenticated");
+        return;
+      }
+
       // Dev: prefixo do e-mail define o role → admin@, gom@, qualquer outro = JOINER
       const role: UserRole = email.startsWith("admin@")
         ? "ADMIN"
@@ -67,7 +102,21 @@ export class AuthService {
           ? "GOM"
           : "JOINER";
       const base = role === "JOINER" ? MOCK_JOINER_USER : MOCK_EXISTING_USER;
-      this._user.set({ ...base, email, role });
+      const comunidade = this.comunidade.comunidade();
+      this._user.set({
+        ...base,
+        email,
+        role,
+        // Qualquer outro gom@… entra como a dona da comunidade mock
+        ...(role === "GOM"
+          ? {
+              gomId: comunidade.gomId,
+              comunidadeId: comunidade.id,
+              comunidadeNome: comunidade.nome,
+              papel: "DONA" as const,
+            }
+          : {}),
+      });
       this._needsOnboarding.set(false);
       this._status.set("authenticated");
     } catch {

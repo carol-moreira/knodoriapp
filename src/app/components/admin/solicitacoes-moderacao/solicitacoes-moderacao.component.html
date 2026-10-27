@@ -1,0 +1,82 @@
+<section class="cozy-card space-y-4 p-4 sm:p-5">
+  <div>
+    <h2 class="flex items-center gap-1.5 text-sm font-semibold">
+      <svg [appIcon]="icons.ShieldAlert" class="h-4 w-4 text-primary"></svg>
+      solicitações das GOMs
+      @if (moderacao.pendentes().length > 0) {
+        <span class="rounded-full bg-amber-500 px-1.5 text-[10px] font-bold text-white">
+          {{ moderacao.pendentes().length }}
+        </span>
+      }
+    </h2>
+    <p class="mt-0.5 text-xs text-muted-foreground">
+      remoções e banimentos de joiners pedidos pelas comunidades — só valem depois da sua aprovação.
+    </p>
+  </div>
+
+  @for (s of moderacao.pendentes(); track s.id) {
+    <article class="space-y-3 rounded-2xl border border-border/60 p-4">
+      <div class="flex flex-wrap items-center gap-1.5">
+        <span [class]="'cozy-pill text-[10px] font-semibold ' + TIPO[s.tipo].badge">
+          {{ TIPO[s.tipo].label }}
+        </span>
+        <span class="text-sm font-semibold">{{ s.joinerNome }}</span>
+        <span class="text-xs text-muted-foreground">{{ s.joinerUsername }}</span>
+        <span class="text-xs text-muted-foreground">· {{ s.comunidadeNome }}</span>
+      </div>
+      <blockquote class="rounded-xl bg-muted/50 px-3 py-2 text-sm">“{{ s.motivo }}”</blockquote>
+      <p class="text-[10px] text-muted-foreground">
+        <app-assinatura [por]="s.solicitadoPor" acao="solicitado por" />
+      </p>
+      <textarea
+        rows="2"
+        [value]="respostas()[s.id] ?? ''"
+        (input)="setResposta(s.id, $any($event.target).value)"
+        placeholder="resposta para a GOM (opcional)"
+        aria-label="resposta para a GOM"
+        class="w-full resize-none rounded-xl border border-border bg-muted/40 px-3 py-2 text-sm outline-none transition placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/20"
+      ></textarea>
+      <div class="flex gap-2">
+        <button
+          type="button"
+          (click)="recusar(s)"
+          class="h-10 flex-1 rounded-2xl border border-border text-xs font-medium text-muted-foreground transition hover:text-foreground"
+        >
+          recusar
+        </button>
+        <button
+          type="button"
+          (click)="aprovar(s)"
+          class="h-10 flex-1 rounded-2xl bg-destructive text-xs font-semibold text-white transition hover:opacity-90"
+        >
+          aprovar {{ TIPO[s.tipo].label }}
+        </button>
+      </div>
+    </article>
+  } @empty {
+    <p
+      class="rounded-2xl border border-dashed border-border py-6 text-center text-xs text-muted-foreground"
+    >
+      nenhuma solicitação pendente.
+    </p>
+  }
+
+  @if (decididas().length > 0) {
+    <div class="space-y-2 border-t border-border/60 pt-3">
+      <p class="text-[11px] font-semibold text-muted-foreground">decididas recentemente</p>
+      @for (s of decididas(); track s.id) {
+        <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
+          <span [class]="'cozy-pill text-[10px] font-semibold ' + STATUS[s.status].badge">
+            {{ STATUS[s.status].label }}
+          </span>
+          <span>{{ TIPO[s.tipo].label }} de {{ s.joinerUsername }} ({{ s.comunidadeNome }})</span>
+          @if (s.decididoPor; as por) {
+            <span class="text-[10px] text-muted-foreground">
+              <app-assinatura [por]="por" acao="decidido por" />
+            </span>
+          }
+        </div>
+      }
+    </div>
+  }
+</section>

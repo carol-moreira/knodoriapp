@@ -6,6 +6,7 @@ import {
   type Conversa,
   type Mensagem,
 } from "@/lib/mensagens-types";
+import { autoriaDe } from "@/lib/autoria";
 import { AuthService } from "./auth.service";
 import { NotificacoesService } from "./notificacoes.service";
 
@@ -23,14 +24,23 @@ export class MensagensService {
     const user = this.auth.user();
     if (!user) return [];
     return this._conversas().filter((c) =>
-      user.role === "GOM" ? c.gomId === user.id : c.joinerId === user.id,
+      user.role === "GOM" ? c.gomId === (user.gomId ?? user.id) : c.joinerId === user.id,
     );
+  });
+
+  /**
+   * Id do usuário logado nas conversas. Dona e admins da comunidade falam como a conta da GOM,
+   * então o "eu" da equipe é o `gomId`.
+   */
+  private readonly meuId = computed(() => {
+    const user = this.auth.user();
+    return user?.role === "GOM" ? (user.gomId ?? user.id) : user?.id;
   });
 
   /** Total de mensagens recebidas e não lidas (badge da navegação). */
   readonly naoLidas = computed(() => {
     const ids = new Set(this.minhasConversas().map((c) => c.id));
-    const meuId = this.auth.user()?.id;
+    const meuId = this.meuId();
     return this._mensagens().filter((m) => ids.has(m.conversaId) && m.autorId !== meuId && !m.lida)
       .length;
   });
@@ -47,7 +57,7 @@ export class MensagensService {
   }
 
   naoLidasDa(conversaId: string): number {
-    const meuId = this.auth.user()?.id;
+    const meuId = this.meuId();
     return this._mensagens().filter(
       (m) => m.conversaId === conversaId && m.autorId !== meuId && !m.lida,
     ).length;
@@ -92,16 +102,17 @@ export class MensagensService {
     const mensagem: Mensagem = {
       id: `msg_${Date.now()}`,
       conversaId,
-      autorId: user.id,
+      autorId: this.meuId() ?? user.id,
       texto: conteudo,
       data: new Date().toISOString(),
       pedidoId,
       imagens: imagens.length > 0 ? imagens : undefined,
       lida: false,
+      enviadoPor: autoriaDe(user),
     };
     this._mensagens.update((prev) => [...prev, mensagem]);
 
-    const daGom = user.id === conversa.gomId;
+    const daGom = user.role === "GOM";
     const resumo = !conteudo
       ? `📷 ${imagens.length} imagem${imagens.length > 1 ? "ns" : ""}`
       : conteudo.length > 90
@@ -116,7 +127,7 @@ export class MensagensService {
 
   /** Marca como lidas as mensagens que o usuário logado recebeu nesta conversa. */
   marcarLidas(conversaId: string): void {
-    const meuId = this.auth.user()?.id;
+    const meuId = this.meuId();
     if (!meuId || this.naoLidasDa(conversaId) === 0) return;
     // 🔌 POST /api/conversas/:id/lidas
     this._mensagens.update((prev) =>

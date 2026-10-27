@@ -10,6 +10,7 @@ import {
 } from "@/lib/gom-types";
 import { IconDirective } from "@/shared/icon.directive";
 import { inputValue } from "@/shared/dom";
+import { AssinaturaComponent } from "@/shared/assinatura/assinatura.component";
 
 // ---------------------------------------------------------------------------
 // Filtros
@@ -31,7 +32,7 @@ export interface StatusChange {
 
 @Component({
   selector: "app-fila-mercari",
-  imports: [IconDirective],
+  imports: [IconDirective, AssinaturaComponent],
   templateUrl: "./fila-mercari.component.html",
   styleUrl: "./fila-mercari.component.scss",
 })

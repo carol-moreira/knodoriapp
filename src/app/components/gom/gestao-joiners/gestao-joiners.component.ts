@@ -1,4 +1,4 @@
-import { Component, computed, input, signal } from "@angular/core";
+import { Component, computed, inject, input, signal } from "@angular/core";
 import {
   AlertCircle,
   CheckCircle2,
@@ -6,6 +6,7 @@ import {
   ChevronUp,
   Clock,
   Package,
+  ShieldAlert,
   ShoppingBag,
   Truck,
   User,
@@ -18,7 +19,13 @@ import {
   type JoinerResumo,
   type StatusConta,
 } from "@/lib/gom-types";
+import { STATUS_MODERACAO_META, TIPO_MODERACAO_META } from "@/lib/moderacao-types";
+import { AuthService } from "@/services/auth.service";
+import { ComunidadeService } from "@/services/comunidade.service";
+import { ModeracaoService } from "@/services/moderacao.service";
+import { AssinaturaComponent } from "@/shared/assinatura/assinatura.component";
 import { IconDirective } from "@/shared/icon.directive";
+import { ModeracaoModalComponent } from "./moderacao-modal/moderacao-modal.component";
 import { DevedoresComponent } from "./devedores/devedores.component";
 
 // ---------------------------------------------------------------------------
@@ -52,18 +59,42 @@ const PEDIDO_LABEL: Record<string, string> = Object.fromEntries(
 
 @Component({
   selector: "app-gestao-joiners",
-  imports: [IconDirective, DevedoresComponent],
+  imports: [IconDirective, DevedoresComponent, AssinaturaComponent, ModeracaoModalComponent],
   templateUrl: "./gestao-joiners.component.html",
   styleUrl: "./gestao-joiners.component.scss",
 })
 export class GestaoJoinersComponent {
   readonly joiners = input.required<JoinerResumo[]>();
 
+  private readonly auth = inject(AuthService);
+  private readonly comunidade = inject(ComunidadeService);
+  protected readonly moderacao = inject(ModeracaoService);
+
+  protected readonly MOD_TIPO = TIPO_MODERACAO_META;
+  protected readonly MOD_STATUS = STATUS_MODERACAO_META;
+
+  /** Joiner com o modal de remoção/banimento aberto. */
+  protected readonly moderando = signal<JoinerResumo | null>(null);
+
+  private readonly comunidadeId = computed(
+    () => this.auth.user()?.comunidadeId ?? this.comunidade.comunidade().id,
+  );
+
+  /** Só as joiners que participam da comunidade (remoções aprovadas saem da lista). */
+  protected readonly visiveis = computed(() =>
+    this.joiners().filter((j) => this.comunidade.participa(j.id, this.comunidadeId())),
+  );
+
+  protected solicitacaoDe(joinerId: string) {
+    return this.moderacao.ultimaDoJoiner(joinerId, this.comunidadeId());
+  }
+
   protected readonly icons = {
     AlertCircle,
     ChevronDown,
     ChevronUp,
     Package,
+    ShieldAlert,
     ShoppingBag,
     Truck,
     User,
@@ -75,10 +106,10 @@ export class GestaoJoinersComponent {
   protected readonly expandedId = signal<string | null>(null);
 
   protected readonly totalFretes = computed(() =>
-    this.joiners().reduce((s, j) => s + j.valorFretesPendentes, 0),
+    this.visiveis().reduce((s, j) => s + j.valorFretesPendentes, 0),
   );
   protected readonly inadimplentes = computed(
-    () => this.joiners().filter((j) => j.statusConta === "INADIMPLENTE").length,
+    () => this.visiveis().filter((j) => j.statusConta === "INADIMPLENTE").length,
   );
 
   protected toggle(id: string): void {

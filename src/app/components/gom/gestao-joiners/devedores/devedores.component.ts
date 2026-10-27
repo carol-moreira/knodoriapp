@@ -8,11 +8,12 @@ import {
 } from "@/services/cobrancas.service";
 import { IconDirective } from "@/shared/icon.directive";
 import { CobrancaWhatsappModalComponent } from "../cobranca-whatsapp-modal/cobranca-whatsapp-modal.component";
+import { AssinaturaComponent } from "@/shared/assinatura/assinatura.component";
 
 /** Joiners com pagamentos pendentes (itens, fretes e taxas) + cobrança pelo WhatsApp. */
 @Component({
   selector: "app-devedores",
-  imports: [IconDirective, CobrancaWhatsappModalComponent],
+  imports: [IconDirective, CobrancaWhatsappModalComponent, AssinaturaComponent],
   templateUrl: "./devedores.component.html",
   styleUrl: "./devedores.component.scss",
 })

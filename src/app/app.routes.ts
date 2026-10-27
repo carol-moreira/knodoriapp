@@ -1,12 +1,6 @@
 import type { Routes } from "@angular/router";
-import {
-  MOCK_API_KEYS,
-  MOCK_CHART_DATA,
-  MOCK_DB_STATUS,
-  MOCK_LOGS,
-  MOCK_USERS,
-} from "@/lib/admin-types";
-import { CONFIG_TAXAS_DEFAULT, MOCK_JOINERS } from "@/lib/gom-types";
+import { MOCK_API_KEYS, MOCK_CHART_DATA, MOCK_DB_STATUS, MOCK_LOGS } from "@/lib/admin-types";
+import { MOCK_JOINERS } from "@/lib/gom-types";
 import type { RouteSeo } from "./services/seo-title.strategy";
 
 /**
@@ -115,8 +109,7 @@ export const routes: Routes = [
         path: "usuarios",
         title: "usuários · KNODORI",
         data: {
-          seo: seo("controle global de usuários, roles e banimentos."),
-          usuarios: MOCK_USERS,
+          seo: seo("controle global de usuários, roles, banimentos e pedidos das GOMs."),
         },
         loadComponent: () =>
           import("./components/admin/controle-usuarios/controle-usuarios.component").then(
@@ -166,6 +159,15 @@ export const routes: Routes = [
           ),
       },
       {
+        path: "claims",
+        title: "claims · KNODORI",
+        data: { seo: seo("salas de claims: chat da rodada e moderação dos claims.") },
+        loadComponent: () =>
+          import("./components/claims/gom-claims/gom-claims.component").then(
+            (m) => m.GomClaimsComponent,
+          ),
+      },
+      {
         path: "financeiro",
         title: "financeiro · KNODORI",
         data: { seo: seo("resumo financeiro das suas CEGs.") },
@@ -177,6 +179,15 @@ export const routes: Routes = [
         title: "fila mercari · KNODORI",
         data: { seo: seo("gerencie os pedidos mercari e acompanhe o status das solicitações.") },
         loadComponent: () => import("./pages/gom-fila/gom-fila.page").then((m) => m.GomFilaPage),
+      },
+      {
+        path: "envios",
+        title: "envios nacionais · KNODORI",
+        data: { seo: seo("frete, pagamento, postagem e entrega dos envios nacionais.") },
+        loadComponent: () =>
+          import("./components/envios/gom-envios/gom-envios.component").then(
+            (m) => m.GomEnviosComponent,
+          ),
       },
       {
         path: "mensagens",
@@ -197,14 +208,14 @@ export const routes: Routes = [
           ),
       },
       {
-        path: "taxas",
-        title: "taxas · KNODORI",
-        data: { seo: seo("configure spreads e markups por item."), config: CONFIG_TAXAS_DEFAULT },
+        path: "ajustes",
+        title: "ajustes · KNODORI",
+        data: { seo: seo("taxas, comunidade, admins e aparência.") },
         loadComponent: () =>
-          import("./components/gom/painel-taxas/painel-taxas.component").then(
-            (m) => m.PainelTaxasComponent,
-          ),
+          import("./components/gom/ajustes/ajustes.component").then((m) => m.AjustesComponent),
       },
+      // Antigo nome da página de ajustes
+      { path: "taxas", redirectTo: "ajustes" },
     ],
   },
 
@@ -240,6 +251,35 @@ export const routes: Routes = [
         loadComponent: () =>
           import("./components/joiner/minhas-cegs/minhas-cegs.component").then(
             (m) => m.MinhasCegsComponent,
+          ),
+      },
+      {
+        path: "vitrine",
+        title: "vitrine · KNODORI",
+        data: { seo: seo("CEGs abertas das suas comunidades — dê claim direto nos itens.") },
+        loadComponent: () =>
+          import("./components/joiner/vitrine-cegs/vitrine-cegs.component").then(
+            (m) => m.VitrineCegsComponent,
+          ),
+      },
+      {
+        path: "claims",
+        title: "claims · KNODORI",
+        data: { seo: seo("dê claim nos itens das CEGs direto pelo chat da rodada.") },
+        loadComponent: () =>
+          import("./components/claims/joiner-claims/joiner-claims.component").then(
+            (m) => m.JoinerClaimsComponent,
+          ),
+      },
+      {
+        path: "envios",
+        title: "envios · KNODORI",
+        data: {
+          seo: seo("peça o envio nacional dos itens que já chegaram e acompanhe o rastreio."),
+        },
+        loadComponent: () =>
+          import("./components/envios/joiner-envios/joiner-envios.component").then(
+            (m) => m.JoinerEnviosComponent,
           ),
       },
       {

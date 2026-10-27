@@ -66,6 +66,11 @@
               (linha.minha ? 'text-primary-foreground/70' : 'text-muted-foreground')
             "
           >
+            @if (linha.mensagem.enviadoPor; as por) {
+              @if (por.id !== linha.mensagem.autorId) {
+                <app-assinatura [por]="por" acao="enviado por" [semData]="true" /> ·
+              }
+            }
             {{ fmtHora(linha.mensagem.data) }}
           </p>
         </div>

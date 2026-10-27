@@ -1,3 +1,4 @@
+import type { Autoria } from "./autoria";
 // ---------------------------------------------------------------------------
 // Repasse de claim — tipos e mocks (sem estado).
 // O estado vive em RepassesService (src/app/services/repasses.service.ts).
@@ -35,6 +36,8 @@ export interface SolicitacaoRepasse {
   status: RepasseStatus;
   dataSolicitacao: string; // ISO
   dataConfirmacao?: string; // ISO
+  /** Quem da equipe confirmou o repasse. */
+  confirmadoPor?: Autoria;
 }
 
 export const REPASSE_STATUS_META: Record<RepasseStatus, { label: string; cls: string }> = {
