@@ -3,6 +3,8 @@
 // O estado da sessão vive em AuthService (src/app/services/auth.service.ts).
 // ---------------------------------------------------------------------------
 
+import type { PapelComunidade } from "./comunidade-types";
+
 export type UserRole = "ADMIN" | "GOM" | "JOINER";
 
 export interface AuthUser {
@@ -15,6 +17,12 @@ export interface AuthUser {
   telefone?: string;
   faves?: string;
   wishlistUrl?: string;
+  // Só para role GOM — dona ou admin da comunidade
+  /** Conta da GOM dona da comunidade (escopo dos dados). Igual a `id` para a dona. */
+  gomId?: string;
+  comunidadeId?: string;
+  comunidadeNome?: string;
+  papel?: PapelComunidade;
 }
 
 export interface OnboardingData {

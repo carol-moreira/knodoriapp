@@ -1,0 +1,38 @@
+<app-dialog
+  [open]="!!confirm.pedido()"
+  (openChange)="onOpenChange($event)"
+  overlayClass="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm animate-in fade-in duration-150"
+  contentClass="fixed left-1/2 top-1/2 z-[60] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 cozy-card p-6 shadow-2xl animate-in zoom-in-95 fade-in duration-150"
+>
+  @if (confirm.pedido(); as p) {
+    <div class="space-y-4 text-center" role="alertdialog" aria-labelledby="confirm-titulo">
+      <div
+        class="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-destructive/10 text-destructive"
+      >
+        <svg [appIcon]="p.icone" class="h-5 w-5"></svg>
+      </div>
+      <div class="space-y-1">
+        <h2 id="confirm-titulo" class="text-base font-bold">{{ p.titulo }}</h2>
+        @if (p.mensagem) {
+          <p class="text-sm text-muted-foreground">{{ p.mensagem }}</p>
+        }
+      </div>
+      <div class="flex gap-2">
+        <button
+          type="button"
+          (click)="confirm.responder(false)"
+          class="h-11 flex-1 rounded-2xl border border-border text-sm font-medium text-muted-foreground transition hover:text-foreground"
+        >
+          {{ p.cancelar }}
+        </button>
+        <button
+          type="button"
+          (click)="confirm.responder(true)"
+          class="h-11 flex-1 rounded-2xl bg-destructive text-sm font-semibold text-white transition hover:opacity-90 active:scale-[0.98]"
+        >
+          {{ p.confirmar }}
+        </button>
+      </div>
+    </div>
+  }
+</app-dialog>

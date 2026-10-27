@@ -7,6 +7,7 @@ import {
   type SolicitacaoRepasse,
 } from "@/lib/repasse-types";
 import { AuthService } from "./auth.service";
+import { AssinaturaService } from "./assinatura.service";
 import { NotificacoesService } from "./notificacoes.service";
 import { PedidosMercariService } from "./pedidos-mercari.service";
 
@@ -25,6 +26,7 @@ export interface NovaSolicitacaoRepasse {
 export class RepassesService {
   private readonly auth = inject(AuthService);
   private readonly notificacoes = inject(NotificacoesService);
+  private readonly assinatura = inject(AssinaturaService);
   private readonly pedidos = inject(PedidosMercariService);
 
   private readonly _solicitacoes = signal<SolicitacaoRepasse[]>(MOCK_SOLICITACOES_REPASSE);
@@ -71,6 +73,10 @@ export class RepassesService {
       dataSolicitacao: new Date().toISOString(),
     };
     this._solicitacoes.update((prev) => [solicitacao, ...prev]);
+    this.assinatura.assinar(
+      "REPASSE",
+      `pediu o repasse de ${nova.itemDescricao} (${nova.cegNome}) para ${nova.destinatario.username}`,
+    );
 
     this.notificacoes.enviar(
       "GOM",
@@ -85,23 +91,35 @@ export class RepassesService {
     if (!s || s.status !== "PENDENTE") return;
 
     // 🔌 POST /api/gom/repasses/:id/confirmar — transfere a claim no servidor
+    const por = this.assinatura.assinar(
+      "REPASSE",
+      `confirmou o repasse de ${s.itemDescricao} de ${s.remetente.username} para ${s.destinatario.username}`,
+    );
     this._solicitacoes.update((prev) =>
       prev.map((x) =>
-        x.id === id ? { ...x, status: "CONFIRMADO", dataConfirmacao: new Date().toISOString() } : x,
+        x.id === id
+          ? {
+              ...x,
+              status: "CONFIRMADO",
+              dataConfirmacao: new Date().toISOString(),
+              confirmadoPor: por,
+            }
+          : x,
       ),
     );
+    const quem = por ? ` por ${por.username}` : " pela GOM";
     // O item muda de dona na fila Mercari
     if (s.pedidoId) this.pedidos.transferir(s.pedidoId, s.destinatario);
 
     this.notificacoes.enviar(
       s.destinatario.id,
       "repasse confirmado 🎉",
-      `${s.itemDescricao} da CEG ${s.cegNome} agora é seu! repassado por ${s.remetente.username} e confirmado pela GOM.`,
+      `${s.itemDescricao} da CEG ${s.cegNome} agora é seu! repassado por ${s.remetente.username} e confirmado${quem}.`,
     );
     this.notificacoes.enviar(
       s.remetente.id,
       "repasse confirmado",
-      `a GOM confirmou o repasse de ${s.itemDescricao} (${s.cegNome}) para ${s.destinatario.username}.`,
+      `o repasse de ${s.itemDescricao} (${s.cegNome}) para ${s.destinatario.username} foi confirmado${quem}.`,
     );
   }
 }

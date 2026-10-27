@@ -51,10 +51,11 @@ Path alias `@/*` → `src/app/*`.
 
 Auth lives in [src/app/services/auth.service.ts](src/app/services/auth.service.ts) (`AuthService`, `providedIn: 'root'`). Pure types/helpers (`AuthUser`, `UserRole`, `dashboardForRole`, `isValidEmail`, `getPasswordStrength`) live in [src/app/lib/auth.ts](src/app/lib/auth.ts). Role is determined at sign-in from the email prefix (dev mock only):
 
-| Email prefix | Role |
+| Email | Role |
 |---|---|
+| registered in a community (`ComunidadeService`, e.g. `lia@knodori.app`) | `GOM` of that community (dona or admin) |
 | `admin@…` | `ADMIN` |
-| `gom@…` | `GOM` |
+| `gom@…` | `GOM` (dona of the mock community) |
 | anything else | `JOINER` |
 
 The mock JOINER signs in as Bia Costa (`id: "j1"`), the same id used by the mock Mercari orders, so the joiner screens have data.
@@ -71,12 +72,13 @@ Routes are declared in [src/app/app.routes.ts](src/app/app.routes.ts) (Angular R
 - Mock data that React passed as props goes in route `data` and reaches component inputs via `withComponentInputBinding()`.
 - `/admin`, `/gom`, `/joiner` use [RoleGuardPage](src/app/pages/role-guard/role-guard.page.ts) as a layout route (`data.role`). It reacts to the auth signals with an `effect` (redirects to `/login`, `/onboarding` or the user's own dashboard) — same behavior as the old component-level guards.
 - Navigation per role is defined in `NAV_BY_ROLE` inside [layout.component.ts](src/app/components/layout/layout.component.ts). Index routes use `exact: true` to avoid active-state collision with sub-routes.
+- Mobile-first shell (the app is mostly used on phones): below `lg` the header shows only logo + page title + actions, and navigation is a fixed bottom bar with the first 4 `NAV_BY_ROLE` items (`curto` = short label) plus a "mais" bottom sheet for the rest; from `lg` up the full nav sits in the header. Full-height screens (chats) use `h-[calc(100dvh-var(--app-chrome))]`; `--app-chrome` lives in `styles.css` and must match the header/`<main>` paddings in `layout.component.html`. Wide tables get a card list below `sm` (`sm:hidden` cards + `hidden sm:block` table).
 
 | Route group | Role | Key pages |
 |---|---|---|
 | `/admin` | ADMIN | Dashboard, Métricas, Usuários, Configurações |
-| `/gom` | GOM | Dashboard, CEGs, Financeiro, Fila Mercari, Joiners, Taxas |
-| `/joiner` | JOINER | Dashboard, Minhas Compras, Minhas CEGs, Extrato |
+| `/gom` | GOM | Dashboard, CEGs, Claims, Fila Mercari, Envios, Financeiro, Joiners, Ajustes |
+| `/joiner` | JOINER | Dashboard, Vitrine, Claims, Minhas Compras, Envios, Minhas CEGs, Extrato |
 | `/calculadora`, `/mercari`, `/sistema` | any | Calculadora, vitrine Mercari, Super Admin |
 
 ### State Management
@@ -160,7 +162,29 @@ The official icon/logo lives at `public/images/init/icon.png` (served at `/image
 
 ### Profile Settings
 
-[profile-settings-modal](src/app/components/auth/profile-settings-modal/profile-settings-modal.component.ts) — opened from the avatar dropdown in the header. Saves via `AuthService.updateUser()`. Fields: nome, username, telefone, faves (textarea), wishlistUrl, avatarUrl (base64 upload). Also hosts the appearance settings (mode + color theme).
+[profile-settings-modal](src/app/components/auth/profile-settings-modal/profile-settings-modal.component.ts) — opened from the avatar dropdown in the header. Saves via `AuthService.updateUser()`. Fields: nome, username, telefone, faves (textarea), wishlistUrl, avatarUrl (base64 upload). It also hosts the appearance settings (`AparenciaSettingsComponent`: mode + color theme) for every role. GOM settings that aren't profile live on `/gom/ajustes` ([ajustes](src/app/components/gom/ajustes/ajustes.component.ts), tabs via `?aba=`: comunidade & admins (default), taxas; `/gom/taxas` redirects there). The avatar menu only has "configurações de perfil" and "sair" — ajustes is reached through the nav.
+
+### Deletions need confirmation
+
+Every delete in the app goes through `ConfirmService.confirmar({ titulo, mensagem?, confirmar? })` ([confirm.service.ts](src/app/shared/confirm-dialog/confirm.service.ts)), which resolves a `Promise<boolean>` from the single `<app-confirm-dialog>` mounted in `app.html`. It stacks on top of other dialogs (z-60).
+
+### Autoria (signatures)
+
+Every action that changes data records who did it, from the logged-in user's registration: `Autoria` (`id`, `nome`, `username`, `em`) in [autoria.ts](src/app/lib/autoria.ts). Services call `AssinaturaService.assinar(area, texto)` ([assinatura.service.ts](src/app/services/assinatura.service.ts)) and store the returned `Autoria` on the changed record (`atualizadoPor`, `decididoPor`, `confirmadoPor`, `por`, `enviadoPor`, `solicitadoPor`…); `area`/`texto` are the payload of the server-side audit (🔌). There is no history screen — authorship is shown **only** as a signature next to the record, always through `<app-assinatura [por] acao="confirmado por">` ([assinatura.component.ts](src/app/shared/assinatura/assinatura.component.ts)). New mutations must do the same. Exception: `ComunidadeService` can't inject `AssinaturaService` (AuthService → ComunidadeService cycle), so its callers pass the autoria. In `CegsService`, use `editar()` for team edits (signed) and `atualizar()` for automatic adjustments.
+
+### Moderação de joiners
+
+On `/gom/joiners` the GOM (dona or admin of the community) can only **request** the removal (leaves the community) or ban (account `SUSPENSO` on the platform + leaves the community) of a joiner, with a mandatory reason (`MOTIVO_MIN`). Requests live in `ModeracaoService` ([moderacao.service.ts](src/app/services/moderacao.service.ts); types in [moderacao-types.ts](src/app/lib/moderacao-types.ts)); the platform admin approves/declines them at the top of `/admin/usuarios` (`SolicitacoesModeracao`, nav badge). Approving applies the change through `UsuariosService` ([usuarios.service.ts](src/app/services/usuarios.service.ts) — single source of account status; login refuses `SUSPENSO`) and `ComunidadeService.removerJoiner()`. Joiner ↔ community membership is `ParticipacaoJoiner` in `ComunidadeService` (`participa`, `comunidadesDaJoiner`); every `CegGOM` has a `comunidadeId`.
+
+### Vitrine de CEGs (joiner)
+
+`/joiner/vitrine` ([vitrine-cegs](src/app/components/joiner/vitrine-cegs/vitrine-cegs.component.ts)) lists the `ABERTA` CEGs of the joiner's communities (`ClaimsService.cegsDaJoiner`) with their items, queue and her claims (status + payment). "dar claim" calls `ClaimsService.darClaim()`, which goes through the same private `publicar()` as the chat: it posts a CLAIM message in the round's room, so queue, GOM confirmation, reservation, inventory and payment are one flow. `bloqueioDeClaim()` centralizes the rules (joiner only, member of the CEG's community, round open). A CEG whose status leaves `ABERTA` ends its round (`estado()` returns `ENCERRADA`).
+
+The "nova CEG" modal ([criar-ceg-modal](src/app/components/gom/gerenciamento-cegs/criar-ceg-modal/criar-ceg-modal.component.ts)) has the same fields as the detail panel — data + status, items (code/name/price) and the claim round (open/close/warning) — and creates the CEG, its items and its schedule in one go.
+
+### Comunidade & admins (GOM)
+
+A GOM account belongs to a community (`ComunidadeService`, [comunidade.service.ts](src/app/services/comunidade.service.ts); types in [comunidade-types.ts](src/app/lib/comunidade-types.ts)). The dona registers admins by e-mail in Ajustes › comunidade. An admin logs in with her own e-mail and gets role `GOM` with `gomId` = the dona's account id, plus `comunidadeId`, `comunidadeNome` and `papel` on `AuthUser`. Data scoped to the GOM must use `user.gomId ?? user.id`, not `user.id` (see `MensagensService`, where the team writes as the GOM account). Only the dona manages admins and edits the community data.
 
 ### Pricing (server-only)
 
@@ -181,6 +205,14 @@ Note: the `/calculadora` page (`CurrencyCalculator`) still computes prices clien
 ### Minhas CEGs & novidades
 
 `/joiner/cegs` ([minhas-cegs](src/app/components/joiner/minhas-cegs/minhas-cegs.component.ts)) lists every CEG where the logged-in joiner has orders (via `cegId` in `PedidosMercariService`): her items, the CEG status bar, her freight/fee charge and the CEG feed. The feed lives in `CegPostsService` ([ceg-posts.service.ts](src/app/services/ceg-posts.service.ts)): the GOM publishes `COMUNICADO` / `AVISO` posts from the "novidades" button on each CEG card (`NovidadesModal`), and every joiner with items in that CEG is notified.
+
+### Claims de CEG (rodada + chat)
+
+State lives in `ClaimsService` ([claims.service.ts](src/app/services/claims.service.ts)); types, mocks and the pure parser `itensCitados()` in [claims-types.ts](src/app/lib/claims-types.ts). The GOM registers items (código, nome, valor) and schedules the round in the expandable "itens & claims" panel of each CEG card ([ceg-detalhes](src/app/components/gom/gerenciamento-cegs/ceg-detalhes/ceg-detalhes.component.ts)), which also shows the full inventory (status, claimer, WhatsApp, pagamento). `/joiner/claims` and `/gom/claims` share `ClaimChatComponent`: while the round is open, a joiner's message citing item codes/names becomes one `Claim` per item, carrying a snapshot of her profile. Competing claims on the same item form a queue ordered by `(criadoEm, seq)`; confirming one rejects the rest, and rejecting the last one frees the item. A 1 s clock in the service drives countdowns and fires the advance warning and opening notifications (in production that is a Durable Object alarm). Backend contract and real-time design: [docs/claims.md](docs/claims.md).
+
+### Envios nacionais
+
+State lives in `EnviosService` ([envios.service.ts](src/app/services/envios.service.ts)); types/mocks in [envios-types.ts](src/app/lib/envios-types.ts). `/joiner/envios` lists what is **ready to ship** (`prontos`: Mercari orders `ENVIO_LIBERADO` + confirmed, paid claims of CEGs `CHEGOU_BR`/`FINALIZADA`, minus items already in an active envio) and the joiner's envios; she picks items, method (PAC/SEDEX/retirada) and address (pre-filled with her last one). `/gom/envios` (tabs: a fazer / com a joiner / postados / concluídos) runs the flow: SOLICITADO → frete informado (`AGUARDANDO_PAGAMENTO`; retirada skips to separação) → joiner says she paid → GOM confirms (`EM_SEPARACAO`) → postado with a Correios tracking code (also written to the Mercari orders via `PedidosMercariService.registrarRastreio`) → ENTREGUE. Every step is an `EventoEnvio` signed with `Autoria`, notifies the other side, and cancelling (confirm popup) returns the items to "prontos". `EnvioCardComponent` is shared by both views (actions via `<ng-content>`). The "solicitar envio nacional" button in Minhas Compras now opens `/joiner/envios?pedido=…` and shows the envio stage once requested.
 
 ### Repasses de claim (joiner → joiner)
 

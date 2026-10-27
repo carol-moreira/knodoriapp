@@ -127,45 +127,8 @@ export const ITEM_LABELS: Record<string, string> = {
 export const INPUT_CLS =
   "w-full rounded-xl border border-border bg-muted/40 px-3 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground/60";
 
-export const BR_ESTADOS = [
-  "AC",
-  "AL",
-  "AP",
-  "AM",
-  "BA",
-  "CE",
-  "DF",
-  "ES",
-  "GO",
-  "MA",
-  "MT",
-  "MS",
-  "MG",
-  "PA",
-  "PB",
-  "PR",
-  "PE",
-  "PI",
-  "RJ",
-  "RN",
-  "RS",
-  "RO",
-  "RR",
-  "SC",
-  "SP",
-  "SE",
-  "TO",
-];
-
-export interface Endereco {
-  cep: string;
-  rua: string;
-  numero: string;
-  complemento: string;
-  bairro: string;
-  cidade: string;
-  estado: string;
-}
+// Endereço e UFs vivem em lib/envios-types (envio nacional)
+export { BR_ESTADOS, type Endereco } from "@/lib/envios-types";
 
 // ---------------------------------------------------------------------------
 // Helpers

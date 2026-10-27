@@ -1,4 +1,7 @@
 <div class="space-y-4">
+  <!-- Pedidos de remoção/banimento das GOMs -->
+  <app-solicitacoes-moderacao />
+
   <!-- Toolbar -->
   <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <div class="relative max-w-xs w-full">
@@ -125,7 +128,7 @@
                     @if (!isSelf(u)) {
                       <button
                         type="button"
-                        (click)="toggleStatus(u.id)"
+                        (click)="toggleStatus(u)"
                         [title]="u.status === 'ATIVO' ? 'banir usuário' : 'reativar usuário'"
                         [class]="
                           'rounded-lg p-1.5 transition ' +

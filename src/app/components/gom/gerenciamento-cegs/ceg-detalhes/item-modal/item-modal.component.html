@@ -1,0 +1,225 @@
+<app-dialog
+  [open]="open()"
+  (openChange)="onOpenChange($event)"
+  contentClass="fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 cozy-card shadow-2xl animate-in zoom-in-95 fade-in duration-150 max-h-[90vh] overflow-y-auto no-scrollbar"
+>
+  <div
+    class="sticky top-0 z-10 flex items-center justify-between border-b border-border/60 bg-card px-6 py-4"
+  >
+    <div class="flex items-center gap-2">
+      <h2 class="text-sm font-bold">
+        {{ item() ? "item #" + item()!.codigo : "novo item" }}
+      </h2>
+      @if (item(); as i) {
+        <span [class]="'cozy-pill text-[10px] font-semibold ' + ITEM_META[i.status].badge">
+          {{ ITEM_META[i.status].label }}
+        </span>
+      }
+    </div>
+    <button
+      type="button"
+      (click)="onOpenChange(false)"
+      aria-label="fechar"
+      class="rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted"
+    >
+      <svg [appIcon]="icons.X" class="h-4 w-4"></svg>
+    </button>
+  </div>
+
+  <form class="space-y-5 px-6 py-5" (submit)="$event.preventDefault(); salvar()">
+    <!-- Dados do item -->
+    <div class="grid grid-cols-[6rem_1fr] gap-3">
+      <label class="block space-y-1.5">
+        <span class="text-xs font-semibold">código</span>
+        <input
+          [value]="codigo()"
+          (input)="codigo.set(val($event))"
+          placeholder="07"
+          [class]="INPUT_CLS"
+        />
+      </label>
+      <label class="block space-y-1.5">
+        <span class="text-xs font-semibold">nome / descrição</span>
+        <input
+          [value]="nome()"
+          (input)="nome.set(val($event))"
+          placeholder="pc jungwon"
+          [class]="INPUT_CLS"
+        />
+      </label>
+    </div>
+    <label class="block space-y-1.5">
+      <span class="text-xs font-semibold">valor unitário (R$)</span>
+      <input
+        type="number"
+        min="0"
+        step="0.01"
+        [appNumberValue]="valor()"
+        (input)="valor.set(+val($event))"
+        [class]="INPUT_CLS"
+      />
+      @if (item(); as i) {
+        @if (i.status === "CONFIRMADO" && valor() !== i.valor) {
+          <span class="block text-[11px] text-amber-700">
+            o item já tem dona — o novo valor vale para a cobrança dela.
+          </span>
+        }
+      }
+    </label>
+
+    <!-- Avaria -->
+    <div class="space-y-2">
+      <button
+        type="button"
+        role="switch"
+        [attr.aria-checked]="avaria()"
+        (click)="avaria.set(!avaria())"
+        [class]="toggleClass(avaria(), 'amber')"
+      >
+        <svg [appIcon]="icons.ShieldAlert" class="mt-0.5 h-4 w-4 shrink-0"></svg>
+        <span class="flex-1">
+          <span class="block text-xs font-semibold">item com avaria</span>
+          <span class="block text-[11px] opacity-80">
+            amassado, riscado, faltando parte… a dona é avisada.
+          </span>
+        </span>
+        <span class="text-[11px] font-semibold">{{ avaria() ? "sim" : "não" }}</span>
+      </button>
+      @if (avaria()) {
+        <textarea
+          rows="2"
+          [value]="avariaNota()"
+          (input)="avariaNota.set(val($event))"
+          placeholder="descreva a avaria (ex: canto do pc dobrado)"
+          aria-label="descrição da avaria"
+          [class]="INPUT_CLS + ' resize-none'"
+        ></textarea>
+      }
+    </div>
+
+    <!-- Abandono -->
+    <div class="space-y-2">
+      <button
+        type="button"
+        role="switch"
+        [attr.aria-checked]="abandonado()"
+        [disabled]="item()?.status !== 'CONFIRMADO'"
+        (click)="abandonado.set(!abandonado())"
+        [class]="toggleClass(abandonado(), 'rose')"
+      >
+        <svg [appIcon]="icons.PackageX" class="mt-0.5 h-4 w-4 shrink-0"></svg>
+        <span class="flex-1">
+          <span class="block text-xs font-semibold">item abandonado</span>
+          <span class="block text-[11px] opacity-80">
+            @if (item()?.status === "CONFIRMADO") {
+              a joiner desistiu ou não pagou.
+            } @else {
+              disponível só para itens com claim confirmado.
+            }
+          </span>
+        </span>
+        <span class="text-[11px] font-semibold">{{ abandonado() ? "sim" : "não" }}</span>
+      </button>
+      @if (abandonado() && dono()) {
+        <button
+          type="button"
+          (click)="liberar()"
+          class="flex w-full items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-card py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50"
+        >
+          <svg [appIcon]="icons.Undo2" class="h-3.5 w-3.5"></svg>
+          salvar e devolver ao estoque (libera para novo claim)
+        </button>
+      }
+    </div>
+
+    <!-- Dona + histórico -->
+    @if (item()) {
+      <div class="space-y-2 border-t border-border/60 pt-4">
+        <p class="text-xs font-semibold">dona do item</p>
+        @if (dono(); as d) {
+          <div class="flex items-center gap-3 rounded-2xl bg-muted/50 p-3 text-xs">
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold">{{ d.joinerNome }} · {{ d.joinerUsername }}</p>
+              @if (d.joinerTelefone) {
+                <p class="flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <svg [appIcon]="icons.Phone" class="h-3 w-3"></svg>{{ d.joinerTelefone }}
+                </p>
+              }
+            </div>
+            <span class="text-[11px] text-muted-foreground">
+              pagamento {{ item()?.pagamento === "PAGO" ? "pago" : "pendente" }}
+            </span>
+          </div>
+        } @else {
+          <p class="text-[11px] text-muted-foreground">ninguém confirmado ainda.</p>
+        }
+
+        <p class="pt-2 text-xs font-semibold">histórico de claims ({{ historico().length }})</p>
+        @for (c of historico(); track c.id) {
+          <div class="flex items-center gap-2 text-[11px]">
+            <span class="min-w-0 flex-1 truncate">
+              {{ c.joinerUsername }}
+              <span class="text-muted-foreground">· {{ fmtDataHora(c.criadoEm) }}</span>
+              @if (c.motivo) {
+                <span class="text-muted-foreground">· {{ c.motivo }}</span>
+              }
+              @if (c.decididoPor; as por) {
+                <span class="text-muted-foreground">
+                  · <app-assinatura [por]="por" acao="decidido por" [semData]="true" />
+                </span>
+              }
+            </span>
+            <span
+              [class]="
+                'shrink-0 rounded-full px-2 py-0.5 text-[9px] font-semibold ' +
+                CLAIM_META[c.status].badge
+              "
+            >
+              {{ CLAIM_META[c.status].label }}
+            </span>
+          </div>
+        } @empty {
+          <p class="text-[11px] text-muted-foreground">nenhum claim neste item.</p>
+        }
+      </div>
+    }
+
+    @if (item()?.atualizadoPor; as por) {
+      <p class="text-[10px] text-muted-foreground">
+        <app-assinatura [por]="por" acao="item alterado por" />
+      </p>
+    }
+
+    @if (erro()) {
+      <p class="text-[11px] font-medium text-destructive">{{ erro() }}</p>
+    }
+
+    <div class="flex gap-2 pt-1">
+      @if (item(); as i) {
+        <button
+          type="button"
+          (click)="remover()"
+          [disabled]="i.status !== 'DISPONIVEL'"
+          [title]="i.status !== 'DISPONIVEL' ? 'itens com claim não podem ser removidos' : ''"
+          aria-label="remover item"
+          class="grid w-11 place-items-center rounded-2xl border border-border text-muted-foreground transition hover:text-destructive disabled:opacity-30 disabled:hover:text-muted-foreground"
+        >
+          <svg [appIcon]="icons.Trash2" class="h-4 w-4"></svg>
+        </button>
+      }
+      <button
+        type="button"
+        (click)="onOpenChange(false)"
+        class="flex-1 rounded-2xl border border-border py-2.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
+      >
+        cancelar
+      </button>
+      <button
+        type="submit"
+        class="flex-1 rounded-2xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+      >
+        {{ item() ? "salvar" : "adicionar" }}
+      </button>
+    </div>
+  </form>
+</app-dialog>

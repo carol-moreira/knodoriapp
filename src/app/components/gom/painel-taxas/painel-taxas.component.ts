@@ -1,4 +1,4 @@
-import { Component, computed, input, linkedSignal, signal } from "@angular/core";
+import { Component, computed, inject, input, linkedSignal, signal } from "@angular/core";
 import { CheckCircle2, Info, RefreshCw, Save } from "lucide-angular";
 import {
   CONFIG_TAXAS_DEFAULT,
@@ -6,6 +6,7 @@ import {
   type ConfigTaxasGOM,
   type ItemKey,
 } from "@/lib/gom-types";
+import { AssinaturaService } from "@/services/assinatura.service";
 import { IconDirective } from "@/shared/icon.directive";
 import { NumberValueDirective } from "@/shared/number-value.directive";
 import { inputValue } from "@/shared/dom";
@@ -84,6 +85,8 @@ const CAMBIO_FIELDS: NumberFieldDef[] = [
   styleUrl: "./painel-taxas.component.scss",
 })
 export class PainelTaxasComponent {
+  private readonly assinatura = inject(AssinaturaService);
+
   readonly config = input<ConfigTaxasGOM>(CONFIG_TAXAS_DEFAULT);
   /** Persistência opcional; sem ela, simula a chamada à API. */
   readonly onSave = input<((config: ConfigTaxasGOM) => Promise<void>) | undefined>(undefined);
@@ -141,6 +144,7 @@ export class PainelTaxasComponent {
         // 🔌 substituir por: await fetch(`/api/gom/${gomId}/config-taxas`, { method: "PUT", body: JSON.stringify(config) })
         await new Promise((r) => setTimeout(r, 700));
       }
+      this.assinatura.assinar("TAXAS", "salvou a configuração de taxas e câmbio");
       this.saved.set(true);
       setTimeout(() => this.saved.set(false), 3000);
     } finally {

@@ -1,0 +1,173 @@
+<div
+  class="cozy-card grid h-[calc(100dvh-var(--app-chrome))] min-h-104 overflow-hidden md:grid-cols-[16rem_1fr] xl:grid-cols-[16rem_1fr_20rem]"
+>
+  <!-- ── Rodadas ───────────────────────────────────────────────────────── -->
+  <aside
+    [class]="
+      'min-h-0 flex-col border-border/60 md:flex md:border-r ' + (selecionada() ? 'hidden' : 'flex')
+    "
+  >
+    <div class="border-b border-border/60 px-4 py-3.5">
+      <h1 class="text-sm font-semibold">claims</h1>
+      <p class="text-[11px] text-muted-foreground">rodadas das CEGs da sua GOM</p>
+    </div>
+    <div class="min-h-0 flex-1 space-y-0.5 overflow-y-auto p-2 no-scrollbar">
+      @for (r of rodadas(); track r.ceg.id) {
+        <button type="button" (click)="selecionar(r.ceg.id)" [class]="rodadaClass(r.ceg.id)">
+          <div class="min-w-0 flex-1 space-y-1">
+            <p class="truncate text-sm font-semibold">{{ r.ceg.nome }}</p>
+            <app-rodada-status [cegId]="r.ceg.id" />
+          </div>
+        </button>
+      } @empty {
+        <p class="px-3 py-8 text-center text-xs text-muted-foreground">
+          nenhuma rodada agendada por enquanto.
+        </p>
+      }
+    </div>
+  </aside>
+
+  @if (selecionada(); as ceg) {
+    <!-- ── Chat ──────────────────────────────────────────────────────────── -->
+    <section class="flex min-h-0 flex-col border-border/60 xl:border-r">
+      <header class="flex items-center gap-3 border-b border-border/60 px-4 py-3">
+        <button
+          type="button"
+          (click)="selecionar(null)"
+          aria-label="voltar para as rodadas"
+          class="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground transition hover:bg-muted md:hidden"
+        >
+          <svg [appIcon]="icons.ArrowLeft" class="h-4 w-4"></svg>
+        </button>
+        <div class="min-w-0 flex-1 space-y-1">
+          <p class="truncate text-sm font-semibold">{{ ceg.nome }}</p>
+          <app-rodada-status [cegId]="ceg.id" />
+        </div>
+      </header>
+
+      @if (feedback(); as f) {
+        <p
+          role="status"
+          [class]="
+            'border-b px-4 py-2 text-[11px] font-medium ' +
+            (f.tipo === 'ok'
+              ? 'border-lime-200 bg-lime-50 text-lime-700'
+              : 'border-amber-200 bg-amber-50 text-amber-700')
+          "
+        >
+          {{ f.texto }}
+        </p>
+      }
+
+      <app-claim-chat
+        class="min-h-0 flex-1"
+        [cegId]="ceg.id"
+        [meuId]="auth.user()?.id ?? ''"
+        [modoJoiner]="true"
+        (enviado)="enviar($event)"
+      />
+
+      <!-- Meus claims (telas menores) -->
+      @if (meusClaims().length > 0) {
+        <div
+          class="flex gap-1.5 overflow-x-auto border-t border-border/60 px-3 py-2 no-scrollbar xl:hidden"
+        >
+          @for (m of meusClaims(); track m.claim.id) {
+            <span
+              [class]="
+                'shrink-0 rounded-pill px-2.5 py-1 text-[10px] font-semibold ' +
+                CLAIM_META[m.claim.status].badge
+              "
+            >
+              #{{ m.item?.codigo }} · {{ CLAIM_META[m.claim.status].label }}
+              @if (m.posicao > 1) {
+                ({{ m.posicao }}º)
+              }
+            </span>
+          }
+        </div>
+      }
+    </section>
+
+    <!-- ── Meus claims ───────────────────────────────────────────────────── -->
+    <aside class="hidden min-h-0 flex-col overflow-y-auto no-scrollbar xl:flex">
+      <div class="space-y-4 p-4">
+        @if (perfil(); as p) {
+          <div class="space-y-1 rounded-2xl bg-muted/50 p-3">
+            <p class="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
+              <svg [appIcon]="icons.IdCard" class="h-3.5 w-3.5"></svg>
+              seus claims saem com
+            </p>
+            <p class="text-xs font-semibold">{{ p.nome }} · {{ p.username }}</p>
+            <p class="text-[11px] text-muted-foreground">
+              {{ p.telefone ?? "sem whatsapp — adicione no seu perfil" }}
+            </p>
+          </div>
+        }
+
+        <div class="space-y-2">
+          <div class="flex items-baseline justify-between">
+            <h2 class="text-sm font-semibold">meus claims</h2>
+            @if (totalConfirmado() > 0) {
+              <span class="text-[11px] text-muted-foreground">
+                {{ brl(totalConfirmado()) }} confirmados
+              </span>
+            }
+          </div>
+          @for (m of meusClaims(); track m.claim.id) {
+            <div class="space-y-1 rounded-2xl border border-border/60 p-3">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold">#{{ m.item?.codigo }}</span>
+                <span class="min-w-0 flex-1 truncate text-xs">{{ m.item?.nome }}</span>
+                <span
+                  [class]="
+                    'shrink-0 rounded-full px-2 py-0.5 text-[9px] font-semibold ' +
+                    CLAIM_META[m.claim.status].badge
+                  "
+                >
+                  {{ CLAIM_META[m.claim.status].label }}
+                </span>
+              </div>
+              <p class="text-[11px] text-muted-foreground">
+                {{ brl(m.item?.valor ?? 0) }}
+                @if (m.claim.status === "PENDENTE") {
+                  ·
+                  {{ m.posicao === 1 ? "você é a primeira da fila" : m.posicao + "º na fila" }}
+                } @else if (m.claim.status === "CONFIRMADO") {
+                  · pagamento {{ m.item?.pagamento === "PAGO" ? "confirmado" : "pendente" }}
+                } @else if (m.claim.motivo) {
+                  · {{ m.claim.motivo }}
+                }
+              </p>
+              @if (m.claim.status === "CONFIRMADO" && m.item?.avaria) {
+                <p class="text-[11px] font-medium text-amber-700">
+                  ⚠ item com avaria{{ m.item?.avariaNota ? ": " + m.item?.avariaNota : "" }}
+                </p>
+              }
+            </div>
+          } @empty {
+            <div class="py-6 text-center">
+              <svg
+                [appIcon]="icons.Hand"
+                class="mx-auto mb-2 h-6 w-6 text-muted-foreground/40"
+              ></svg>
+              <p class="text-xs text-muted-foreground">
+                quando abrir, digite o código do item no chat — o resto é automático.
+              </p>
+            </div>
+          }
+        </div>
+      </div>
+    </aside>
+  } @else {
+    <div class="hidden place-items-center p-8 text-center md:grid xl:col-span-2">
+      <div class="space-y-2">
+        <svg [appIcon]="icons.Hand" class="mx-auto h-8 w-8 text-muted-foreground/40"></svg>
+        <p class="text-sm font-semibold">escolha uma rodada</p>
+        <p class="text-xs text-muted-foreground">
+          você recebe um aviso antes de abrir e outro na hora exata.
+        </p>
+      </div>
+    </div>
+  }
+</div>

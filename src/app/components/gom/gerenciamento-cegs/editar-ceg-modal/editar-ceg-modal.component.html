@@ -1,0 +1,78 @@
+<app-dialog
+  [open]="open()"
+  (openChange)="onOpenChange($event)"
+  contentClass="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 cozy-card shadow-2xl animate-in zoom-in-95 fade-in duration-150"
+>
+  <div class="flex items-center justify-between border-b border-border/60 px-6 py-4">
+    <div>
+      <h2 class="text-sm font-bold">editar CEG</h2>
+      <p class="text-[11px] text-muted-foreground">{{ ceg()?.nome }}</p>
+    </div>
+    <button
+      type="button"
+      (click)="onOpenChange(false)"
+      aria-label="fechar"
+      class="rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted"
+    >
+      <svg [appIcon]="icons.X" class="h-4 w-4"></svg>
+    </button>
+  </div>
+
+  <form class="space-y-4 px-6 py-5" (submit)="$event.preventDefault(); salvar()">
+    <label class="block space-y-1.5">
+      <span class="text-xs font-semibold">nome da CEG</span>
+      <input type="text" [value]="nome()" (input)="nome.set(val($event))" [class]="INPUT_CLS" />
+    </label>
+
+    <div class="grid grid-cols-2 gap-3">
+      <label class="block space-y-1.5">
+        <span class="text-xs font-semibold">loja</span>
+        <select (change)="loja.set(val($event))" [class]="INPUT_CLS">
+          @for (l of lojas(); track l) {
+            <option [selected]="l === loja()">{{ l }}</option>
+          }
+        </select>
+      </label>
+      <label class="block space-y-1.5">
+        <span class="text-xs font-semibold">moeda</span>
+        <select (change)="moeda.set($any(val($event)))" [class]="INPUT_CLS">
+          @for (m of moedas; track m) {
+            <option [selected]="m === moeda()">{{ m }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      <label class="block space-y-1.5">
+        <span class="text-xs font-semibold">prazo</span>
+        <input type="date" [value]="prazo()" (input)="prazo.set(val($event))" [class]="INPUT_CLS" />
+      </label>
+      <label class="block space-y-1.5">
+        <span class="text-xs font-semibold">status</span>
+        <select (change)="status.set($any(val($event)))" [class]="INPUT_CLS">
+          @for (s of statusList; track s) {
+            <option [value]="s" [selected]="s === status()">{{ STATUS_META[s].label }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    <div class="flex gap-2 pt-1">
+      <button
+        type="button"
+        (click)="onOpenChange(false)"
+        class="flex-1 rounded-2xl border border-border py-2.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
+      >
+        cancelar
+      </button>
+      <button
+        type="submit"
+        [disabled]="!canSave()"
+        class="flex-1 rounded-2xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
+      >
+        salvar
+      </button>
+    </div>
+  </form>
+</app-dialog>

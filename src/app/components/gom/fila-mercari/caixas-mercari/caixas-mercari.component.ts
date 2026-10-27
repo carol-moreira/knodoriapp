@@ -5,6 +5,7 @@ import { NumberValueDirective } from "@/shared/number-value.directive";
 import { CegsService } from "@/services/cegs.service";
 import { PedidosMercariService } from "@/services/pedidos-mercari.service";
 import { CEG_STATUS_META, brl, type CegGOM } from "../../gerenciamento-cegs/cegs.model";
+import { AssinaturaComponent } from "@/shared/assinatura/assinatura.component";
 
 /** Etapas da caixa, derivadas do status da CEG + cobrança. */
 const ETAPAS_CAIXA = ["aberta", "fechada", "frete cobrado", "chegou na GOM", "envio liberado"];
@@ -13,7 +14,7 @@ type Acao = "fechar" | "chegou" | "liberar";
 
 @Component({
   selector: "app-caixas-mercari",
-  imports: [IconDirective, NumberValueDirective],
+  imports: [IconDirective, NumberValueDirective, AssinaturaComponent],
   templateUrl: "./caixas-mercari.component.html",
   styleUrl: "./caixas-mercari.component.scss",
 })

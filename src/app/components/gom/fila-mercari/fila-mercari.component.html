@@ -147,6 +147,11 @@
                       class="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 opacity-70"
                     ></svg>
                   </div>
+                  @if (req.atualizadoPor; as por) {
+                    <p class="mt-1 text-[10px] text-muted-foreground">
+                      <app-assinatura [por]="por" acao="alterado por" />
+                    </p>
+                  }
                 }
               </td>
 
@@ -279,6 +284,11 @@
                     class="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 opacity-70"
                   ></svg>
                 </div>
+                @if (req.atualizadoPor; as por) {
+                  <p class="mt-1 text-[10px] text-muted-foreground">
+                    <app-assinatura [por]="por" acao="alterado por" />
+                  </p>
+                }
               }
             </div>
           }

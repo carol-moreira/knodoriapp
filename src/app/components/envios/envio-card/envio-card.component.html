@@ -1,0 +1,159 @@
+<article class="cozy-card overflow-hidden">
+  <div class="space-y-3 p-4 sm:p-5">
+    <!-- Cabeçalho -->
+    <div class="flex items-start justify-between gap-2">
+      <div class="min-w-0">
+        @if (visao() === "gom") {
+          <p class="text-[15px] font-bold leading-snug sm:text-sm">
+            {{ envio().joinerNome }}
+            <span class="text-xs font-normal text-muted-foreground">{{
+              envio().joinerUsername
+            }}</span>
+          </p>
+        } @else {
+          <p class="text-[15px] font-bold leading-snug sm:text-sm">
+            envio de {{ envio().itens.length }} item{{ envio().itens.length !== 1 ? "s" : "" }}
+          </p>
+        }
+        <p class="mt-0.5 text-[11px] text-muted-foreground">
+          {{ MODALIDADE[envio().modalidade].label }} · pedido em
+          {{ fmtData(envio().eventos[0].por.em) }}
+          @if (envio().frete !== undefined && envio().modalidade !== "RETIRADA") {
+            · frete {{ brl(envio().frete!) }}
+          }
+        </p>
+      </div>
+      <span
+        [class]="'cozy-pill shrink-0 text-[10px] font-semibold ' + STATUS[envio().status].badge"
+      >
+        {{ rotulo(envio().status, envio().modalidade) }}
+      </span>
+    </div>
+
+    <!-- Progresso -->
+    @if (envio().status !== "CANCELADO") {
+      <div class="flex items-center gap-1" aria-hidden="true">
+        @for (e of etapas; track e; let i = $index) {
+          <div
+            [class]="'h-1.5 flex-1 rounded-full ' + (i <= passo() ? 'bg-primary' : 'bg-muted')"
+          ></div>
+        }
+      </div>
+    }
+
+    <!-- Itens -->
+    <ul class="space-y-1">
+      @for (i of envio().itens; track i.refId) {
+        <li class="flex items-center gap-2 text-xs">
+          <svg [appIcon]="icons.Package" class="h-3 w-3 shrink-0 text-muted-foreground"></svg>
+          <span class="min-w-0 flex-1 truncate">{{ i.descricao }}</span>
+          <span class="shrink-0 text-[10px] text-muted-foreground">{{ i.cegNome }}</span>
+        </li>
+      }
+    </ul>
+
+    <!-- Endereço -->
+    @if (envio().endereco) {
+      <div class="flex items-start gap-2 rounded-2xl bg-muted/50 p-3 text-xs">
+        <svg [appIcon]="icons.MapPin" class="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary"></svg>
+        <p class="min-w-0 flex-1 leading-snug">{{ endereco() }}</p>
+        @if (visao() === "gom") {
+          <button
+            type="button"
+            (click)="copiar('endereco')"
+            [attr.aria-label]="'copiar endereço de ' + envio().joinerNome"
+            class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted-foreground transition hover:bg-card hover:text-foreground"
+          >
+            <svg
+              [appIcon]="copiado() === 'endereco' ? icons.Check : icons.Copy"
+              class="h-3.5 w-3.5"
+            ></svg>
+          </button>
+        }
+      </div>
+    } @else if (envio().modalidade === "RETIRADA") {
+      <p class="rounded-2xl bg-muted/50 p-3 text-xs text-muted-foreground">
+        retirada em mãos — combinem pelo chat.
+      </p>
+    }
+
+    @if (envio().observacao) {
+      <p class="text-xs text-muted-foreground">“{{ envio().observacao }}”</p>
+    }
+
+    <!-- Rastreio -->
+    @if (envio().rastreio; as codigo) {
+      <div
+        class="flex items-center gap-2 rounded-2xl border border-blue-200 bg-blue-50/60 p-3 text-xs dark:border-blue-500/30 dark:bg-blue-500/10"
+      >
+        <svg [appIcon]="icons.Truck" class="h-3.5 w-3.5 shrink-0 text-blue-600"></svg>
+        <span class="font-mono font-semibold">{{ codigo }}</span>
+        <button
+          type="button"
+          (click)="copiar('rastreio')"
+          aria-label="copiar código de rastreio"
+          class="grid h-8 w-8 place-items-center rounded-lg text-muted-foreground transition hover:bg-card hover:text-foreground"
+        >
+          <svg
+            [appIcon]="copiado() === 'rastreio' ? icons.Check : icons.Copy"
+            class="h-3.5 w-3.5"
+          ></svg>
+        </button>
+        <a
+          [href]="linkRastreio(codigo)"
+          target="_blank"
+          rel="noopener"
+          class="ml-auto flex items-center gap-1 font-semibold text-blue-700 hover:underline"
+        >
+          rastrear
+          <svg [appIcon]="icons.ExternalLink" class="h-3 w-3"></svg>
+        </a>
+      </div>
+    }
+
+    <!-- Ações da página (GOM ou joiner) -->
+    <ng-content />
+
+    <!-- Etapas assinadas -->
+    <div class="flex items-center justify-between gap-2 border-t border-border/60 pt-2">
+      <button
+        type="button"
+        (click)="etapasAberto.set(!etapasAberto())"
+        [attr.aria-expanded]="etapasAberto()"
+        class="flex h-8 items-center gap-1 text-[11px] font-medium text-muted-foreground transition hover:text-foreground"
+      >
+        etapas ({{ envio().eventos.length }})
+        <svg
+          [appIcon]="icons.ChevronDown"
+          [class]="'h-3.5 w-3.5 transition ' + (etapasAberto() ? 'rotate-180' : '')"
+        ></svg>
+      </button>
+      @if (visao() === "gom" && whatsapp(); as wa) {
+        <a
+          [href]="wa"
+          target="_blank"
+          rel="noopener"
+          class="flex h-8 items-center gap-1 text-[11px] font-medium text-primary hover:underline"
+        >
+          <svg [appIcon]="icons.MessageCircle" class="h-3 w-3"></svg>
+          whatsapp
+        </a>
+      }
+    </div>
+    @if (etapasAberto()) {
+      <ol class="space-y-1.5 border-l border-border pl-3">
+        @for (ev of envio().eventos; track $index) {
+          <li class="text-[11px]">
+            <span class="font-semibold">{{ rotulo(ev.status, envio().modalidade) }}</span>
+            @if (ev.nota) {
+              <span class="text-muted-foreground"> — {{ ev.nota }}</span>
+            }
+            <p class="text-[10px] text-muted-foreground">
+              <app-assinatura [por]="ev.por" />
+            </p>
+          </li>
+        }
+      </ol>
+    }
+  </div>
+</article>

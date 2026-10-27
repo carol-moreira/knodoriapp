@@ -156,64 +156,7 @@
     </div>
 
     <!-- ── Aparência ──────────────────────────────────────────────── -->
-    <div class="space-y-5 rounded-2xl border border-border bg-muted/20 p-4">
-      <!-- Header -->
-      <div class="flex items-center gap-2">
-        <div class="grid h-7 w-7 place-items-center rounded-lg bg-primary/10">
-          <svg [appIcon]="icons.Palette" class="h-3.5 w-3.5 text-primary"></svg>
-        </div>
-        <span class="text-sm font-semibold">aparência</span>
-      </div>
-
-      <!-- ── Modo de exibição ─────────────────────────────────────── -->
-      <div class="space-y-2">
-        <p class="text-xs font-medium text-muted-foreground">modo de exibição</p>
-        <div class="grid grid-cols-2 gap-1.5 rounded-xl border border-border bg-muted/40 p-1">
-          @for (m of modes; track m.value) {
-            <button
-              type="button"
-              (click)="theme.setMode(m.value)"
-              [class]="
-                'flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-all ' +
-                (theme.mode() === m.value
-                  ? 'bg-card text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground')
-              "
-            >
-              <svg
-                [appIcon]="m.icon"
-                [class]="'h-3.5 w-3.5 ' + (theme.mode() === m.value ? 'text-primary' : '')"
-              ></svg>
-              {{ m.label }}
-            </button>
-          }
-        </div>
-      </div>
-
-      <!-- ── Tema de cores ────────────────────────────────────────── -->
-      <div class="space-y-3">
-        <p class="text-xs font-medium text-muted-foreground">tema de cores</p>
-
-        <div class="grid grid-cols-3 gap-2">
-          @for (t of themes; track t) {
-            <ng-container
-              [ngTemplateOutlet]="swatchTpl"
-              [ngTemplateOutletContext]="{ $implicit: t, compact: false }"
-            />
-          }
-        </div>
-      </div>
-
-      <!-- Live preview pill -->
-      <div class="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">
-        <span class="h-2.5 w-2.5 rounded-full bg-primary transition-colors"></span>
-        <span class="text-xs text-muted-foreground">prévia —</span>
-        <span class="text-xs font-semibold text-primary transition-colors">
-          {{ THEME_META[theme.colorTheme()].label }} ·
-          {{ theme.mode() === "dark" ? "escuro" : "claro" }}
-        </span>
-      </div>
-    </div>
+    <app-aparencia-settings />
 
     <!-- ── Botões ─────────────────────────────────────────────────── -->
     <div class="flex gap-2">
@@ -238,22 +181,3 @@
     </div>
   </div>
 </app-dialog>
-
-<!-- ColorSwatch — card de seleção de tema -->
-<ng-template #swatchTpl let-t let-compact="compact">
-  <button type="button" (click)="theme.setColorTheme(t)" [class]="swatchClass(t, compact)">
-    <!-- Barra de cor -->
-    <div
-      [class]="'w-full rounded-lg shadow-sm transition-all ' + (compact ? 'h-6' : 'h-7')"
-      [style.background]="swatch(t)"
-    ></div>
-    <!-- Label -->
-    <span [class]="swatchLabelClass(t, compact)">{{ themeLabel(t) }}</span>
-    <!-- Indicador ativo -->
-    @if (theme.colorTheme() === t) {
-      <span
-        class="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-card bg-primary"
-      ></span>
-    }
-  </button>
-</ng-template>

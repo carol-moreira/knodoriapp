@@ -215,6 +215,25 @@ html.dark[data-theme="classic-elegance"],
 
 /* ── Base layer ─────────────────────────────────────────────────────────── */
 @layer base {
+  /*
+   * Altura ocupada pelo shell (header + paddings do <main> + barra inferior no celular).
+   * Telas de altura cheia (chats) usam h-[calc(100dvh-var(--app-chrome))].
+   * Manter em sincronia com layout.component.html.
+   */
+  :root {
+    --app-chrome: calc(9.75rem + 1px + env(safe-area-inset-top) + env(safe-area-inset-bottom));
+  }
+  @media (min-width: 40rem) {
+    :root {
+      --app-chrome: calc(10.25rem + 1px + env(safe-area-inset-top) + env(safe-area-inset-bottom));
+    }
+  }
+  @media (min-width: 64rem) {
+    :root {
+      --app-chrome: calc(9rem + 1px);
+    }
+  }
+
   * {
     border-color: var(--color-border);
   }

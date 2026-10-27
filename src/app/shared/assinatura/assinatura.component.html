@@ -1,0 +1,7 @@
+<span class="inline-flex flex-wrap items-center gap-x-1" [title]="por().nome"
+  ><svg [appIcon]="icons.PenLine" class="h-2.5 w-2.5 shrink-0 opacity-70"></svg>{{ acao() }}
+  <span class="font-semibold">{{ por().username }}</span>
+  @if (!semData()) {
+    <span>· {{ quando() }}</span>
+  }
+</span>

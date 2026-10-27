@@ -1,0 +1,13 @@
+<span class="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+  <span [class]="'cozy-pill text-[10px] font-semibold ' + META[estado()].badge">
+    {{ META[estado()].label }}
+  </span>
+  @if (detalhe()) {
+    <span class="flex items-center gap-1 tabular-nums">
+      @if (estado() === "AGENDADA") {
+        <svg [appIcon]="icons.Timer" class="h-3 w-3"></svg>
+      }
+      {{ detalhe() }}
+    </span>
+  }
+</span>
