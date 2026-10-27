@@ -31,8 +31,9 @@
     @for (pedido of ativos(); track pedido.id) {
       <app-pedido-card
         [pedido]="pedido"
+        [envioEtapa]="envioEtapa(pedido.id)"
         (solicitarRepasse)="abrirRepasse(pedido)"
-        (solicitarEnvio)="envioPedido.set(pedido)"
+        (solicitarEnvio)="solicitarEnvio(pedido)"
       />
     }
   </div>
@@ -43,10 +44,5 @@
     [pedidos]="pedidos()"
     [pedidoInicial]="repassePedido()"
     (closed)="fecharRepasse()"
-  />
-  <app-solicitar-envio-modal
-    [open]="!!envioPedido()"
-    [pedido]="envioPedido()"
-    (closed)="envioPedido.set(null)"
   />
 }

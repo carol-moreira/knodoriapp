@@ -3,6 +3,7 @@ import {
   ElementRef,
   afterRenderEffect,
   computed,
+  inject,
   input,
   linkedSignal,
   output,
@@ -14,6 +15,8 @@ import { ImageLightboxComponent } from "@/components/joiner/minhas-compras/image
 import { MERCARI_STATUS_META, type SolicitacaoGOM } from "@/lib/gom-types";
 import { resumoItens, type Mensagem } from "@/lib/mensagens-types";
 import { IconDirective } from "@/shared/icon.directive";
+import { ConfirmService } from "@/shared/confirm-dialog/confirm.service";
+import { AssinaturaComponent } from "@/shared/assinatura/assinatura.component";
 
 const MAX_IMAGENS = 4;
 const MAX_IMAGEM_BYTES = 4 * 1024 * 1024;
@@ -35,11 +38,13 @@ interface LinhaMensagem {
 /** Thread de mensagens + campo de envio (com vínculo opcional a um pedido). */
 @Component({
   selector: "app-chat-thread",
-  imports: [IconDirective, ImageLightboxComponent],
+  imports: [IconDirective, ImageLightboxComponent, AssinaturaComponent],
   templateUrl: "./chat-thread.component.html",
   styleUrl: "./chat-thread.component.scss",
 })
 export class ChatThreadComponent {
+  private readonly confirm = inject(ConfirmService);
+
   /** Trocar de conversa limpa o rascunho e o pedido vinculado. */
   readonly conversaId = input.required<string>();
   readonly mensagens = input.required<Mensagem[]>();
@@ -164,8 +169,9 @@ export class ChatThreadComponent {
     }
   }
 
-  protected removerAnexo(i: number): void {
-    this.anexos.update((a) => a.filter((_, idx) => idx !== i));
+  protected async removerAnexo(i: number): Promise<void> {
+    const ok = await this.confirm.confirmar({ titulo: `excluir a imagem ${i + 1}?` });
+    if (ok) this.anexos.update((a) => a.filter((_, idx) => idx !== i));
   }
 
   protected gradeImagens(qtd: number): string {

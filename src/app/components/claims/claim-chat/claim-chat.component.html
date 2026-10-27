@@ -1,0 +1,131 @@
+<div class="flex h-full min-h-0 flex-col">
+  <!-- Mensagens -->
+  <div #scroller class="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-4 no-scrollbar">
+    @for (linha of linhas(); track linha.mensagem.id) {
+      @if (linha.mensagem.tipo === "SISTEMA") {
+        <p
+          class="mx-auto flex w-fit max-w-[90%] items-center gap-1.5 rounded-pill bg-muted px-3 py-1 text-center text-[11px] font-medium text-muted-foreground"
+        >
+          <svg [appIcon]="icons.Sparkles" class="h-3 w-3 shrink-0"></svg>
+          {{ linha.mensagem.texto }}
+        </p>
+      } @else {
+        <div [class]="'flex ' + (linha.minha ? 'justify-end' : 'justify-start')">
+          <div [class]="'max-w-[85%] px-3.5 py-2.5 sm:max-w-[70%] ' + bolhaClass(linha)">
+            @if (!linha.minha) {
+              <p class="mb-0.5 flex items-center gap-1 text-[11px] font-semibold">
+                @if (linha.mensagem.tipo === "CLAIM") {
+                  <svg [appIcon]="icons.Hand" class="h-3 w-3 text-amber-600"></svg>
+                }
+                {{ linha.mensagem.autorUsername }}
+              </p>
+            }
+            <p class="whitespace-pre-line wrap-break-word text-sm leading-snug">
+              {{ linha.mensagem.texto }}
+            </p>
+
+            @if (linha.claims.length > 0) {
+              <ul class="mt-1.5 space-y-1">
+                @for (c of linha.claims; track c.claim.id) {
+                  <li
+                    [class]="
+                      'flex items-center gap-2 rounded-xl px-2.5 py-1.5 text-[11px] ' +
+                      (linha.minha ? 'bg-primary-foreground/15' : 'bg-card')
+                    "
+                  >
+                    <span class="font-bold">#{{ c.item?.codigo }}</span>
+                    <span class="min-w-0 truncate">{{ c.item?.nome }}</span>
+                    @if (c.posicao > 1) {
+                      <span class="shrink-0 opacity-75">{{ c.posicao }}º na fila</span>
+                    }
+                    <span
+                      [class]="
+                        'ml-auto shrink-0 rounded-full px-2 py-0.5 text-[9px] font-semibold ' +
+                        CLAIM_META[c.claim.status].badge
+                      "
+                    >
+                      {{ CLAIM_META[c.claim.status].label }}
+                    </span>
+                  </li>
+                }
+              </ul>
+            }
+
+            <p
+              [class]="
+                'mt-1 text-right text-[10px] tabular-nums ' +
+                (linha.minha ? 'text-primary-foreground/70' : 'text-muted-foreground')
+              "
+            >
+              {{ fmtHora(linha.mensagem.data) }}
+            </p>
+          </div>
+        </div>
+      }
+    } @empty {
+      <div class="grid h-full place-items-center py-12 text-center">
+        <div class="space-y-2">
+          <div
+            class="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary"
+          >
+            <svg [appIcon]="icons.MessagesSquare" class="h-6 w-6"></svg>
+          </div>
+          <p class="text-sm font-semibold">sala vazia por enquanto</p>
+          <p class="text-xs text-muted-foreground">as mensagens da rodada aparecem aqui ── .✦</p>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Envio -->
+  <form
+    class="space-y-2 border-t border-border/60 bg-card px-3 py-3"
+    (submit)="$event.preventDefault(); submit()"
+  >
+    @if (modoJoiner() && estado() === "ABERTA" && atalhos().length > 0) {
+      <div class="flex gap-1.5 overflow-x-auto no-scrollbar" aria-label="itens disponíveis">
+        @for (item of atalhos(); track item.id) {
+          <button
+            type="button"
+            (click)="inserirCodigo(item)"
+            [title]="item.nome + ' · ' + brl(item.valor)"
+            class="flex shrink-0 items-center gap-1.5 rounded-pill border border-border bg-muted/40 px-2.5 py-1 text-[11px] transition hover:border-primary hover:text-primary"
+          >
+            <span class="font-bold">#{{ item.codigo }}</span>
+            <span class="max-w-28 truncate text-muted-foreground">{{ item.nome }}</span>
+            @if (item.status === "RESERVADO") {
+              <span class="h-1.5 w-1.5 rounded-full bg-amber-500" title="reservado (fila)"></span>
+            }
+          </button>
+        }
+      </div>
+    }
+
+    @if (estado() === "ENCERRADA") {
+      <p class="flex items-center gap-1.5 px-1 text-[11px] text-muted-foreground">
+        <svg [appIcon]="icons.Lock" class="h-3 w-3"></svg>
+        rodada encerrada — o chat é só leitura.
+      </p>
+    } @else {
+      <div class="flex items-end gap-2">
+        <textarea
+          rows="1"
+          [value]="texto()"
+          (input)="texto.set($any($event.target).value)"
+          (keydown)="onKeydown($event)"
+          [placeholder]="placeholder()"
+          aria-label="mensagem"
+          class="max-h-32 min-h-10 flex-1 resize-none rounded-2xl border border-border bg-muted/40 px-3.5 py-2.5 text-sm outline-none transition placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/20 field-sizing-content"
+        ></textarea>
+        <button
+          type="submit"
+          [disabled]="!texto().trim()"
+          aria-label="enviar"
+          class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-sm transition hover:opacity-90 active:scale-95 disabled:opacity-40"
+        >
+          <svg [appIcon]="icons.SendHorizontal" class="h-4 w-4"></svg>
+        </button>
+      </div>
+    }
+  </form>
+</div>

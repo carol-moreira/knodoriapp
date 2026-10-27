@@ -1,8 +1,9 @@
-<div class="space-y-6">
+<div class="space-y-5 sm:space-y-6">
   <!-- Header -->
   <div class="flex flex-wrap items-center justify-between gap-3">
     <div>
-      <h1 class="text-2xl font-bold tracking-tight">CEGs</h1>
+      <!-- No celular o título já aparece no header -->
+      <h1 class="sr-only text-2xl font-bold tracking-tight sm:not-sr-only">CEGs</h1>
       <p class="mt-0.5 text-sm text-muted-foreground">
         {{ cegs().length }} grupo{{ cegs().length !== 1 ? "s" : "" }} de pedido
       </p>
@@ -10,7 +11,7 @@
     <button
       type="button"
       (click)="criarOpen.set(true)"
-      class="flex items-center gap-2 rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90"
+      class="flex h-10 items-center gap-2 rounded-2xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90 active:scale-[0.98]"
     >
       <svg [appIcon]="icons.Plus" class="h-4 w-4"></svg>
       nova CEG
@@ -18,7 +19,7 @@
   </div>
 
   <!-- Filtros -->
-  <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+  <div class="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 no-scrollbar sm:mx-0 sm:px-0">
     @for (f of filtros; track f.value) {
       <button type="button" (click)="filtro.set(f.value)" [class]="filtroClass(f.value)">
         {{ f.label }}
@@ -40,115 +41,144 @@
       @for (ceg of filtradas(); track ceg.id) {
         <!-- CegCard -->
         <div class="cozy-card overflow-hidden">
-          <div class="p-5">
-            <div class="flex flex-wrap items-start justify-between gap-3">
-              <!-- Info -->
-              <div class="min-w-0 flex-1 space-y-1.5">
-                <div class="flex flex-wrap items-center gap-2">
-                  <h3 class="text-sm font-bold truncate">{{ ceg.nome }}</h3>
-                  <span
-                    [class]="'cozy-pill text-[10px] font-semibold ' + STATUS_META[ceg.status].badge"
-                  >
-                    {{ STATUS_META[ceg.status].label }}
-                  </span>
-                </div>
-                <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                  <span class="flex items-center gap-1">
-                    <svg [appIcon]="icons.Layers" class="h-3 w-3"></svg>
-                    {{ ceg.loja }}
-                  </span>
-                  <span>·</span>
-                  <span class="flex items-center gap-1">
-                    <svg [appIcon]="icons.Users" class="h-3 w-3"></svg>
-                    {{ ceg.qtdJoiners }} joiners
-                  </span>
-                  <span>·</span>
-                  <span class="flex items-center gap-1">
-                    <svg [appIcon]="icons.Package" class="h-3 w-3"></svg>
-                    {{ ceg.qtdItens }} itens
-                  </span>
-                  <span>·</span>
-                  <span class="flex items-center gap-1">
-                    <svg [appIcon]="icons.Clock" class="h-3 w-3"></svg>
-                    {{ fmtDate(ceg.prazo) }}
-                  </span>
-                  <span>·</span>
-                  <span class="font-medium">{{ ceg.moeda }}</span>
-                </div>
+          <!-- Cabeçalho tocável: abre/fecha o dropdown de detalhes -->
+          <button
+            type="button"
+            (click)="alternarDetalhes(ceg.id)"
+            [attr.aria-expanded]="expandidas().has(ceg.id)"
+            [attr.aria-controls]="'detalhes-' + ceg.id"
+            class="group flex w-full items-start gap-3 p-4 text-left transition active:bg-muted/40 sm:p-5 sm:hover:bg-muted/30"
+          >
+            <div class="min-w-0 flex-1 space-y-2">
+              <div class="flex items-start justify-between gap-2">
+                <h3 class="min-w-0 text-[15px] font-bold leading-snug sm:text-sm">
+                  {{ ceg.nome }}
+                </h3>
+                <span
+                  [class]="
+                    'cozy-pill shrink-0 text-[10px] font-semibold ' + STATUS_META[ceg.status].badge
+                  "
+                >
+                  {{ STATUS_META[ceg.status].label }}
+                </span>
               </div>
 
-              <!-- Ações -->
-              <div class="flex flex-wrap items-center gap-2 shrink-0">
-                <button
-                  type="button"
-                  (click)="novidadesCeg.set(ceg)"
-                  class="flex items-center gap-1.5 rounded-pill border border-border bg-muted/50 px-3 py-2 text-xs font-medium transition hover:bg-muted"
-                >
-                  <svg [appIcon]="icons.Megaphone" class="h-3.5 w-3.5"></svg>
-                  novidades
-                  @if (posts.daCeg(ceg.id).length > 0) {
-                    <span class="text-[10px] font-bold text-muted-foreground">
-                      {{ posts.daCeg(ceg.id).length }}
-                    </span>
-                  }
-                </button>
-                <button
-                  type="button"
-                  (click)="repassesCeg.set(ceg)"
-                  class="relative flex items-center gap-1.5 rounded-pill border border-border bg-muted/50 px-3 py-2 text-xs font-medium transition hover:bg-muted"
-                >
-                  <svg [appIcon]="icons.BarChart3" class="h-3.5 w-3.5"></svg>
-                  pagamentos
-                  @if (repassesPend(ceg.id) > 0) {
-                    <span
-                      class="absolute -right-1.5 -top-1.5 grid h-4 w-4 place-items-center rounded-full bg-amber-500 text-[9px] font-bold text-white"
-                    >
-                      {{ repassesPend(ceg.id) }}
-                    </span>
-                  }
-                </button>
-                <button
-                  type="button"
-                  (click)="verRepasses(ceg.id)"
-                  class="relative flex items-center gap-1.5 rounded-pill border border-border bg-muted/50 px-3 py-2 text-xs font-medium transition hover:bg-muted"
-                >
-                  <svg [appIcon]="icons.Repeat2" class="h-3.5 w-3.5"></svg>
-                  repasses
-                  @if (repasseService.pendentesDaCeg(ceg.id) > 0) {
-                    <span
-                      class="absolute -right-1.5 -top-1.5 grid h-4 w-4 place-items-center rounded-full bg-amber-500 text-[9px] font-bold text-white"
-                    >
-                      {{ repasseService.pendentesDaCeg(ceg.id) }}
-                    </span>
-                  }
-                </button>
-                <select
-                  (change)="onStatusChange(ceg.id, $event)"
-                  class="rounded-xl border border-border bg-muted/40 px-2 py-2 text-xs font-medium outline-none transition focus:border-primary"
-                >
-                  @for (s of steps; track s) {
-                    <option [value]="s" [selected]="s === ceg.status">
-                      {{ STATUS_META[s].label }}
-                    </option>
-                  }
-                </select>
+              <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                <span class="flex items-center gap-1">
+                  <svg [appIcon]="icons.Layers" class="h-3 w-3"></svg>
+                  {{ ceg.loja }} · {{ ceg.moeda }}
+                </span>
+                <span class="flex items-center gap-1">
+                  <svg [appIcon]="icons.Users" class="h-3 w-3"></svg>
+                  {{ ceg.qtdJoiners }} joiners
+                </span>
+                <span class="flex items-center gap-1">
+                  <svg [appIcon]="icons.Package" class="h-3 w-3"></svg>
+                  {{ ceg.qtdItens }} itens
+                </span>
+                <span class="flex items-center gap-1">
+                  <svg [appIcon]="icons.Clock" class="h-3 w-3"></svg>
+                  {{ fmtDate(ceg.prazo) }}
+                </span>
               </div>
-            </div>
 
-            <!-- Barra de progresso das etapas -->
-            <div class="mt-4 flex items-center gap-1">
-              @for (s of steps; track s) {
-                <div [class]="stepClass(ceg, s)"></div>
+              @if (claims.pendentesDa(ceg.id).length > 0) {
+                <span
+                  class="cozy-pill inline-block bg-amber-50 text-[10px] font-semibold text-amber-700 ring-1 ring-amber-200"
+                >
+                  {{ claims.pendentesDa(ceg.id).length }} claim{{
+                    claims.pendentesDa(ceg.id).length !== 1 ? "s" : ""
+                  }}
+                  pendente{{ claims.pendentesDa(ceg.id).length !== 1 ? "s" : "" }}
+                </span>
               }
+
+              <!-- Barra de progresso das etapas -->
+              <div class="flex items-center gap-1 pt-1" aria-hidden="true">
+                @for (s of steps; track s) {
+                  <div [class]="stepClass(ceg, s)"></div>
+                }
+              </div>
             </div>
+
+            <span
+              class="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-muted/60 text-muted-foreground transition group-hover:text-foreground"
+            >
+              <svg
+                [appIcon]="icons.ChevronDown"
+                [class]="'h-4 w-4 transition ' + (expandidas().has(ceg.id) ? 'rotate-180' : '')"
+              ></svg>
+              <span class="sr-only">
+                {{ expandidas().has(ceg.id) ? "ocultar detalhes" : "ver detalhes" }}
+              </span>
+            </span>
+          </button>
+
+          <!-- Ações (no celular rolam na horizontal) -->
+          <div
+            class="flex items-center gap-2 overflow-x-auto border-t border-border/60 px-4 py-2.5 no-scrollbar sm:flex-wrap sm:px-5"
+          >
+            <button type="button" (click)="editarCeg.set(ceg)" [class]="ACAO_CLS">
+              <svg [appIcon]="icons.Pencil" class="h-3.5 w-3.5"></svg>
+              editar
+            </button>
+            <button type="button" (click)="novidadesCeg.set(ceg)" [class]="ACAO_CLS">
+              <svg [appIcon]="icons.Megaphone" class="h-3.5 w-3.5"></svg>
+              novidades
+              @if (posts.daCeg(ceg.id).length > 0) {
+                <span class="text-[10px] font-bold text-muted-foreground">
+                  {{ posts.daCeg(ceg.id).length }}
+                </span>
+              }
+            </button>
+            <button type="button" (click)="repassesCeg.set(ceg)" [class]="ACAO_CLS">
+              <svg [appIcon]="icons.BarChart3" class="h-3.5 w-3.5"></svg>
+              pagamentos
+              @if (repassesPend(ceg.id) > 0) {
+                <span class="rounded-full bg-amber-500 px-1.5 text-[10px] font-bold text-white">
+                  {{ repassesPend(ceg.id) }}
+                </span>
+              }
+            </button>
+            <button type="button" (click)="verRepasses(ceg.id)" [class]="ACAO_CLS">
+              <svg [appIcon]="icons.Repeat2" class="h-3.5 w-3.5"></svg>
+              repasses
+              @if (repasseService.pendentesDaCeg(ceg.id) > 0) {
+                <span class="rounded-full bg-amber-500 px-1.5 text-[10px] font-bold text-white">
+                  {{ repasseService.pendentesDaCeg(ceg.id) }}
+                </span>
+              }
+            </button>
+            <select
+              (change)="onStatusChange(ceg.id, $event)"
+              aria-label="status da CEG"
+              class="h-9 shrink-0 rounded-pill border border-border bg-muted/40 px-3 text-xs font-medium outline-none transition focus:border-primary sm:ml-auto"
+            >
+              @for (s of steps; track s) {
+                <option [value]="s" [selected]="s === ceg.status">
+                  {{ STATUS_META[s].label }}
+                </option>
+              }
+            </select>
           </div>
+
+          @if (expandidas().has(ceg.id)) {
+            <app-ceg-detalhes
+              [id]="'detalhes-' + ceg.id"
+              [ceg]="ceg"
+              [repasses]="repassesDa(ceg.id)"
+              (abrirNovidades)="novidadesCeg.set(ceg)"
+              (abrirPagamentos)="repassesCeg.set(ceg)"
+              (abrirRepasses)="verRepasses(ceg.id)"
+            />
+          }
         </div>
       }
     </div>
   }
 
   <!-- Fila de repasses (seção própria) -->
-  <div #filaSection class="scroll-mt-24 border-t border-border/60 pt-6">
+  <div #filaSection class="scroll-mt-20 border-t border-border/60 pt-6 lg:scroll-mt-24">
     <app-fila-repasses [cegs]="cegs()" [(cegFiltro)]="filaCeg" />
   </div>
 </div>
@@ -159,6 +189,9 @@
   (closed)="criarOpen.set(false)"
   (saved)="handleCriar($event)"
 />
+@if (editarCeg(); as ceg) {
+  <app-editar-ceg-modal [open]="true" [ceg]="ceg" (closed)="editarCeg.set(null)" />
+}
 <app-novidades-modal
   [open]="!!novidadesCeg()"
   [ceg]="novidadesCeg()"

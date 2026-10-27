@@ -1,7 +1,9 @@
-import { Component, computed, input, linkedSignal, signal } from "@angular/core";
+import { Component, computed, inject, signal } from "@angular/core";
 import { Lock, Pencil, Search, Shield, ShieldOff, Users } from "lucide-angular";
 import type { GlobalUser } from "@/lib/admin-types";
 import type { UserRole } from "@/lib/auth";
+import { UsuariosService } from "@/services/usuarios.service";
+import { ConfirmService } from "@/shared/confirm-dialog/confirm.service";
 import { IconDirective } from "@/shared/icon.directive";
 import { inputValue } from "@/shared/dom";
 import {
@@ -13,6 +15,7 @@ import {
   type PendingRoleChange,
   type UserEdit,
 } from "./controle-usuarios.model";
+import { SolicitacoesModeracaoComponent } from "../solicitacoes-moderacao/solicitacoes-moderacao.component";
 import { EditUserDialogComponent } from "./edit-user-dialog/edit-user-dialog.component";
 import { RoleChangeDialogComponent } from "./role-change-dialog/role-change-dialog.component";
 
@@ -20,12 +23,18 @@ type RoleFilter = UserRole | "TODOS";
 
 @Component({
   selector: "app-controle-usuarios",
-  imports: [IconDirective, EditUserDialogComponent, RoleChangeDialogComponent],
+  imports: [
+    IconDirective,
+    EditUserDialogComponent,
+    RoleChangeDialogComponent,
+    SolicitacoesModeracaoComponent,
+  ],
   templateUrl: "./controle-usuarios.component.html",
   styleUrl: "./controle-usuarios.component.scss",
 })
 export class ControleUsuariosComponent {
-  readonly usuarios = input.required<GlobalUser[]>();
+  private readonly confirm = inject(ConfirmService);
+  private readonly usuarios = inject(UsuariosService);
 
   protected readonly icons = { Lock, Pencil, Search, Shield, ShieldOff, Users };
   protected readonly ROLE_META = ROLE_META;
@@ -36,8 +45,7 @@ export class ControleUsuariosComponent {
   protected readonly fmtDate = fmtDate;
   protected readonly val = inputValue;
 
-  /** Lista editável (inicia com o input `usuarios`). */
-  protected readonly lista = linkedSignal<GlobalUser[]>(() => this.usuarios());
+  protected readonly lista = this.usuarios.usuarios;
   protected readonly search = signal("");
   protected readonly filtroRole = signal<RoleFilter>("TODOS");
   protected readonly editTarget = signal<GlobalUser | null>(null);
@@ -88,18 +96,22 @@ export class ControleUsuariosComponent {
 
   // ── Ações ──────────────────────────────────────────────────────────────────
 
-  protected toggleStatus(id: string): void {
-    // 🔌 await fetch(`/api/admin/users/${id}/toggle-status`, { method: "POST" })
-    this.lista.update((prev) =>
-      prev.map((u) =>
-        u.id === id ? { ...u, status: u.status === "ATIVO" ? "SUSPENSO" : "ATIVO" } : u,
-      ),
-    );
+  /** Banir pede confirmação; reativar é direto. */
+  protected async toggleStatus(user: GlobalUser): Promise<void> {
+    if (user.status === "ATIVO") {
+      const ok = await this.confirm.confirmar({
+        titulo: `banir ${user.nome}?`,
+        mensagem: `${user.username} perde o acesso ao app até ser reativada.`,
+        confirmar: "banir",
+        icone: ShieldOff,
+      });
+      if (!ok) return;
+    }
+    this.usuarios.alterarStatus(user.id, user.status === "ATIVO" ? "SUSPENSO" : "ATIVO");
   }
 
   private changeRole(id: string, role: UserRole): void {
-    // 🔌 await fetch(`/api/admin/users/${id}/role`, { method: "PATCH", body: JSON.stringify({ role }) })
-    this.lista.update((prev) => prev.map((u) => (u.id === id ? { ...u, role } : u)));
+    this.usuarios.alterarRole(id, role);
   }
 
   /**
@@ -126,8 +138,7 @@ export class ControleUsuariosComponent {
   }
 
   protected saveEdit({ id, dados }: UserEdit): void {
-    // 🔌 await fetch(`/api/admin/users/${id}`, { method: "PATCH", body: JSON.stringify(dados) })
-    this.lista.update((prev) => prev.map((u) => (u.id === id ? { ...u, ...dados } : u)));
+    this.usuarios.editar(id, dados);
     this.editTarget.set(null);
   }
 }

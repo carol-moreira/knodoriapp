@@ -1,0 +1,633 @@
+<div class="space-y-5 border-t border-border/60 bg-muted/20 px-4 py-4 sm:px-5 sm:py-5">
+  <!-- ── Resumo ────────────────────────────────────────────────────────── -->
+  <section class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+    <div class="rounded-2xl border border-border/60 bg-card p-3">
+      <p class="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">loja</p>
+      <p class="mt-0.5 text-sm font-semibold">{{ ceg().loja }} · {{ ceg().moeda }}</p>
+    </div>
+    <div class="rounded-2xl border border-border/60 bg-card p-3">
+      <p class="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">prazo</p>
+      <p class="mt-0.5 text-sm font-semibold">{{ fmtDate(ceg().prazo) }}</p>
+    </div>
+    <div class="rounded-2xl border border-border/60 bg-card p-3">
+      <p class="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        joiners · itens
+      </p>
+      <p class="mt-0.5 text-sm font-semibold">{{ ceg().qtdJoiners }} · {{ ceg().qtdItens }}</p>
+    </div>
+    <div class="rounded-2xl border border-border/60 bg-card p-3">
+      <p class="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">status</p>
+      <span
+        [class]="
+          'cozy-pill mt-1 inline-block text-[10px] font-semibold ' + STATUS_META[ceg().status].badge
+        "
+      >
+        {{ STATUS_META[ceg().status].label }}
+      </span>
+    </div>
+  </section>
+  @if (ceg().atualizadoPor; as por) {
+    <p class="-mt-3 text-[10px] text-muted-foreground">
+      CEG <app-assinatura [por]="por" acao="alterada por" />
+    </p>
+  }
+
+  <div class="grid gap-5 lg:grid-cols-2">
+    <!-- ── Pagamentos ──────────────────────────────────────────────────── -->
+    <section class="space-y-2">
+      <div class="flex items-center justify-between gap-2">
+        <h4 class="flex items-center gap-1.5 text-xs font-semibold">
+          <svg [appIcon]="icons.BarChart3" class="h-3.5 w-3.5 text-primary"></svg>
+          pagamentos
+        </h4>
+        <button
+          type="button"
+          (click)="abrirPagamentos.emit()"
+          class="text-[11px] font-medium text-primary hover:underline"
+        >
+          gerenciar
+        </button>
+      </div>
+      @if (repasses().length === 0) {
+        <p
+          class="rounded-xl border border-dashed border-border py-4 text-center text-xs text-muted-foreground"
+        >
+          nenhuma cobrança nesta CEG.
+        </p>
+      } @else {
+        <p class="text-[11px] text-muted-foreground">
+          {{ brl(pagamentos().pago) }} de {{ brl(pagamentos().total) }} recebidos ·
+          {{ pagamentos().pendentes }} em aberto
+        </p>
+        <ul class="divide-y divide-border/60 rounded-2xl border border-border/60 bg-card">
+          @for (r of repasses(); track r.id) {
+            <li class="flex flex-wrap items-center gap-x-2 gap-y-0.5 px-3 py-2 text-xs">
+              <span class="min-w-0 flex-1 truncate">
+                <span class="font-semibold">{{ r.joinerNome }}</span>
+                <span class="text-muted-foreground"> {{ r.joinerUsername }}</span>
+              </span>
+              <span
+                class="order-last w-full tabular-nums text-muted-foreground sm:order-none sm:w-auto sm:shrink-0"
+              >
+                {{ brl(r.valorPago) }} / {{ brl(r.valorTotal) }}
+                @if (r.atualizadoPor; as por) {
+                  · <app-assinatura [por]="por" acao="registrado por" />
+                }
+              </span>
+              <span
+                [class]="
+                  'shrink-0 rounded-full px-2 py-0.5 text-[9px] font-semibold ' +
+                  REPASSE_META[r.status].cls
+                "
+              >
+                {{ REPASSE_META[r.status].label }}
+              </span>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <!-- ── Novidades + repasses ────────────────────────────────────────── -->
+    <section class="space-y-2">
+      <div class="flex items-center justify-between gap-2">
+        <h4 class="flex items-center gap-1.5 text-xs font-semibold">
+          <svg [appIcon]="icons.Megaphone" class="h-3.5 w-3.5 text-primary"></svg>
+          novidades ({{ totalPosts() }})
+        </h4>
+        <button
+          type="button"
+          (click)="abrirNovidades.emit()"
+          class="text-[11px] font-medium text-primary hover:underline"
+        >
+          publicar
+        </button>
+      </div>
+      @for (p of ultimosPosts(); track p.id) {
+        <div class="rounded-2xl border border-border/60 bg-card px-3 py-2">
+          <div class="mb-0.5 flex items-center gap-2">
+            <span [class]="'cozy-pill text-[9px] font-semibold ' + POST_META[p.tipo].badge">
+              {{ POST_META[p.tipo].label }}
+            </span>
+            <span class="text-[10px] text-muted-foreground">{{ fmtDataHora(p.data) }}</span>
+          </div>
+          <p class="line-clamp-2 text-xs">{{ p.texto }}</p>
+        </div>
+      } @empty {
+        <p
+          class="rounded-xl border border-dashed border-border py-4 text-center text-xs text-muted-foreground"
+        >
+          nenhuma postagem ainda.
+        </p>
+      }
+      <button
+        type="button"
+        (click)="abrirRepasses.emit()"
+        class="flex w-full items-center gap-2 rounded-2xl border border-border/60 bg-card px-3 py-2 text-left text-xs transition hover:bg-muted"
+      >
+        <svg [appIcon]="icons.Repeat2" class="h-3.5 w-3.5 text-primary"></svg>
+        <span class="flex-1">repasses de claim</span>
+        <span
+          [class]="
+            'rounded-full px-2 py-0.5 text-[10px] font-semibold ' +
+            (repassesPendentes() > 0
+              ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-200'
+              : 'bg-muted text-muted-foreground')
+          "
+        >
+          {{ repassesPendentes() }} pendente{{ repassesPendentes() !== 1 ? "s" : "" }}
+        </span>
+      </button>
+    </section>
+  </div>
+
+  @if (ehCaixa()) {
+    <!-- ── Pedidos da caixa ──────────────────────────────────────────────── -->
+    <section class="space-y-2">
+      <div class="flex flex-wrap items-baseline justify-between gap-2">
+        <h4 class="flex items-center gap-1.5 text-xs font-semibold">
+          <svg [appIcon]="icons.Package" class="h-3.5 w-3.5 text-primary"></svg>
+          pedidos da caixa ({{ pedidosDaCaixa().length }})
+        </h4>
+        @if (ceg().cobranca; as cob) {
+          <p class="text-[11px] text-muted-foreground">
+            frete {{ brl(cob.freteTotal) }} + taxa {{ brl(cob.taxaPorJoiner) }}/joiner ·
+            {{ cob.pagoPor?.length ?? 0 }} de {{ qtdCobrados(cob.porJoiner) }} pagos
+          </p>
+        }
+      </div>
+      @if (pedidosDaCaixa().length === 0) {
+        <p
+          class="rounded-xl border border-dashed border-border py-4 text-center text-xs text-muted-foreground"
+        >
+          nenhum pedido nesta caixa ainda.
+        </p>
+      } @else {
+        <!-- Celular: cards -->
+        <ul class="space-y-2 sm:hidden">
+          @for (p of pedidosDaCaixa(); track p.id) {
+            <li class="rounded-2xl border border-border/60 bg-card p-3 text-xs">
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                  <p class="truncate font-semibold">{{ p.joinerNome }}</p>
+                  <p class="text-[11px] text-muted-foreground">{{ p.joinerUsername }}</p>
+                </div>
+                <span
+                  [class]="
+                    'cozy-pill shrink-0 text-[10px] font-semibold ' + MERCARI_META[p.status].badge
+                  "
+                >
+                  {{ MERCARI_META[p.status].label }}
+                </span>
+              </div>
+              <div class="mt-2 flex items-center justify-between gap-2">
+                <span class="min-w-0 truncate text-muted-foreground">{{
+                  resumoItens(p.itens)
+                }}</span>
+                <span class="shrink-0 font-semibold tabular-nums">{{ brl(p.valorBrl) }}</span>
+              </div>
+              @if (p.atualizadoPor; as por) {
+                <p class="mt-1 text-[10px] text-muted-foreground">
+                  <app-assinatura [por]="por" acao="alterado por" />
+                </p>
+              }
+            </li>
+          }
+        </ul>
+        <div class="hidden overflow-x-auto sm:block rounded-2xl border border-border/60 bg-card">
+          <table class="w-full min-w-[36rem] text-left text-xs">
+            <thead
+              class="border-b border-border/60 text-[10px] uppercase tracking-wide text-muted-foreground"
+            >
+              <tr>
+                <th class="px-3 py-2 font-semibold">joiner</th>
+                <th class="px-3 py-2 font-semibold">itens</th>
+                <th class="px-3 py-2 text-right font-semibold">valor</th>
+                <th class="px-3 py-2 font-semibold">status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border/60">
+              @for (p of pedidosDaCaixa(); track p.id) {
+                <tr>
+                  <td class="px-3 py-2.5">
+                    <p class="font-semibold">{{ p.joinerNome }}</p>
+                    <p class="text-[11px] text-muted-foreground">{{ p.joinerUsername }}</p>
+                  </td>
+                  <td class="px-3 py-2.5">{{ resumoItens(p.itens) }}</td>
+                  <td class="px-3 py-2.5 text-right tabular-nums">{{ brl(p.valorBrl) }}</td>
+                  <td class="px-3 py-2.5">
+                    <span
+                      [class]="
+                        'cozy-pill text-[10px] font-semibold ' + MERCARI_META[p.status].badge
+                      "
+                    >
+                      {{ MERCARI_META[p.status].label }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  } @else {
+    <!-- ── Agenda dos claims ─────────────────────────────────────────────── -->
+    <section class="space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h4 class="flex items-center gap-1.5 text-xs font-semibold">
+          <svg [appIcon]="icons.CalendarClock" class="h-3.5 w-3.5 text-primary"></svg>
+          rodada de claims
+        </h4>
+        <div class="flex flex-wrap items-center gap-2">
+          <app-rodada-status [cegId]="ceg().id" />
+          <a
+            routerLink="/gom/claims"
+            [queryParams]="{ ceg: ceg().id }"
+            class="flex items-center gap-1.5 rounded-pill bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
+          >
+            <svg [appIcon]="icons.MessagesSquare" class="h-3.5 w-3.5"></svg>
+            sala de claims
+            @if (claims.pendentesDa(ceg().id).length > 0) {
+              <span class="rounded-full bg-primary-foreground/20 px-1.5 text-[10px] font-bold">
+                {{ claims.pendentesDa(ceg().id).length }}
+              </span>
+            }
+          </a>
+        </div>
+      </div>
+
+      <div class="grid gap-2 sm:grid-cols-[1fr_1fr_auto_auto] sm:items-end">
+        <label class="space-y-1">
+          <span class="text-[11px] font-medium text-muted-foreground">abre em</span>
+          <input
+            type="datetime-local"
+            [value]="abreEm()"
+            (input)="abreEm.set(val($event))"
+            [class]="INPUT_CLS"
+          />
+        </label>
+        <label class="space-y-1">
+          <span class="text-[11px] font-medium text-muted-foreground">fecha em (opcional)</span>
+          <input
+            type="datetime-local"
+            [value]="fechaEm()"
+            (input)="fechaEm.set(val($event))"
+            [class]="INPUT_CLS"
+          />
+        </label>
+        <label class="space-y-1">
+          <span class="text-[11px] font-medium text-muted-foreground">aviso prévio</span>
+          <select (change)="avisoMinutos.set(+val($event))" [class]="INPUT_CLS + ' sm:w-32'">
+            @for (m of avisoOpcoes; track m) {
+              <option [value]="m" [selected]="m === avisoMinutos()">
+                {{ m === 0 ? "sem aviso" : m + " min antes" }}
+              </option>
+            }
+          </select>
+        </label>
+        <div class="flex gap-2">
+          <button
+            type="button"
+            (click)="salvarAgenda()"
+            class="flex-1 rounded-xl bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
+          >
+            {{ agenda() ? "reagendar" : "agendar" }}
+          </button>
+          @if (estado() === "ABERTA") {
+            <button
+              type="button"
+              (click)="claims.encerrar(ceg().id)"
+              class="rounded-xl border border-border bg-card px-3 py-2.5 text-xs font-medium transition hover:bg-muted"
+            >
+              encerrar
+            </button>
+          }
+        </div>
+      </div>
+      @if (agendaErro()) {
+        <p class="text-[11px] font-medium text-destructive">{{ agendaErro() }}</p>
+      } @else if (agendaSalva()) {
+        <p class="text-[11px] text-muted-foreground">
+          agenda salva — as joiners recebem o aviso prévio e o aviso de abertura.
+        </p>
+      }
+      @if (agenda()?.por; as por) {
+        <p class="text-[10px] text-muted-foreground">
+          <app-assinatura [por]="por" acao="agenda por" />
+        </p>
+      }
+    </section>
+
+    <!-- ── Inventário ────────────────────────────────────────────────────── -->
+    <section class="space-y-3">
+      <div class="flex flex-wrap items-baseline justify-between gap-2">
+        <h4 class="text-xs font-semibold">itens ({{ resumo().total }})</h4>
+        <p class="text-[11px] text-muted-foreground">
+          {{ resumo().disponiveis }} disponíveis · {{ resumo().reservados }} reservados ·
+          {{ resumo().confirmados }} confirmados · {{ brl(resumo().valorPago) }} de
+          {{ brl(resumo().valorConfirmado) }} pagos
+          @if (resumo().avarias > 0) {
+            · {{ resumo().avarias }} com avaria
+          }
+          @if (resumo().abandonados > 0) {
+            · {{ resumo().abandonados }} abandonado{{ resumo().abandonados !== 1 ? "s" : "" }}
+          }
+        </p>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        <button
+          type="button"
+          (click)="itemModal.set({ id: null })"
+          class="flex items-center gap-1.5 rounded-pill bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
+        >
+          <svg [appIcon]="icons.Plus" class="h-3.5 w-3.5"></svg>
+          novo item
+        </button>
+        <button
+          type="button"
+          (click)="joinerModal.set({ joinerId: null })"
+          class="flex items-center gap-1.5 rounded-pill border border-border bg-card px-3 py-1.5 text-xs font-medium transition hover:bg-muted"
+        >
+          <svg [appIcon]="icons.Users" class="h-3.5 w-3.5"></svg>
+          claims por joiner
+        </button>
+      </div>
+
+      @if (linhas().length === 0) {
+        <p
+          class="rounded-xl border border-dashed border-border py-6 text-center text-xs text-muted-foreground"
+        >
+          nenhum item cadastrado — adicione os itens antes de abrir os claims.
+        </p>
+      } @else {
+        <!-- Celular: cards -->
+        <ul class="space-y-2 sm:hidden">
+          @for (l of linhas(); track l.item.id) {
+            <li class="rounded-2xl border border-border/60 bg-card p-3 text-xs">
+              <div class="flex items-start gap-2">
+                <span class="font-bold">#{{ l.item.codigo }}</span>
+                <div class="min-w-0 flex-1">
+                  <p class="font-medium leading-snug">{{ l.item.nome }}</p>
+                  @if (l.item.avaria || l.item.abandonado) {
+                    <div class="mt-1 flex flex-wrap gap-1">
+                      @if (l.item.avaria) {
+                        <span
+                          class="flex items-center gap-0.5 rounded-full bg-amber-50 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700 ring-1 ring-amber-200"
+                        >
+                          <svg [appIcon]="icons.ShieldAlert" class="h-2.5 w-2.5"></svg>avaria
+                        </span>
+                      }
+                      @if (l.item.abandonado) {
+                        <span
+                          class="flex items-center gap-0.5 rounded-full bg-rose-50 px-1.5 py-0.5 text-[9px] font-semibold text-rose-700 ring-1 ring-rose-200"
+                        >
+                          <svg [appIcon]="icons.PackageX" class="h-2.5 w-2.5"></svg>abandonado
+                        </span>
+                      }
+                    </div>
+                  }
+                </div>
+                <span class="shrink-0 font-semibold tabular-nums">{{ brl(l.item.valor) }}</span>
+              </div>
+
+              <div class="mt-2 flex items-start gap-2">
+                <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+                  <span
+                    [class]="
+                      'cozy-pill text-[10px] font-semibold ' + ITEM_META[l.item.status].badge
+                    "
+                  >
+                    {{ ITEM_META[l.item.status].label }}
+                  </span>
+                  @if (l.dono; as d) {
+                    <button
+                      type="button"
+                      (click)="joinerModal.set({ joinerId: d.joinerId })"
+                      class="font-semibold underline-offset-2 active:underline"
+                    >
+                      {{ d.joinerNome }}
+                      <span class="font-normal text-muted-foreground">{{ d.joinerUsername }}</span>
+                    </button>
+                  } @else if (l.fila[0]; as primeira) {
+                    <span class="flex items-center gap-1 text-muted-foreground">
+                      <svg [appIcon]="icons.Hand" class="h-3 w-3 text-amber-600"></svg>
+                      {{ primeira.joinerUsername }}
+                      @if (l.fila.length > 1) {
+                        <span class="text-[10px]">+{{ l.fila.length - 1 }} na fila</span>
+                      }
+                    </span>
+                  }
+                </div>
+                <button
+                  type="button"
+                  (click)="itemModal.set({ id: l.item.id })"
+                  [attr.aria-label]="'editar item ' + l.item.codigo"
+                  class="flex h-8 shrink-0 items-center gap-1 rounded-lg border border-border px-3 text-[11px] font-medium text-muted-foreground active:bg-muted"
+                >
+                  <svg [appIcon]="icons.Pencil" class="h-3 w-3"></svg>
+                  editar
+                </button>
+              </div>
+
+              @if (l.dono?.joinerTelefone || l.item.pagamento) {
+                <div class="mt-2 flex items-center gap-2">
+                  @if (l.dono?.joinerTelefone; as tel) {
+                    <a
+                      [href]="whatsapp(tel)"
+                      target="_blank"
+                      rel="noopener"
+                      class="flex h-8 items-center gap-1 rounded-lg px-2 text-primary active:bg-primary/10"
+                    >
+                      <svg [appIcon]="icons.Phone" class="h-3 w-3"></svg>
+                      whatsapp
+                    </a>
+                  }
+                  @if (l.item.pagamento) {
+                    <select
+                      (change)="onPagamento(l.item.id, $event)"
+                      [attr.aria-label]="'pagamento do item ' + l.item.codigo"
+                      [class]="
+                        'h-8 rounded-lg border px-2 text-[11px] font-medium outline-none ' +
+                        (l.item.pagamento === 'PAGO'
+                          ? 'border-lime-200 bg-lime-50 text-lime-700'
+                          : 'border-amber-200 bg-amber-50 text-amber-700')
+                      "
+                    >
+                      <option value="PENDENTE" [selected]="l.item.pagamento === 'PENDENTE'">
+                        pgto pendente
+                      </option>
+                      <option value="PAGO" [selected]="l.item.pagamento === 'PAGO'">pago</option>
+                    </select>
+                  }
+                </div>
+              }
+            </li>
+          }
+        </ul>
+
+        <div class="hidden overflow-x-auto sm:block rounded-2xl border border-border/60 bg-card">
+          <table class="w-full min-w-[46rem] text-left text-xs">
+            <thead
+              class="border-b border-border/60 text-[10px] uppercase tracking-wide text-muted-foreground"
+            >
+              <tr>
+                <th class="px-3 py-2 font-semibold">código</th>
+                <th class="px-3 py-2 font-semibold">item</th>
+                <th class="px-3 py-2 text-right font-semibold">valor</th>
+                <th class="px-3 py-2 font-semibold">status</th>
+                <th class="px-3 py-2 font-semibold">claimer</th>
+                <th class="px-3 py-2 font-semibold">contato</th>
+                <th class="px-3 py-2 font-semibold">pagamento</th>
+                <th class="px-3 py-2"><span class="sr-only">ações</span></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border/60">
+              @for (l of linhas(); track l.item.id) {
+                <tr>
+                  <td class="px-3 py-2.5 font-bold">#{{ l.item.codigo }}</td>
+                  <td class="px-3 py-2.5">
+                    <p>{{ l.item.nome }}</p>
+                    @if (l.item.avaria || l.item.abandonado) {
+                      <div class="mt-1 flex flex-wrap gap-1">
+                        @if (l.item.avaria) {
+                          <span
+                            [title]="l.item.avariaNota ?? ''"
+                            class="flex items-center gap-0.5 rounded-full bg-amber-50 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700 ring-1 ring-amber-200"
+                          >
+                            <svg [appIcon]="icons.ShieldAlert" class="h-2.5 w-2.5"></svg>avaria
+                          </span>
+                        }
+                        @if (l.item.abandonado) {
+                          <span
+                            class="flex items-center gap-0.5 rounded-full bg-rose-50 px-1.5 py-0.5 text-[9px] font-semibold text-rose-700 ring-1 ring-rose-200"
+                          >
+                            <svg [appIcon]="icons.PackageX" class="h-2.5 w-2.5"></svg>abandonado
+                          </span>
+                        }
+                      </div>
+                    }
+                  </td>
+                  <td class="px-3 py-2.5 text-right tabular-nums">{{ brl(l.item.valor) }}</td>
+                  <td class="px-3 py-2.5">
+                    <span
+                      [class]="
+                        'cozy-pill text-[10px] font-semibold ' + ITEM_META[l.item.status].badge
+                      "
+                    >
+                      {{ ITEM_META[l.item.status].label }}
+                    </span>
+                  </td>
+                  <td class="px-3 py-2.5">
+                    @if (l.dono; as d) {
+                      <button
+                        type="button"
+                        (click)="joinerModal.set({ joinerId: d.joinerId })"
+                        title="ver claims desta joiner"
+                        class="text-left hover:underline"
+                      >
+                        <span class="block font-semibold">{{ d.joinerNome }}</span>
+                        <span class="block text-[11px] text-muted-foreground">
+                          {{ d.joinerUsername }}
+                        </span>
+                      </button>
+                    } @else if (l.fila[0]; as primeira) {
+                      <p class="flex items-center gap-1 text-muted-foreground">
+                        <svg [appIcon]="icons.Hand" class="h-3 w-3 text-amber-600"></svg>
+                        {{ primeira.joinerUsername }}
+                        @if (l.fila.length > 1) {
+                          <span class="text-[10px]">+{{ l.fila.length - 1 }} na fila</span>
+                        }
+                      </p>
+                    } @else {
+                      <span class="text-muted-foreground/60">—</span>
+                    }
+                  </td>
+                  <td class="px-3 py-2.5">
+                    @if (l.dono?.joinerTelefone; as tel) {
+                      <a
+                        [href]="whatsapp(tel)"
+                        target="_blank"
+                        rel="noopener"
+                        class="flex items-center gap-1 whitespace-nowrap text-primary hover:underline"
+                      >
+                        <svg [appIcon]="icons.Phone" class="h-3 w-3"></svg>
+                        {{ tel }}
+                      </a>
+                    } @else if (l.dono) {
+                      <span class="text-muted-foreground/60">sem telefone</span>
+                    } @else {
+                      <span class="text-muted-foreground/60">—</span>
+                    }
+                  </td>
+                  <td class="px-3 py-2.5">
+                    @if (l.item.pagamento) {
+                      <select
+                        (change)="onPagamento(l.item.id, $event)"
+                        [attr.aria-label]="'pagamento do item ' + l.item.codigo"
+                        [class]="
+                          'rounded-lg border px-2 py-1 text-[11px] font-medium outline-none ' +
+                          (l.item.pagamento === 'PAGO'
+                            ? 'border-lime-200 bg-lime-50 text-lime-700'
+                            : 'border-amber-200 bg-amber-50 text-amber-700')
+                        "
+                      >
+                        <option value="PENDENTE" [selected]="l.item.pagamento === 'PENDENTE'">
+                          pendente
+                        </option>
+                        <option value="PAGO" [selected]="l.item.pagamento === 'PAGO'">pago</option>
+                      </select>
+                    } @else {
+                      <span class="text-muted-foreground/60">—</span>
+                    }
+                  </td>
+                  <td class="px-3 py-2.5">
+                    <div class="flex justify-end gap-1">
+                      <button
+                        type="button"
+                        (click)="itemModal.set({ id: l.item.id })"
+                        [attr.aria-label]="'editar item ' + l.item.codigo"
+                        class="rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                      >
+                        <svg [appIcon]="icons.Pencil" class="h-3.5 w-3.5"></svg>
+                      </button>
+                      <button
+                        type="button"
+                        (click)="removerItem(l.item)"
+                        [disabled]="l.item.status !== 'DISPONIVEL'"
+                        [attr.aria-label]="'remover item ' + l.item.codigo"
+                        [title]="
+                          l.item.status !== 'DISPONIVEL'
+                            ? 'itens com claim não podem ser removidos'
+                            : ''
+                        "
+                        class="rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted hover:text-destructive disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
+                      >
+                        <svg [appIcon]="icons.Trash2" class="h-3.5 w-3.5"></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+</div>
+
+@if (itemModal(); as m) {
+  <app-item-modal [open]="true" [cegId]="ceg().id" [itemId]="m.id" (closed)="itemModal.set(null)" />
+}
+@if (joinerModal(); as m) {
+  <app-claims-joiner-modal
+    [open]="true"
+    [cegId]="ceg().id"
+    [cegNome]="ceg().nome"
+    [joinerInicial]="m.joinerId"
+    (closed)="joinerModal.set(null)"
+    (editarItem)="joinerModal.set(null); itemModal.set({ id: $event })"
+  />
+}

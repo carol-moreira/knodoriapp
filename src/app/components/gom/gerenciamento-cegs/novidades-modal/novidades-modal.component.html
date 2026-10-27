@@ -88,10 +88,16 @@
                 <span [class]="'cozy-pill text-[10px] font-semibold ' + POST_META[p.tipo].badge">
                   {{ POST_META[p.tipo].label }}
                 </span>
-                <span class="text-[10px] text-muted-foreground">{{ fmtDataHora(p.data) }}</span>
+                <span class="text-[10px] text-muted-foreground">
+                  @if (p.por; as por) {
+                    <app-assinatura [por]="por" acao="publicado por" />
+                  } @else {
+                    {{ p.autor }} · {{ fmtDataHora(p.data) }}
+                  }
+                </span>
                 <button
                   type="button"
-                  (click)="posts.remover(p.id)"
+                  (click)="remover(p.id)"
                   aria-label="remover postagem"
                   class="ml-auto rounded-lg p-1 text-muted-foreground opacity-0 transition hover:text-destructive group-hover:opacity-100 focus:opacity-100"
                 >

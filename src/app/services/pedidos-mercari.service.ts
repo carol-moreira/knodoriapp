@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from "@angular/core";
 import {
   ITEM_META,
+  MERCARI_STATUS_META,
   MOCK_SOLICITACOES,
   etapaMercari,
   type ItemKey,
@@ -8,6 +9,7 @@ import {
   type SolicitacaoGOM,
 } from "@/lib/gom-types";
 import { CegsService } from "./cegs.service";
+import { AssinaturaService } from "./assinatura.service";
 import { NotificacoesService } from "./notificacoes.service";
 
 /** Mensagens enviadas à joiner quando o pedido avança (etapas alteradas pedido a pedido). */
@@ -42,6 +44,7 @@ function brl(v: number): string {
 export class PedidosMercariService {
   private readonly cegs = inject(CegsService);
   private readonly notificacoes = inject(NotificacoesService);
+  private readonly assinatura = inject(AssinaturaService);
 
   // 🔌 substituir por HttpClient.get(`/api/gom/${gomId}/solicitacoes`)
   private readonly _solicitacoes = signal<SolicitacaoGOM[]>(MOCK_SOLICITACOES);
@@ -60,6 +63,10 @@ export class PedidosMercariService {
       id: `req_${Date.now()}`,
       status: "PENDENTE",
       dataSolicitacao: new Date().toISOString().slice(0, 10),
+      atualizadoPor: this.assinatura.assinar(
+        "PEDIDO",
+        `enviou um pedido mercari: ${resumo(nova as SolicitacaoGOM)} (${brl(nova.valorBrl)})`,
+      ),
     };
     this._solicitacoes.update((prev) => [solicitacao, ...prev]);
     this.notificacoes.enviar(
@@ -91,7 +98,11 @@ export class PedidosMercariService {
     if (status === "NA_WAREHOUSE" && !atual.cegId) return;
 
     // 🔌 PATCH /api/gom/solicitacoes/:id { status }
-    this.patch(id, { status });
+    const atualizadoPor = this.assinatura.assinar(
+      "PEDIDO",
+      `mudou o pedido de ${atual.joinerUsername} (${resumo(atual)}) para “${MERCARI_STATUS_META[status].label}”`,
+    );
+    this.patch(id, { status, atualizadoPor });
 
     const aviso = AVISO_POR_STATUS[status];
     if (aviso && etapaMercari(status) > etapaMercari(atual.status)) {
@@ -107,7 +118,17 @@ export class PedidosMercariService {
     if (!atual || !caixa || caixa.status !== "ABERTA" || proofs.length === 0) return;
 
     // 🔌 POST /api/gom/solicitacoes/:id/confirmar-compra (multipart com as imagens)
-    this.patch(id, { status: "COMPRADO", proofs, cegId: caixa.id, cegNome: caixa.nome });
+    const atualizadoPor = this.assinatura.assinar(
+      "PEDIDO",
+      `confirmou a compra de ${atual.joinerUsername} (${resumo(atual)}) e colocou na ${caixa.nome}`,
+    );
+    this.patch(id, {
+      status: "COMPRADO",
+      proofs,
+      cegId: caixa.id,
+      cegNome: caixa.nome,
+      atualizadoPor,
+    });
     this.recontarCaixa(caixa.id);
 
     this.notificacoes.enviar(
@@ -129,8 +150,9 @@ export class PedidosMercariService {
     if (this.faltandoWarehouse(cegId) > 0) return;
 
     // 🔌 POST /api/gom/cegs/:id/fechar
-    this.patchCaixa(cegId, { status: "CAIXA_FECHADA" });
-    this.cegs.atualizar(cegId, { status: "TRANSITO" });
+    const por = this.assinatura.assinar("CAIXA", `fechou a ${caixa.nome}`);
+    this.patchCaixa(cegId, { status: "CAIXA_FECHADA", atualizadoPor: por });
+    this.cegs.atualizar(cegId, { status: "TRANSITO", atualizadoPor: por });
     for (const joinerId of this.joinersDaCaixa(cegId)) {
       this.notificacoes.enviar(
         joinerId,
@@ -151,8 +173,13 @@ export class PedidosMercariService {
     const porJoiner = Object.fromEntries(joiners.map((j) => [j, parte + taxaPorJoiner]));
 
     // 🔌 POST /api/gom/cegs/:id/cobranca
+    const por = this.assinatura.assinar(
+      "CAIXA",
+      `cobrou frete + taxas da ${caixa.nome} (${brl(freteTotal)} + ${brl(taxaPorJoiner)}/joiner)`,
+    );
     this.cegs.atualizar(cegId, {
-      cobranca: { freteTotal, taxaPorJoiner, porJoiner, data: new Date().toISOString() },
+      cobranca: { freteTotal, taxaPorJoiner, porJoiner, data: new Date().toISOString(), por },
+      atualizadoPor: por,
     });
     for (const joinerId of joiners) {
       this.notificacoes.enviar(
@@ -167,16 +194,18 @@ export class PedidosMercariService {
     const caixa = this.cegs.porId(cegId);
     if (!caixa || caixa.status !== "TRANSITO" || !caixa.cobranca) return;
     // 🔌 POST /api/gom/cegs/:id/chegou
-    this.patchCaixa(cegId, { status: "CHEGOU_GOM" });
-    this.cegs.atualizar(cegId, { status: "CHEGOU_BR" });
+    const por = this.assinatura.assinar("CAIXA", `marcou que a ${caixa.nome} chegou na GOM`);
+    this.patchCaixa(cegId, { status: "CHEGOU_GOM", atualizadoPor: por });
+    this.cegs.atualizar(cegId, { status: "CHEGOU_BR", atualizadoPor: por });
   }
 
   liberarEnvio(cegId: string): void {
     const caixa = this.cegs.porId(cegId);
     if (!caixa || caixa.status !== "CHEGOU_BR") return;
     // 🔌 POST /api/gom/cegs/:id/liberar-envio
-    this.patchCaixa(cegId, { status: "ENVIO_LIBERADO" });
-    this.cegs.atualizar(cegId, { status: "FINALIZADA" });
+    const por = this.assinatura.assinar("CAIXA", `liberou o envio nacional da ${caixa.nome}`);
+    this.patchCaixa(cegId, { status: "ENVIO_LIBERADO", atualizadoPor: por });
+    this.cegs.atualizar(cegId, { status: "FINALIZADA", atualizadoPor: por });
     for (const joinerId of this.joinersDaCaixa(cegId)) {
       this.notificacoes.enviar(
         joinerId,
@@ -184,6 +213,12 @@ export class PedidosMercariService {
         `seus itens da ${caixa.nome} chegaram na GOM! já pode solicitar o envio nacional em minhas compras.`,
       );
     }
+  }
+
+  /** Envio nacional postado: o rastreio aparece no card do pedido (minhas compras). */
+  registrarRastreio(ids: string[], rastreio: string): void {
+    const alvo = new Set(ids);
+    this._solicitacoes.update((prev) => prev.map((s) => (alvo.has(s.id) ? { ...s, rastreio } : s)));
   }
 
   joinersDaCaixa(cegId: string): string[] {

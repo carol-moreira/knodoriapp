@@ -1,0 +1,32 @@
+<div class="space-y-6">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight">ajustes</h1>
+    <p class="mt-0.5 text-sm text-muted-foreground">
+      comunidade, admins e taxas. perfil e aparência ficam no menu do avatar.
+    </p>
+  </div>
+
+  <div class="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar" role="tablist">
+    @for (a of abas; track a.value) {
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="atual() === a.value"
+        (click)="selecionar(a.value)"
+        [class]="abaClass(a.value)"
+      >
+        <svg [appIcon]="a.icon" class="h-3.5 w-3.5"></svg>
+        {{ a.label }}
+      </button>
+    }
+  </div>
+
+  @switch (atual()) {
+    @case ("comunidade") {
+      <app-comunidade-ajustes />
+    }
+    @case ("taxas") {
+      <app-painel-taxas [config]="configTaxas" />
+    }
+  }
+</div>

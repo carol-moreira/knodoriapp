@@ -4,13 +4,14 @@ import { IconDirective } from "@/shared/icon.directive";
 import { REPASSE_STATUS_META, type RepasseStatus } from "@/lib/repasse-types";
 import { RepassesService } from "@/services/repasses.service";
 import { brl, fmtDate, type CegGOM } from "../cegs.model";
+import { AssinaturaComponent } from "@/shared/assinatura/assinatura.component";
 
 /** "TODAS" = visão consolidada de todas as CEGs. */
 export type FiltroRepasseCeg = string | "TODAS";
 
 @Component({
   selector: "app-fila-repasses",
-  imports: [IconDirective],
+  imports: [IconDirective, AssinaturaComponent],
   templateUrl: "./fila-repasses.component.html",
   styleUrl: "./fila-repasses.component.scss",
 })

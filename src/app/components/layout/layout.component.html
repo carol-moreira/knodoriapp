@@ -5,17 +5,21 @@
 } @else {
   <div class="min-h-screen bg-background text-foreground">
     <!-- Header -->
-    <header class="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-md">
-      <div
-        class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6 sm:py-4"
-      >
+    <header
+      class="sticky top-0 z-30 border-b border-border/60 bg-background/85 pt-[env(safe-area-inset-top)] backdrop-blur-md"
+    >
+      <div class="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:px-6 lg:h-16 lg:gap-4">
         <!-- Logo -->
-        <a routerLink="/" class="flex shrink-0 items-center gap-2 text-lg font-bold">
-          <span class="grid h-9 w-9 place-items-center">
+        <a
+          routerLink="/"
+          aria-label="KNODORI — início"
+          class="flex shrink-0 items-center gap-2 text-lg font-bold"
+        >
+          <span class="grid h-8 w-8 place-items-center lg:h-9 lg:w-9">
             @if (!logoFailed()) {
               <img
                 src="/images/init/icon.png"
-                alt="KNODORI"
+                alt=""
                 class="h-full w-full object-contain"
                 (error)="logoFailed.set(true)"
               />
@@ -23,26 +27,38 @@
               <svg [appIcon]="icons.Heart" class="h-5 w-5 text-primary" fill="currentColor"></svg>
             }
           </span>
-          <span class="hidden sm:inline">KNODORI</span>
+          <span class="hidden lg:inline">KNODORI</span>
         </a>
 
-        <!-- Nav -->
+        <!-- Título da página (celular — a navegação fica na barra inferior) -->
+        <p class="min-w-0 flex-1 truncate text-base font-bold lg:hidden">{{ tituloAtual() }}</p>
+
+        <!-- Nav (desktop) -->
         @if (nav().length > 0) {
           <nav
-            class="flex items-center gap-1 overflow-x-auto no-scrollbar rounded-full bg-muted/70 p-1 silver-surface shrink"
+            aria-label="navegação principal"
+            class="hidden min-w-0 shrink items-center gap-0.5 overflow-x-auto rounded-full bg-muted/70 p-1 silver-surface no-scrollbar lg:flex"
           >
             @for (item of nav(); track item.to) {
               <a
                 [routerLink]="item.to"
+                [attr.aria-current]="isActive(item) ? 'page' : null"
                 [class]="
-                  'flex shrink-0 items-center gap-1.5 rounded-pill px-3 py-2 text-sm font-medium transition sm:px-4 ' +
+                  'relative flex shrink-0 items-center gap-1.5 rounded-pill px-3 py-2 text-[13px] font-medium transition xl:px-3.5 xl:text-sm ' +
                   (isActive(item)
                     ? 'bg-primary text-primary-foreground shadow'
                     : 'text-foreground/70 hover:text-foreground')
                 "
               >
                 <svg [appIcon]="item.icon" class="h-4 w-4"></svg>
-                <span class="hidden sm:inline">{{ item.label }}</span>
+                {{ item.label }}
+                @if (badge(item) > 0) {
+                  <span
+                    class="grid h-4 min-w-4 place-items-center rounded-full bg-amber-500 px-1 text-[9px] font-bold text-white"
+                  >
+                    {{ badge(item) }}
+                  </span>
+                }
               </a>
             }
           </nav>
@@ -50,7 +66,7 @@
 
         <!-- Ações do usuário: mensagens, notificações e perfil (afastadas da nav) -->
         @if (auth.user(); as user) {
-          <div class="flex shrink-0 items-center gap-1 pl-1 sm:gap-1.5 sm:pl-4">
+          <div class="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1.5">
             <!-- Mensagens -->
             @if (mensagensRota(); as rota) {
               <a
@@ -58,7 +74,7 @@
                 aria-label="mensagens"
                 title="mensagens"
                 [class]="
-                  'relative grid h-9 w-9 place-items-center rounded-xl outline-none transition focus-visible:ring-2 focus-visible:ring-primary ' +
+                  'relative grid h-10 w-10 place-items-center rounded-xl outline-none transition focus-visible:ring-2 focus-visible:ring-primary ' +
                   (path() === rota
                     ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground')
@@ -81,7 +97,7 @@
                 type="button"
                 aria-label="notificações"
                 title="notificações"
-                class="relative grid h-9 w-9 place-items-center rounded-xl text-muted-foreground outline-none transition hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary"
+                class="relative grid h-10 w-10 place-items-center rounded-xl text-muted-foreground outline-none transition hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary"
                 [cdkMenuTriggerFor]="notifMenu"
                 [cdkMenuPosition]="menuPosition"
                 (cdkMenuClosed)="notificacoes.marcarTodasLidas()"
@@ -142,13 +158,14 @@
               </ng-template>
             </div>
 
-            <div role="separator" class="mx-1 hidden h-6 w-px bg-border sm:block"></div>
+            <div role="separator" class="mx-1 hidden h-6 w-px bg-border lg:block"></div>
 
             <!-- Dropdown de perfil -->
             <div class="shrink-0">
               <button
                 type="button"
-                class="rounded-xl outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-primary"
+                aria-label="menu do perfil"
+                class="grid h-10 w-10 place-items-center rounded-xl outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-primary"
                 [cdkMenuTriggerFor]="profileMenu"
                 [cdkMenuPosition]="menuPosition"
               >
@@ -189,6 +206,11 @@
                   <div class="px-3 py-2 mb-1 border-b border-border/60">
                     <p class="text-xs font-semibold truncate">{{ user.nome }}</p>
                     <p class="text-[10px] text-muted-foreground truncate">{{ user.username }}</p>
+                    @if (user.comunidadeNome) {
+                      <p class="mt-1 text-[10px] font-medium text-primary truncate">
+                        {{ user.comunidadeNome }} · {{ user.papel === "DONA" ? "dona" : "admin" }}
+                      </p>
+                    }
                   </div>
 
                   <div
@@ -223,13 +245,119 @@
       </div>
     </header>
 
-    <!-- Conteúdo -->
-    <main class="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+    <!-- Conteúdo (no celular, o padding de baixo reserva a barra inferior) -->
+    <main
+      [class]="
+        'mx-auto max-w-6xl px-4 pt-4 sm:px-6 sm:pt-6 lg:py-10 ' +
+        (nav().length > 0 ? 'pb-[calc(5.25rem+env(safe-area-inset-bottom))]' : 'pb-8')
+      "
+    >
       <router-outlet />
     </main>
 
-    <footer class="border-t border-border/60 py-6 text-center text-xs text-muted-foreground">
+    <footer
+      class="hidden border-t border-border/60 py-6 text-center text-xs text-muted-foreground lg:block"
+    >
       feito de colecionador para colecionador
     </footer>
+
+    <!-- Barra inferior (celular) -->
+    @if (nav().length > 0) {
+      <nav
+        aria-label="navegação"
+        class="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
+      >
+        <div class="mx-auto grid max-w-lg px-1" [style.grid-template-columns]="colunasBarra()">
+          @for (item of navBarra(); track item.to) {
+            <a
+              [routerLink]="item.to"
+              [attr.aria-current]="isActive(item) ? 'page' : null"
+              [class]="
+                'flex min-w-0 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition ' +
+                (isActive(item) ? 'text-primary' : 'text-muted-foreground active:text-foreground')
+              "
+            >
+              <span
+                [class]="
+                  'relative grid h-7 w-12 place-items-center rounded-full transition ' +
+                  (isActive(item) ? 'bg-primary/15' : '')
+                "
+              >
+                <svg [appIcon]="item.icon" class="h-5 w-5"></svg>
+                @if (badge(item) > 0) {
+                  <span
+                    class="absolute -top-1 right-1 grid h-4 min-w-4 place-items-center rounded-full bg-amber-500 px-1 text-[9px] font-bold text-white"
+                  >
+                    {{ badge(item) }}
+                  </span>
+                }
+              </span>
+              <span class="max-w-full truncate">{{ item.curto ?? item.label }}</span>
+            </a>
+          }
+          @if (navMais().length > 0) {
+            <button
+              type="button"
+              (click)="maisOpen.set(true)"
+              [attr.aria-expanded]="maisOpen()"
+              [class]="
+                'flex min-w-0 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition ' +
+                (maisAtivo() ? 'text-primary' : 'text-muted-foreground active:text-foreground')
+              "
+            >
+              <span
+                [class]="
+                  'relative grid h-7 w-12 place-items-center rounded-full transition ' +
+                  (maisAtivo() ? 'bg-primary/15' : '')
+                "
+              >
+                <svg [appIcon]="icons.Menu" class="h-5 w-5"></svg>
+                @if (maisPendente()) {
+                  <span
+                    class="absolute right-2.5 top-0.5 h-2.5 w-2.5 rounded-full bg-amber-500 ring-2 ring-background"
+                  ></span>
+                }
+              </span>
+              mais
+            </button>
+          }
+        </div>
+      </nav>
+
+      <app-dialog
+        [open]="maisOpen()"
+        (openChange)="maisOpen.set($event)"
+        contentClass="fixed inset-x-0 bottom-0 z-50 rounded-t-3xl border-t border-border bg-card px-4 pt-3 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-2xl animate-in slide-in-from-bottom duration-200 lg:hidden"
+      >
+        <div class="mx-auto mb-3 h-1 w-10 rounded-full bg-border" aria-hidden="true"></div>
+        <p class="mb-2 px-1 text-xs font-semibold text-muted-foreground">mais opções</p>
+        <div class="grid grid-cols-3 gap-2">
+          @for (item of navMais(); track item.to) {
+            <a
+              [routerLink]="item.to"
+              (click)="maisOpen.set(false)"
+              [class]="
+                'flex flex-col items-center gap-1.5 rounded-2xl px-2 py-3 text-center text-xs font-medium transition ' +
+                (isActive(item)
+                  ? 'bg-primary/10 text-primary'
+                  : 'bg-muted/50 text-foreground active:bg-muted')
+              "
+            >
+              <span class="relative">
+                <svg [appIcon]="item.icon" class="h-5 w-5"></svg>
+                @if (badge(item) > 0) {
+                  <span
+                    class="absolute -right-3 -top-2 grid h-4 min-w-4 place-items-center rounded-full bg-amber-500 px-1 text-[9px] font-bold text-white"
+                  >
+                    {{ badge(item) }}
+                  </span>
+                }
+              </span>
+              {{ item.label }}
+            </a>
+          }
+        </div>
+      </app-dialog>
+    }
   </div>
 }

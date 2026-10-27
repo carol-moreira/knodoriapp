@@ -1,0 +1,240 @@
+<div
+  class="cozy-card grid h-[calc(100dvh-var(--app-chrome))] min-h-104 overflow-hidden md:grid-cols-[16rem_1fr] xl:grid-cols-[16rem_1fr_22rem]"
+>
+  <!-- ── Salas ─────────────────────────────────────────────────────────── -->
+  <aside
+    [class]="
+      'min-h-0 flex-col border-border/60 md:flex md:border-r ' + (selecionada() ? 'hidden' : 'flex')
+    "
+  >
+    <div class="border-b border-border/60 px-4 py-3.5">
+      <h1 class="text-sm font-semibold">claims</h1>
+      <p class="text-[11px] text-muted-foreground">
+        agende e cadastre itens em CEGs › itens & claims
+      </p>
+    </div>
+    <div class="min-h-0 flex-1 space-y-0.5 overflow-y-auto p-2 no-scrollbar">
+      @for (s of salas(); track s.ceg.id) {
+        <button type="button" (click)="selecionadaId.set(s.ceg.id)" [class]="salaClass(s.ceg.id)">
+          <div class="min-w-0 flex-1 space-y-1">
+            <p class="truncate text-sm font-semibold">{{ s.ceg.nome }}</p>
+            <app-rodada-status [cegId]="s.ceg.id" />
+          </div>
+          @if (s.pendentes > 0) {
+            <span
+              class="grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-white"
+            >
+              {{ s.pendentes }}
+            </span>
+          }
+        </button>
+      }
+    </div>
+  </aside>
+
+  @if (selecionada(); as ceg) {
+    <!-- ── Chat ──────────────────────────────────────────────────────────── -->
+    <section
+      [class]="
+        'min-h-0 flex-col border-border/60 xl:flex xl:border-r ' +
+        (painel() === 'fila' ? 'hidden' : 'flex')
+      "
+    >
+      <header class="flex items-center gap-3 border-b border-border/60 px-4 py-3">
+        <button
+          type="button"
+          (click)="selecionadaId.set(null)"
+          aria-label="voltar para as salas"
+          class="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground transition hover:bg-muted md:hidden"
+        >
+          <svg [appIcon]="icons.ArrowLeft" class="h-4 w-4"></svg>
+        </button>
+        <div class="min-w-0 flex-1 space-y-1">
+          <p class="truncate text-sm font-semibold">{{ ceg.nome }}</p>
+          <app-rodada-status [cegId]="ceg.id" />
+        </div>
+        <button
+          type="button"
+          (click)="painel.set('fila')"
+          class="flex shrink-0 items-center gap-1.5 rounded-pill border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium transition hover:bg-muted xl:hidden"
+        >
+          <svg [appIcon]="icons.Hand" class="h-3.5 w-3.5"></svg>
+          fila
+          @if (claims.pendentesDa(ceg.id).length > 0) {
+            <span class="rounded-full bg-amber-500 px-1.5 text-[10px] font-bold text-white">
+              {{ claims.pendentesDa(ceg.id).length }}
+            </span>
+          }
+        </button>
+      </header>
+
+      <app-claim-chat
+        class="min-h-0 flex-1"
+        [cegId]="ceg.id"
+        [meuId]="auth.user()?.id ?? ''"
+        (enviado)="enviar($event)"
+      />
+    </section>
+
+    <!-- ── Moderação ─────────────────────────────────────────────────────── -->
+    <aside
+      [class]="
+        'min-h-0 flex-col overflow-y-auto no-scrollbar xl:flex ' +
+        (painel() === 'fila' ? 'flex' : 'hidden')
+      "
+    >
+      <div class="flex items-center gap-3 border-b border-border/60 px-4 py-3.5">
+        <button
+          type="button"
+          (click)="painel.set('chat')"
+          aria-label="voltar para o chat"
+          class="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground transition hover:bg-muted xl:hidden"
+        >
+          <svg [appIcon]="icons.ArrowLeft" class="h-4 w-4"></svg>
+        </button>
+        <div>
+          <h2 class="text-sm font-semibold">moderação</h2>
+          <p class="text-[11px] text-muted-foreground">
+            fila por item na ordem de chegada ao servidor
+          </p>
+        </div>
+      </div>
+
+      <div class="space-y-3 p-3">
+        @for (f of filas(); track f.itemId) {
+          <div class="space-y-2 rounded-2xl border border-border/60 p-3">
+            <div class="flex items-baseline justify-between gap-2">
+              <p class="min-w-0 truncate text-xs font-semibold">#{{ f.codigo }} {{ f.nome }}</p>
+              <span class="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+                {{ brl(f.valor) }}
+              </span>
+            </div>
+            <ol class="space-y-1.5">
+              @for (c of f.fila; track c.id; let i = $index) {
+                <li
+                  [class]="
+                    'space-y-1.5 rounded-xl px-2.5 py-2 ' +
+                    (i === 0 ? 'bg-amber-50/70 dark:bg-amber-500/10' : 'bg-muted/40')
+                  "
+                >
+                  <div class="flex items-start gap-2">
+                    <span class="mt-0.5 text-[10px] font-bold text-muted-foreground">
+                      {{ i + 1 }}º
+                    </span>
+                    <div class="min-w-0 flex-1">
+                      <p class="truncate text-xs font-semibold">
+                        {{ c.joinerNome }}
+                        <span class="font-normal text-muted-foreground">{{
+                          c.joinerUsername
+                        }}</span>
+                      </p>
+                      <p class="flex flex-wrap gap-x-2 text-[10px] text-muted-foreground">
+                        <span class="tabular-nums"
+                          >{{ fmtTimestamp(c.criadoEm) }} · #{{ c.seq }}</span
+                        >
+                        @if (c.joinerTelefone) {
+                          <span class="flex items-center gap-0.5">
+                            <svg [appIcon]="icons.Phone" class="h-2.5 w-2.5"></svg
+                            >{{ c.joinerTelefone }}
+                          </span>
+                        }
+                      </p>
+                    </div>
+                    <div class="flex shrink-0 gap-1">
+                      <button
+                        type="button"
+                        (click)="claims.confirmar(c.id)"
+                        [attr.aria-label]="'confirmar claim de ' + c.joinerUsername"
+                        title="confirmar"
+                        class="grid h-7 w-7 place-items-center rounded-full bg-lime-600 text-white transition hover:opacity-90"
+                      >
+                        <svg [appIcon]="icons.Check" class="h-3.5 w-3.5"></svg>
+                      </button>
+                      <button
+                        type="button"
+                        (click)="abrirRejeicao(c.id)"
+                        [attr.aria-label]="'rejeitar claim de ' + c.joinerUsername"
+                        title="rejeitar"
+                        class="grid h-7 w-7 place-items-center rounded-full border border-border bg-card text-muted-foreground transition hover:text-destructive"
+                      >
+                        <svg [appIcon]="icons.X" class="h-3.5 w-3.5"></svg>
+                      </button>
+                    </div>
+                  </div>
+                  @if (rejeitandoId() === c.id) {
+                    <form class="flex gap-1.5" (submit)="$event.preventDefault(); rejeitar(c.id)">
+                      <input
+                        [value]="motivo()"
+                        (input)="motivo.set($any($event.target).value)"
+                        placeholder="motivo (opcional)"
+                        aria-label="motivo da rejeição"
+                        class="min-w-0 flex-1 rounded-lg border border-border bg-card px-2 py-1 text-[11px] outline-none focus:border-primary"
+                      />
+                      <button
+                        type="submit"
+                        class="rounded-lg bg-destructive px-2 py-1 text-[11px] font-semibold text-white"
+                      >
+                        rejeitar
+                      </button>
+                      <button
+                        type="button"
+                        (click)="rejeitandoId.set(null)"
+                        class="rounded-lg px-1.5 text-[11px] text-muted-foreground"
+                      >
+                        cancelar
+                      </button>
+                    </form>
+                  }
+                </li>
+              }
+            </ol>
+            @if (f.fila.length > 1) {
+              <p class="text-[10px] text-muted-foreground">
+                confirmar um claim recusa automaticamente os demais da fila.
+              </p>
+            }
+          </div>
+        } @empty {
+          <div class="py-8 text-center">
+            <svg [appIcon]="icons.Hand" class="mx-auto mb-2 h-6 w-6 text-muted-foreground/40"></svg>
+            <p class="text-xs text-muted-foreground">nenhum claim pendente.</p>
+          </div>
+        }
+
+        @if (decididos().length > 0) {
+          <div class="space-y-1.5 border-t border-border/60 pt-3">
+            <p class="text-[11px] font-semibold text-muted-foreground">decididos recentemente</p>
+            @for (c of decididos(); track c.id) {
+              <div class="flex items-center gap-2 text-[11px]">
+                <span class="min-w-0 flex-1 truncate">
+                  {{ itemNome(c.itemId) }} · {{ c.joinerUsername }}
+                  @if (c.decididoPor; as por) {
+                    <span class="text-muted-foreground">
+                      · <app-assinatura [por]="por" acao="decidido por" [semData]="true" />
+                    </span>
+                  }
+                </span>
+                <span
+                  [class]="
+                    'shrink-0 rounded-full px-2 py-0.5 text-[9px] font-semibold ' +
+                    CLAIM_META[c.status].badge
+                  "
+                >
+                  {{ CLAIM_META[c.status].label }}
+                </span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </aside>
+  } @else {
+    <div class="hidden place-items-center p-8 text-center md:grid xl:col-span-2">
+      <div class="space-y-2">
+        <svg [appIcon]="icons.Hand" class="mx-auto h-8 w-8 text-muted-foreground/40"></svg>
+        <p class="text-sm font-semibold">escolha uma rodada</p>
+        <p class="text-xs text-muted-foreground">o chat e a fila de claims aparecem aqui.</p>
+      </div>
+    </div>
+  }
+</div>

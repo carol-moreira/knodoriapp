@@ -1,7 +1,9 @@
 import { Injectable, computed, inject, signal } from "@angular/core";
+import type { Autoria } from "@/lib/autoria";
 import { MOCK_JOINERS } from "@/lib/gom-types";
 import { resumoItens } from "@/lib/mensagens-types";
 import { CegsService } from "./cegs.service";
+import { AssinaturaService } from "./assinatura.service";
 import { NotificacoesService } from "./notificacoes.service";
 import { PedidosMercariService } from "./pedidos-mercari.service";
 
@@ -34,6 +36,8 @@ export interface Cobranca {
   valor: number;
   mensagem: string;
   data: string; // ISO
+  /** Quem enviou a cobrança. */
+  por?: Autoria;
 }
 
 export const TIPO_DEBITO_META: Record<TipoDebito, { label: string; badge: string }> = {
@@ -74,6 +78,7 @@ export class CobrancasService {
   private readonly pedidos = inject(PedidosMercariService);
   private readonly cegs = inject(CegsService);
   private readonly notificacoes = inject(NotificacoesService);
+  private readonly assinatura = inject(AssinaturaService);
 
   // 🔌 GET /api/gom/cobrancas
   private readonly _cobrancas = signal<Cobranca[]>([
@@ -178,6 +183,10 @@ export class CobrancasService {
   /** Registra a cobrança (também usada quando a GOM envia pelo próprio WhatsApp). */
   registrar(devedor: Devedor, debitos: Debito[], mensagem: string): void {
     const valor = debitos.reduce((t, d) => t + d.valor, 0);
+    const por = this.assinatura.assinar(
+      "COBRANCA",
+      `cobrou ${devedor.username}: ${brl(valor)} (${debitos.map((d) => d.descricao).join(", ")})`,
+    );
     this._cobrancas.update((prev) => [
       {
         id: `cob_${Date.now()}`,
@@ -186,13 +195,14 @@ export class CobrancasService {
         valor,
         mensagem,
         data: new Date().toISOString(),
+        por,
       },
       ...prev,
     ]);
     this.notificacoes.enviar(
       devedor.joinerId,
       "pagamento pendente 💸",
-      `a GOM enviou uma cobrança de ${brl(valor)}: ${debitos.map((d) => d.descricao).join(", ")}.`,
+      `${por ? por.username : "a GOM"} enviou uma cobrança de ${brl(valor)}: ${debitos.map((d) => d.descricao).join(", ")}.`,
     );
   }
 }
