@@ -116,6 +116,22 @@
     </label>
 
     <div class="space-y-1.5">
+      <p class="text-xs font-semibold">comprovante do pagamento</p>
+      @if (comprovante(); as c) {
+        <app-comprovante-chip [comprovante]="c" />
+      }
+      <button
+        type="button"
+        (click)="anexarComprovante()"
+        [disabled]="sending() || sent()"
+        class="flex h-10 w-full items-center justify-center gap-1.5 rounded-2xl border border-dashed border-primary/50 text-xs font-semibold text-primary transition hover:bg-primary/5 disabled:opacity-50"
+      >
+        <svg [appIcon]="icons.Receipt" class="h-3.5 w-3.5"></svg>
+        {{ comprovante() ? "trocar comprovante" : "anexar comprovante" }}
+      </button>
+    </div>
+
+    <div class="space-y-1.5">
       <label for="repasse-obs" class="text-xs font-semibold">observação (opcional)</label>
       <textarea
         id="repasse-obs"

@@ -153,6 +153,9 @@
                     </p>
                   }
                 }
+                @if (req.comprovantes?.at(-1); as c) {
+                  <app-comprovante-chip class="mt-1" [comprovante]="c" [compacto]="true" />
+                }
               </td>
 
               <!-- Caixa + proof -->
@@ -255,6 +258,10 @@
                     </button>
                   }
                 </div>
+              }
+
+              @for (c of req.comprovantes ?? []; track c.id) {
+                <app-comprovante-chip [comprovante]="c" />
               }
 
               @if (gerenciadoPelaCaixa(req)) {

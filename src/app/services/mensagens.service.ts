@@ -120,8 +120,10 @@ export class MensagensService {
         : conteudo;
     this.notificacoes.enviar(
       daGom ? conversa.joinerId : conversa.gomId,
+      "MENSAGEM",
       `nova mensagem de ${daGom ? conversa.gomUsername : conversa.joinerUsername} 💬`,
       resumo,
+      daGom ? "/joiner/mensagens" : "/gom/mensagens",
     );
   }
 

@@ -9,11 +9,15 @@ import {
   Images,
   MessageCircle,
   PackageCheck,
+  Receipt,
   Truck,
   ZoomIn,
 } from "lucide-angular";
 import { IconDirective } from "@/shared/icon.directive";
+import { PedidosMercariService } from "@/services/pedidos-mercari.service";
 import { RepassesService } from "@/services/repasses.service";
+import { ComprovanteChipComponent } from "@/shared/comprovante/comprovante-chip.component";
+import { ComprovanteService } from "@/shared/comprovante/comprovante.service";
 import { ImageLightboxComponent } from "../image-lightbox/image-lightbox.component";
 import {
   BAR_COLOR,
@@ -30,7 +34,7 @@ import {
 
 @Component({
   selector: "app-pedido-card",
-  imports: [IconDirective, ImageLightboxComponent, RouterLink],
+  imports: [IconDirective, ImageLightboxComponent, RouterLink, ComprovanteChipComponent],
   templateUrl: "./pedido-card.component.html",
   styleUrl: "./pedido-card.component.scss",
 })
@@ -50,6 +54,7 @@ export class PedidoCardComponent {
     Images,
     MessageCircle,
     PackageCheck,
+    Receipt,
     Truck,
     ZoomIn,
   };
@@ -61,6 +66,30 @@ export class PedidoCardComponent {
   protected readonly fmtDate = fmtDate;
 
   private readonly repasses = inject(RepassesService);
+  private readonly fila = inject(PedidosMercariService);
+  private readonly comprovantes = inject(ComprovanteService);
+
+  /** PIX do pedido: anexa o comprovante e a GOM confere. */
+  protected async pagarPedido(): Promise<void> {
+    const p = this.pedido();
+    const r = await this.comprovantes.pedir({
+      titulo: "pagar pedido mercari",
+      mensagem: `${this.resumoItens()} — faça o pix para a GOM e anexe o comprovante.`,
+      valor: p.valorBrl,
+    });
+    if (r?.comprovante) this.fila.enviarComprovante(p.id, r.comprovante);
+  }
+
+  /** Frete internacional + taxas da caixa. */
+  protected async pagarCaixa(): Promise<void> {
+    const p = this.pedido();
+    const r = await this.comprovantes.pedir({
+      titulo: `frete + taxas da ${p.cegNome}`,
+      mensagem: "faça o pix para a GOM e anexe o comprovante — ela confere e confirma.",
+      valor: p.cobrancaCaixa,
+    });
+    if (r?.comprovante) this.fila.enviarComprovanteCaixa(p.cegId, r.comprovante);
+  }
   /** Repasse aguardando confirmação da GOM para este pedido. */
   protected readonly repassePendente = computed(
     () => this.repasses.pendentePorPedido().get(this.pedido().id) ?? null,

@@ -15,7 +15,9 @@ import {
   type EstadoRodada,
   type PagamentoItem,
 } from "@/lib/claims-types";
+import type { Comprovante } from "@/lib/comprovante";
 import { MOCK_JOINERS } from "@/lib/gom-types";
+import type { TipoNotificacao } from "@/lib/notificacoes-types";
 import { AuthService } from "./auth.service";
 import { CegsService } from "./cegs.service";
 import { ComunidadeService } from "./comunidade.service";
@@ -268,10 +270,12 @@ export class ClaimsService {
     if (dono && avaria && !item.avaria) {
       this.notificacoes.enviar(
         dono.joinerId,
+        "CLAIM_ITEM",
         "item com avaria",
         `o ${item.codigo} (${item.nome}) chegou com avaria${
           dados.avariaNota?.trim() ? `: ${dados.avariaNota.trim()}` : "."
         } fale com a GOM pelo chat.`,
+        "/joiner/claims",
       );
     }
     return null;
@@ -314,8 +318,10 @@ export class ClaimsService {
     this.sistema(item.cegId, `o ${item.codigo} (${item.nome}) voltou para o estoque ✦`);
     this.notificacoes.enviar(
       dono.joinerId,
+      "CLAIM_ITEM",
       "item liberado",
       `o ${item.codigo} (${item.nome}) foi marcado como abandonado e voltou para o estoque.`,
+      "/joiner/claims",
     );
   }
 
@@ -329,10 +335,16 @@ export class ClaimsService {
     this.sincronizarInventario(item.cegId);
   }
 
-  marcarPagamento(itemId: string, pagamento: PagamentoItem): void {
-    // 🔌 PATCH /api/gom/cegs/:id/itens/:itemId  { pagamento }
+  /**
+   * GOM marca o pagamento do item. "pago" exige comprovante — o que a joiner enviou ou um anexado
+   * agora pela GOM (`comprovante`).
+   */
+  marcarPagamento(itemId: string, pagamento: PagamentoItem, comprovante?: Comprovante): void {
+    // 🔌 PATCH /api/gom/cegs/:id/itens/:itemId  { pagamento, comprovanteId }
     const item = this._itens().find((i) => i.id === itemId);
     if (!item || item.pagamento === pagamento) return;
+    const comprovantes = [...(item.comprovantes ?? []), ...(comprovante ? [comprovante] : [])];
+    if (pagamento === "PAGO" && comprovantes.length === 0) return;
     const dono = this.donoDo(item);
     const atualizadoPor = this.assinatura.assinar(
       "PAGAMENTO",
@@ -340,7 +352,37 @@ export class ClaimsService {
         pagamento === "PAGO" ? "pago" : "pagamento pendente"
       }`,
     );
-    this.patchItem(itemId, { pagamento, atualizadoPor });
+    this.patchItem(itemId, { pagamento, comprovantes, atualizadoPor });
+    if (pagamento === "PAGO" && dono) {
+      this.notificacoes.enviar(
+        dono.joinerId,
+        "PAGAMENTO_CONFIRMADO",
+        "pagamento confirmado ✓",
+        `o pagamento do ${item.codigo} (${item.nome}) foi conferido${atualizadoPor ? ` por ${atualizadoPor.username}` : ""}.`,
+        "/joiner/claims",
+      );
+    }
+  }
+
+  /** Joiner envia o comprovante do item que ganhou (a GOM confere e marca pago). */
+  enviarComprovante(itemId: string, comprovante: Comprovante): string | null {
+    const item = this._itens().find((i) => i.id === itemId);
+    const dono = item ? this.donoDo(item) : undefined;
+    const user = this.auth.user();
+    if (!item || !dono || dono.joinerId !== user?.id) return "este item não é seu.";
+    if (item.pagamento !== "PENDENTE") return "este item já está pago.";
+    // 🔌 POST /api/joiner/cegs/:id/itens/:itemId/comprovantes { comprovanteId }
+    this.assinatura.assinar("PAGAMENTO", `enviou o comprovante do item #${item.codigo}`);
+    this.patchItem(itemId, { comprovantes: [...(item.comprovantes ?? []), comprovante] });
+    const ceg = this.cegs.porId(item.cegId);
+    this.notificacoes.enviar(
+      "GOM",
+      "COMPROVANTE_ENVIADO",
+      "comprovante para conferir 🧾",
+      `${user.username} enviou o comprovante do ${item.codigo} (${item.nome})${ceg ? ` · ${ceg.nome}` : ""}.`,
+      "/gom/cegs",
+    );
+    return null;
   }
 
   // ── Chat e claims ────────────────────────────────────────────────────────
@@ -461,8 +503,10 @@ export class ClaimsService {
       this.assinatura.assinar("CLAIM", `deu claim em ${rotulos} (${ceg?.nome ?? "CEG"})`);
       this.notificacoes.enviar(
         "GOM",
+        "CLAIM_NOVO",
         `novo claim em ${ceg?.nome ?? "CEG"} ✋`,
         `${user.username} pediu ${rotulos}.`,
+        "/gom/claims",
       );
     }
     return resultado;
@@ -510,14 +554,18 @@ export class ClaimsService {
     this.sistema(claim.cegId, `${claim.joinerUsername} · claim do ${rotulo} confirmado${quem} ✓`);
     this.notificacoes.enviar(
       claim.joinerId,
+      "CLAIM_DECIDIDO",
       "claim confirmado ✓",
       `seu claim do ${rotulo} foi confirmado${quem}. o pagamento aparece em minhas CEGs.`,
+      "/joiner/claims",
     );
     for (const p of perdedores) {
       this.notificacoes.enviar(
         p.joinerId,
+        "CLAIM_DECIDIDO",
         "claim não confirmado",
         `o ${rotulo} foi confirmado para quem chegou antes na fila. :(`,
+        "/joiner/claims",
       );
     }
   }
@@ -554,8 +602,10 @@ export class ClaimsService {
     this.sistema(claim.cegId, `${claim.joinerUsername} · claim do ${rotulo} rejeitado${quem}`);
     this.notificacoes.enviar(
       claim.joinerId,
+      "CLAIM_DECIDIDO",
       "claim rejeitado",
       `seu claim do ${rotulo} foi rejeitado${quem}${motivo.trim() ? `: ${motivo.trim()}` : "."}`,
+      "/joiner/claims",
     );
   }
 
@@ -582,6 +632,7 @@ export class ClaimsService {
           "claims abertos! digite o código ou o nome do item para dar claim ✦",
         );
         this.avisarJoiners(
+          "CLAIM_ABERTO",
           `claims abertos: ${ceg.nome} ✋`,
           "corre! digite o código do item no chat da rodada.",
         );
@@ -593,16 +644,19 @@ export class ClaimsService {
         this.patchAgenda(agenda.cegId, { avisoEnviado: true });
         const faltam = Math.max(1, Math.round((abre - agora) / 60_000));
         this.avisarJoiners(
-          `claims de ${ceg.nome} em ${faltam} min ⏰`,
-          `a rodada abre às ${hora}. separe os códigos dos itens que você quer!`,
+          "CLAIM_ABRE_EM_BREVE",
+          `claim abre em breve: ${faltam} min ⏰`,
+          `a rodada de ${ceg.nome} abre às ${hora}. separe os códigos dos itens que você quer!`,
         );
       }
     }
   }
 
   /** 🔌 em produção: joiners vinculadas à GOM (+ Web Push para quem permitiu). */
-  private avisarJoiners(titulo: string, mensagem: string): void {
-    for (const j of MOCK_JOINERS) this.notificacoes.enviar(j.id, titulo, mensagem);
+  private avisarJoiners(tipo: TipoNotificacao, titulo: string, mensagem: string): void {
+    for (const j of MOCK_JOINERS) {
+      this.notificacoes.enviar(j.id, tipo, titulo, mensagem, "/joiner/claims");
+    }
   }
 
   private sistema(cegId: string, texto: string): void {

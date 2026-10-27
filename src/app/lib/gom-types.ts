@@ -5,6 +5,7 @@
  */
 
 import type { Autoria } from "./autoria";
+import type { Comprovante } from "./comprovante";
 
 // ---------------------------------------------------------------------------
 // Solicitação Mercari (perspectiva da GOM)
@@ -99,6 +100,8 @@ export interface SolicitacaoGOM {
   cegNome?: string;
   /** Imagens de proof da compra anexadas pela GOM. */
   proofs?: string[];
+  /** Comprovantes do pagamento do item (da joiner ou anexados pela GOM ao marcar "pago"). */
+  comprovantes?: Comprovante[];
   /** Última alteração (etapa, compra confirmada, caixa…) e quem fez. */
   atualizadoPor?: Autoria;
 }

@@ -1,4 +1,5 @@
 import type { Autoria } from "@/lib/autoria";
+import type { Comprovante } from "@/lib/comprovante";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -34,6 +35,8 @@ export interface CobrancaCaixa {
   data: string; // ISO
   /** Joiners que já pagaram o frete + taxas desta caixa. */
   pagoPor?: string[];
+  /** joinerId → comprovantes do pagamento do frete + taxas. */
+  comprovantes?: Record<string, Comprovante[]>;
   /** Quem lançou a cobrança. */
   por?: Autoria;
 }
@@ -46,6 +49,8 @@ export interface Repasse {
   valorPago: number;
   status: "PENDENTE" | "PARCIAL" | "PAGO";
   dataVencimento: string;
+  /** Um comprovante por pagamento registrado. */
+  comprovantes?: Comprovante[];
   /** Quem registrou o último pagamento. */
   atualizadoPor?: Autoria;
 }

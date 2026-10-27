@@ -7,6 +7,7 @@ import {
   Warehouse,
   type LucideIconData,
 } from "lucide-angular";
+import type { Comprovante } from "@/lib/comprovante";
 import {
   MERCARI_STATUS_META,
   etapaMercari,
@@ -38,14 +39,26 @@ export interface PedidoJoiner {
   envioLiberado: boolean;
   /** Proof da compra enviado pela GOM. */
   imagens?: string[];
+  /** Comprovantes do pagamento do pedido. */
+  comprovantes: Comprovante[];
   /** Frete internacional + taxas cobrados desta joiner na caixa. */
   cobrancaCaixa?: number;
+  /** A GOM já conferiu o frete + taxas da caixa. */
+  caixaPaga: boolean;
+  comprovantesCaixa: Comprovante[];
+}
+
+/** O que a joiner deve de frete + taxas na caixa do pedido. */
+export interface CobrancaDaJoiner {
+  valor: number;
+  pago: boolean;
+  comprovantes: Comprovante[];
 }
 
 // 🔌 em produção a GOM vem do vínculo da joiner; mock com a GOM única
 const GOM_USERNAME = "@knodori_gom";
 
-export function toPedidoJoiner(s: SolicitacaoGOM, cobrancaCaixa?: number): PedidoJoiner {
+export function toPedidoJoiner(s: SolicitacaoGOM, cobranca?: CobrancaDaJoiner): PedidoJoiner {
   return {
     id: s.id,
     cegId: s.cegId ?? "",
@@ -63,7 +76,10 @@ export function toPedidoJoiner(s: SolicitacaoGOM, cobrancaCaixa?: number): Pedid
     pagamentoConfirmado: etapaMercari(s.status) >= etapaMercari("PAGO"),
     envioLiberado: s.status === "ENVIO_LIBERADO",
     imagens: s.proofs,
-    cobrancaCaixa,
+    comprovantes: s.comprovantes ?? [],
+    cobrancaCaixa: cobranca?.valor,
+    caixaPaga: cobranca?.pago ?? false,
+    comprovantesCaixa: cobranca?.comprovantes ?? [],
   };
 }
 

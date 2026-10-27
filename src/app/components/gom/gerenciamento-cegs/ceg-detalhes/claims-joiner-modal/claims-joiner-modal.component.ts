@@ -1,17 +1,18 @@
 import { Component, computed, inject, input, linkedSignal, output } from "@angular/core";
 import { PackageX, Pencil, Phone, ShieldAlert, X } from "lucide-angular";
-import { CLAIM_STATUS_META, type PagamentoItem } from "@/lib/claims-types";
+import { CLAIM_STATUS_META, type CegItem, type PagamentoItem } from "@/lib/claims-types";
 import { ClaimsService } from "@/services/claims.service";
 import { DialogComponent } from "@/shared/dialog.component";
 import { IconDirective } from "@/shared/icon.directive";
-import { inputValue } from "@/shared/dom";
+import { ComprovanteChipComponent } from "@/shared/comprovante/comprovante-chip.component";
+import { ComprovanteService } from "@/shared/comprovante/comprovante.service";
 import { brl } from "../../cegs.model";
 import { AssinaturaComponent } from "@/shared/assinatura/assinatura.component";
 
 /** Claims da CEG vistos joiner a joiner, um por um, com totais e pagamento. */
 @Component({
   selector: "app-claims-joiner-modal",
-  imports: [DialogComponent, IconDirective, AssinaturaComponent],
+  imports: [DialogComponent, IconDirective, AssinaturaComponent, ComprovanteChipComponent],
   templateUrl: "./claims-joiner-modal.component.html",
   styleUrl: "./claims-joiner-modal.component.scss",
 })
@@ -26,6 +27,7 @@ export class ClaimsJoinerModalComponent {
   readonly editarItem = output<string>();
 
   protected readonly claims = inject(ClaimsService);
+  private readonly comprovantes = inject(ComprovanteService);
 
   protected readonly icons = { PackageX, Pencil, Phone, ShieldAlert, X };
   protected readonly CLAIM_META = CLAIM_STATUS_META;
@@ -71,8 +73,26 @@ export class ClaimsJoinerModalComponent {
     return `${conf} confirmado${conf !== 1 ? "s" : ""}${pend ? ` · ${pend} pendente${pend !== 1 ? "s" : ""}` : ""}`;
   }
 
-  protected onPagamento(itemId: string, e: Event): void {
-    this.claims.marcarPagamento(itemId, inputValue(e) as PagamentoItem);
+  /** "pago" pede o comprovante: o que a joiner enviou (para conferir) ou um anexado agora. */
+  protected async onPagamento(item: CegItem, e: Event): Promise<void> {
+    const select = e.target as HTMLSelectElement;
+    const pagamento = select.value as PagamentoItem;
+    // Controlado: o select só muda junto com o estado (o comprovante pode ser cancelado)
+    select.value = item.pagamento ?? "PENDENTE";
+    if (pagamento !== "PAGO") {
+      this.claims.marcarPagamento(item.id, pagamento);
+      return;
+    }
+    const r = await this.comprovantes.pedir({
+      titulo: `pagamento do #${item.codigo}`,
+      mensagem: item.comprovantes?.length
+        ? "confira o comprovante que a joiner enviou antes de marcar como pago."
+        : "anexe o comprovante do pagamento que você recebeu.",
+      valor: item.valor,
+      existentes: item.comprovantes,
+      confirmar: "marcar como pago",
+    });
+    if (r) this.claims.marcarPagamento(item.id, "PAGO", r.comprovante);
   }
 
   protected fmtDataHora(iso: string): string {

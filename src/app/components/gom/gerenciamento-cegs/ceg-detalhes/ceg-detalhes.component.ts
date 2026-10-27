@@ -24,6 +24,7 @@ import {
   type CegItem,
   type PagamentoItem,
 } from "@/lib/claims-types";
+import type { Comprovante } from "@/lib/comprovante";
 import { MERCARI_STATUS_META } from "@/lib/gom-types";
 import { resumoItens } from "@/lib/mensagens-types";
 import { CEG_POST_META, CegPostsService } from "@/services/ceg-posts.service";
@@ -31,6 +32,8 @@ import { ClaimsService } from "@/services/claims.service";
 import { PedidosMercariService } from "@/services/pedidos-mercari.service";
 import { RepassesService } from "@/services/repasses.service";
 import { IconDirective } from "@/shared/icon.directive";
+import { ComprovanteChipComponent } from "@/shared/comprovante/comprovante-chip.component";
+import { ComprovanteService } from "@/shared/comprovante/comprovante.service";
 import { ConfirmService } from "@/shared/confirm-dialog/confirm.service";
 import { inputValue } from "@/shared/dom";
 import { RodadaStatusComponent } from "@/components/claims/rodada-status/rodada-status.component";
@@ -62,6 +65,7 @@ export const AVISO_OPCOES = [0, 5, 15, 30, 60];
     ItemModalComponent,
     ClaimsJoinerModalComponent,
     AssinaturaComponent,
+    ComprovanteChipComponent,
   ],
   templateUrl: "./ceg-detalhes.component.html",
   styleUrl: "./ceg-detalhes.component.scss",
@@ -77,6 +81,7 @@ export class CegDetalhesComponent {
 
   protected readonly claims = inject(ClaimsService);
   private readonly confirm = inject(ConfirmService);
+  private readonly comprovantes = inject(ComprovanteService);
   private readonly posts = inject(CegPostsService);
   private readonly pedidos = inject(PedidosMercariService);
   private readonly repassesClaim = inject(RepassesService);
@@ -144,6 +149,42 @@ export class CegDetalhesComponent {
     this.ehCaixa() ? this.pedidos.pedidosDaCaixa(this.ceg().id) : [],
   );
 
+  /** Frete internacional + taxas da caixa, joiner a joiner. */
+  protected readonly cobrancaJoiners = computed(() => {
+    const cob = this.ceg().cobranca;
+    if (!cob) return [];
+    const pedidos = this.pedidosDaCaixa();
+    return Object.entries(cob.porJoiner).map(([joinerId, valor]) => {
+      const pedido = pedidos.find((p) => p.joinerId === joinerId);
+      return {
+        joinerId,
+        nome: pedido?.joinerNome ?? joinerId,
+        username: pedido?.joinerUsername ?? "",
+        valor,
+        pago: cob.pagoPor?.includes(joinerId) ?? false,
+        comprovantes: cob.comprovantes?.[joinerId] ?? [],
+      };
+    });
+  });
+
+  protected async confirmarCaixa(l: {
+    joinerId: string;
+    username: string;
+    valor: number;
+    comprovantes: Comprovante[];
+  }): Promise<void> {
+    const r = await this.comprovantes.pedir({
+      titulo: `frete + taxas de ${l.username}`,
+      mensagem: l.comprovantes.length
+        ? "confira o comprovante que a joiner enviou."
+        : "anexe o comprovante do pagamento que você recebeu.",
+      valor: l.valor,
+      existentes: l.comprovantes,
+      confirmar: "confirmar pagamento",
+    });
+    if (r) this.pedidos.confirmarPagamentoCaixa(this.ceg().id, l.joinerId, r.comprovante);
+  }
+
   protected readonly agenda = computed(() => this.claims.agendaDa(this.ceg().id));
   protected readonly estado = computed(() => this.claims.estado(this.ceg().id));
 
@@ -210,8 +251,26 @@ export class CegDetalhesComponent {
     if (ok) this.claims.removerItem(item.id);
   }
 
-  protected onPagamento(itemId: string, e: Event): void {
-    this.claims.marcarPagamento(itemId, inputValue(e) as PagamentoItem);
+  /** "pago" pede o comprovante: o que a joiner enviou (para conferir) ou um anexado agora. */
+  protected async onPagamento(item: CegItem, e: Event): Promise<void> {
+    const select = e.target as HTMLSelectElement;
+    const pagamento = select.value as PagamentoItem;
+    // Controlado: o select só muda junto com o estado (o comprovante pode ser cancelado)
+    select.value = item.pagamento ?? "PENDENTE";
+    if (pagamento !== "PAGO") {
+      this.claims.marcarPagamento(item.id, pagamento);
+      return;
+    }
+    const r = await this.comprovantes.pedir({
+      titulo: `pagamento do #${item.codigo}`,
+      mensagem: item.comprovantes?.length
+        ? "confira o comprovante que a joiner enviou antes de marcar como pago."
+        : "anexe o comprovante do pagamento que você recebeu.",
+      valor: item.valor,
+      existentes: item.comprovantes,
+      confirmar: "marcar como pago",
+    });
+    if (r) this.claims.marcarPagamento(item.id, "PAGO", r.comprovante);
   }
 
   protected fmtDataHora(iso: string): string {

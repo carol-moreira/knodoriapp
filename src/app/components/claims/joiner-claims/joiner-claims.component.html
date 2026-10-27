@@ -144,6 +144,30 @@
                   ⚠ item com avaria{{ m.item?.avariaNota ? ": " + m.item?.avariaNota : "" }}
                 </p>
               }
+              @if (m.claim.status === "CONFIRMADO" && m.item; as item) {
+                @for (c of item.comprovantes ?? []; track c.id) {
+                  <app-comprovante-chip [comprovante]="c" />
+                }
+                @if (item.pagamento === "PENDENTE") {
+                  @if (item.comprovantes?.length) {
+                    <p class="text-[11px] font-medium text-sky-700">
+                      comprovante enviado · a GOM está conferindo
+                    </p>
+                  }
+                  <button
+                    type="button"
+                    (click)="enviarComprovante(item)"
+                    class="flex h-9 w-full items-center justify-center gap-1.5 rounded-xl bg-primary text-xs font-semibold text-primary-foreground transition hover:opacity-90 active:scale-[0.98]"
+                  >
+                    <svg [appIcon]="icons.Receipt" class="h-3.5 w-3.5"></svg>
+                    {{
+                      item.comprovantes?.length
+                        ? "enviar outro comprovante"
+                        : "pagar e enviar comprovante"
+                    }}
+                  </button>
+                }
+              }
             </div>
           } @empty {
             <div class="py-6 text-center">
