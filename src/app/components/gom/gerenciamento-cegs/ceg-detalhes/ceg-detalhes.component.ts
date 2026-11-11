@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, input, output, signal } from "@ang
 import { RouterLink } from "@angular/router";
 import {
   BarChart3,
+  Boxes,
   CalendarClock,
   Check,
   Hand,
@@ -28,6 +29,7 @@ import type { Comprovante } from "@/lib/comprovante";
 import { MERCARI_STATUS_META } from "@/lib/gom-types";
 import { resumoItens } from "@/lib/mensagens-types";
 import { CEG_POST_META, CegPostsService } from "@/services/ceg-posts.service";
+import { BancoItensService } from "@/services/banco-itens.service";
 import { ClaimsService } from "@/services/claims.service";
 import { PedidosMercariService } from "@/services/pedidos-mercari.service";
 import { RepassesService } from "@/services/repasses.service";
@@ -39,6 +41,7 @@ import { inputValue } from "@/shared/dom";
 import { RodadaStatusComponent } from "@/components/claims/rodada-status/rodada-status.component";
 import { ClaimsJoinerModalComponent } from "./claims-joiner-modal/claims-joiner-modal.component";
 import { ItemModalComponent } from "./item-modal/item-modal.component";
+import { AtrelarItensModalComponent } from "@/components/gom/banco-itens/atrelar-itens-modal/atrelar-itens-modal.component";
 import {
   CEG_STATUS_META,
   INPUT_CLS,
@@ -63,6 +66,7 @@ export const AVISO_OPCOES = [0, 5, 15, 30, 60];
     RouterLink,
     RodadaStatusComponent,
     ItemModalComponent,
+    AtrelarItensModalComponent,
     ClaimsJoinerModalComponent,
     AssinaturaComponent,
     ComprovanteChipComponent,
@@ -85,9 +89,11 @@ export class CegDetalhesComponent {
   private readonly posts = inject(CegPostsService);
   private readonly pedidos = inject(PedidosMercariService);
   private readonly repassesClaim = inject(RepassesService);
+  private readonly banco = inject(BancoItensService);
 
   protected readonly icons = {
     BarChart3,
+    Boxes,
     CalendarClock,
     Check,
     Hand,
@@ -126,6 +132,12 @@ export class CegDetalhesComponent {
 
   /** Modal do item aberto (id null = novo item). */
   protected readonly itemModal = signal<{ id: string | null } | null>(null);
+  /** Modal "do banco de itens" aberto. */
+  protected readonly atrelarOpen = signal(false);
+  /** CEG aberta com rodada não encerrada — pode receber itens do banco. */
+  protected readonly aceitaDoBanco = computed(() =>
+    this.claims.cegsParaAtrelar().some((c) => c.id === this.ceg().id),
+  );
   /** Modal de claims por joiner aberto (joinerId null = primeira da lista). */
   protected readonly joinerModal = signal<{ joinerId: string | null } | null>(null);
 
@@ -243,10 +255,18 @@ export class CegDetalhesComponent {
     this.agendaSalva.set(true);
   }
 
+  /** Código do item no banco (ITM-…), se ele veio de lá. */
+  protected codigoBanco(item: CegItem): string | undefined {
+    return item.bancoId ? this.banco.porId(item.bancoId)?.codigo : undefined;
+  }
+
   protected async removerItem(item: CegItem): Promise<void> {
+    const banco = this.codigoBanco(item);
     const ok = await this.confirm.confirmar({
-      titulo: `excluir o item #${item.codigo}?`,
-      mensagem: `${item.nome} sai do inventário da CEG.`,
+      titulo: banco ? `tirar o #${item.codigo} da CEG?` : `excluir o item #${item.codigo}?`,
+      mensagem: banco
+        ? `${item.nome} sai do inventário da CEG e ${banco} volta livre para o banco de itens.`
+        : `${item.nome} sai do inventário da CEG.`,
     });
     if (ok) this.claims.removerItem(item.id);
   }

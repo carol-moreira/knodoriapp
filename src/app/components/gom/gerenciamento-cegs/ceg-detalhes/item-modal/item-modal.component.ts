@@ -112,8 +112,10 @@ export class ItemModalComponent {
     const item = this.item();
     if (!item) return;
     const ok = await this.confirm.confirmar({
-      titulo: `excluir o item #${item.codigo}?`,
-      mensagem: `${item.nome} sai do inventário da CEG.`,
+      titulo: item.bancoId ? `tirar o #${item.codigo} da CEG?` : `excluir o item #${item.codigo}?`,
+      mensagem: item.bancoId
+        ? `${item.nome} sai do inventário da CEG e volta livre para o banco de itens.`
+        : `${item.nome} sai do inventário da CEG.`,
     });
     if (!ok) return;
     this.claims.removerItem(item.id);

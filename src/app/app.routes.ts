@@ -159,6 +159,15 @@ export const routes: Routes = [
           ),
       },
       {
+        path: "itens",
+        title: "banco de itens · KNODORI",
+        data: { seo: seo("cadastre itens um a um e atrele cada um a uma CEG.") },
+        loadComponent: () =>
+          import("./components/gom/banco-itens/banco-itens.component").then(
+            (m) => m.BancoItensComponent,
+          ),
+      },
+      {
         path: "claims",
         title: "claims · KNODORI",
         data: { seo: seo("salas de claims: chat da rodada e moderação dos claims.") },

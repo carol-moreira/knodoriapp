@@ -7,6 +7,7 @@
  * mesmo item formam uma fila ordenada pelo timestamp do servidor (+ `seq` para empates).
  *
  * Relações: CegGOM 1─N CegItem · CegGOM 1─1 CegSchedule · CegItem 1─N Claim · User 1─N Claim
+ *           ItemBanco 1─0..1 CegItem (o item do banco atrelado à CEG)
  * Contrato da API e arquitetura de tempo real: docs/claims.md
  */
 
@@ -28,6 +29,8 @@ export interface CegItem {
   cegId: string;
   /** Código que a joiner digita no chat (único por CEG, sem diferenciar maiúsculas). */
   codigo: string;
+  /** Item do banco de itens de onde veio (ItemBanco.id) — ver banco-itens-types.ts. */
+  bancoId?: string;
   nome: string;
   /** Valor unitário em BRL. */
   valor: number;
@@ -215,6 +218,7 @@ export const MOCK_CEG_ITENS: CegItem[] = [
     id: "it_04",
     cegId: "ceg_03",
     codigo: "04",
+    bancoId: "bi_01",
     nome: "pc sunghoon",
     valor: 29.9,
     status: "DISPONIVEL",
@@ -256,6 +260,7 @@ export const MOCK_CEG_ITENS: CegItem[] = [
     id: "it_13",
     cegId: "ceg_01",
     codigo: "B1",
+    bancoId: "bi_02",
     nome: "keyring cherry",
     valor: 25.0,
     status: "DISPONIVEL",

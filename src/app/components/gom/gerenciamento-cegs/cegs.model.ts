@@ -9,7 +9,10 @@ export type CegStatus = "ABERTA" | "EM_COMPRA" | "TRANSITO" | "CHEGOU_BR" | "FIN
 export type Moeda = "KRW" | "JPY" | "USD" | "IDR";
 
 export interface CegGOM {
+  /** Chave interna (API) — não aparece na interface. */
   id: string;
+  /** "CEG-001" — código legível, gerado na criação e único na comunidade (CegsService). */
+  codigo: string;
   /** Comunidade dona da CEG — as joiners dela veem a CEG na vitrine. */
   comunidadeId: string;
   nome: string;
@@ -62,6 +65,7 @@ export interface Repasse {
 export const MOCK_CEGS: CegGOM[] = [
   {
     id: "ceg_cx1",
+    codigo: "CEG-007",
     comunidadeId: "com_01",
     nome: "caixa mercari 3",
     loja: "Mercari",
@@ -74,6 +78,7 @@ export const MOCK_CEGS: CegGOM[] = [
   },
   {
     id: "ceg_cx_mai",
+    codigo: "CEG-003",
     comunidadeId: "com_01",
     nome: "caixa mercari 2",
     loja: "Mercari",
@@ -92,6 +97,7 @@ export const MOCK_CEGS: CegGOM[] = [
   },
   {
     id: "ceg_cx_abr",
+    codigo: "CEG-001",
     comunidadeId: "com_01",
     nome: "caixa mercari 1",
     loja: "Mercari",
@@ -111,6 +117,7 @@ export const MOCK_CEGS: CegGOM[] = [
   },
   {
     id: "ceg_01",
+    codigo: "CEG-004",
     comunidadeId: "com_01",
     nome: "Cherry Haul Jun/26",
     loja: "Mercari",
@@ -122,6 +129,7 @@ export const MOCK_CEGS: CegGOM[] = [
   },
   {
     id: "ceg_02",
+    codigo: "CEG-005",
     comunidadeId: "com_01",
     nome: "Spring Box Ktown4u",
     loja: "Ktown4u",
@@ -133,6 +141,7 @@ export const MOCK_CEGS: CegGOM[] = [
   },
   {
     id: "ceg_03",
+    codigo: "CEG-006",
     comunidadeId: "com_01",
     nome: "WTS Álbuns Dopamine",
     loja: "Mercari",
@@ -144,6 +153,7 @@ export const MOCK_CEGS: CegGOM[] = [
   },
   {
     id: "ceg_04",
+    codigo: "CEG-008",
     comunidadeId: "com_01",
     nome: "Winter Box Coreia",
     loja: "Weverse",
@@ -155,6 +165,7 @@ export const MOCK_CEGS: CegGOM[] = [
   },
   {
     id: "ceg_05",
+    codigo: "CEG-002",
     comunidadeId: "com_01",
     nome: "Idol Power CEG",
     loja: "YesAsia",

@@ -1,0 +1,164 @@
+<app-dialog
+  [open]="open()"
+  (openChange)="onOpenChange($event)"
+  contentClass="fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 cozy-card shadow-2xl animate-in zoom-in-95 fade-in duration-150 max-h-[90vh] overflow-y-auto no-scrollbar"
+>
+  <div
+    class="sticky top-0 z-10 flex items-center justify-between border-b border-border/60 bg-card px-6 py-4"
+  >
+    <div class="flex items-center gap-2">
+      <h2 class="text-sm font-bold">
+        {{ item() ? item()!.codigo : "novo item no banco" }}
+      </h2>
+      @if (item()) {
+        @if (vinculo(); as v) {
+          <span class="cozy-pill bg-primary/10 text-[10px] font-semibold text-primary">
+            na {{ v.ceg?.codigo ?? "CEG" }}
+          </span>
+        } @else {
+          <span
+            class="cozy-pill bg-lime-50 text-[10px] font-semibold text-lime-700 ring-1 ring-lime-200"
+          >
+            livre
+          </span>
+        }
+      }
+    </div>
+    <button
+      type="button"
+      (click)="onOpenChange(false)"
+      aria-label="fechar"
+      class="rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted"
+    >
+      <svg [appIcon]="icons.X" class="h-4 w-4"></svg>
+    </button>
+  </div>
+
+  <form class="space-y-5 px-6 py-5" (submit)="$event.preventDefault(); salvar()">
+    @if (!item()) {
+      <p class="text-[11px] text-muted-foreground">
+        o código (ITM-…) é gerado ao salvar. depois é só atrelar o item a uma CEG — lá ele ganha o
+        código do claim.
+      </p>
+    }
+
+    @if (cadastrado()) {
+      <p
+        class="flex items-center gap-1.5 rounded-xl bg-lime-50 px-3 py-2 text-[11px] font-medium text-lime-800 ring-1 ring-lime-200"
+      >
+        <svg [appIcon]="icons.Check" class="h-3.5 w-3.5 shrink-0"></svg>
+        {{ cadastrado() }} cadastrado. pode seguir com o próximo.
+      </p>
+    }
+
+    <label class="block space-y-1.5">
+      <span class="text-xs font-semibold">nome / descrição</span>
+      <input
+        [value]="nome()"
+        (input)="nome.set(val($event))"
+        placeholder="pc karina armageddon"
+        [class]="INPUT_CLS"
+      />
+    </label>
+
+    <div class="grid gap-3 sm:grid-cols-2">
+      <label class="block space-y-1.5">
+        <span class="text-xs font-semibold">categoria</span>
+        <select
+          (change)="categoria.set($any(val($event)))"
+          aria-label="categoria do item"
+          [class]="INPUT_CLS"
+        >
+          <option value="" [selected]="categoria() === ''">sem categoria</option>
+          @for (c of categorias; track c[0]) {
+            <option [value]="c[0]" [selected]="categoria() === c[0]">
+              {{ c[1].emoji }} {{ c[1].label }}
+            </option>
+          }
+        </select>
+      </label>
+      <label class="block space-y-1.5">
+        <span class="text-xs font-semibold">valor base (R$)</span>
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          [appNumberValue]="valor()"
+          (input)="valor.set(+val($event))"
+          [class]="INPUT_CLS"
+        />
+      </label>
+    </div>
+
+    <label class="block space-y-1.5">
+      <span class="text-xs font-semibold">notas <span class="font-normal">(opcional)</span></span>
+      <textarea
+        rows="2"
+        [value]="notas()"
+        (input)="notas.set(val($event))"
+        placeholder="estado, versão, de onde veio…"
+        [class]="INPUT_CLS + ' resize-none'"
+      ></textarea>
+    </label>
+
+    @if (vinculo(); as v) {
+      <div class="space-y-1 rounded-2xl bg-muted/50 p-3 text-xs">
+        <p class="font-semibold">{{ v.ceg?.codigo }} · {{ v.ceg?.nome }}</p>
+        <p class="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+          claim #{{ v.cegItem.codigo }}
+          <span
+            [class]="
+              'rounded-full px-2 py-0.5 text-[9px] font-semibold ' +
+              ITEM_STATUS[v.cegItem.status].badge
+            "
+          >
+            {{ ITEM_STATUS[v.cegItem.status].label }}
+          </span>
+        </p>
+        @if (v.cegItem.valor !== valor()) {
+          <p class="text-[11px] text-muted-foreground">
+            o valor da CEG não muda ao editar o banco — edite pelo inventário da CEG.
+          </p>
+        }
+      </div>
+    }
+
+    @if (item()?.atualizadoPor; as por) {
+      <p class="text-[10px] text-muted-foreground">
+        <app-assinatura [por]="por" acao="item alterado por" />
+      </p>
+    }
+
+    @if (erro()) {
+      <p class="text-[11px] font-medium text-destructive">{{ erro() }}</p>
+    }
+
+    @if (!item()) {
+      <label class="flex items-center gap-2 text-xs">
+        <input
+          type="checkbox"
+          [checked]="continuar()"
+          (change)="continuar.set(!continuar())"
+          class="h-4 w-4 accent-primary"
+        />
+        cadastrar outro em seguida
+      </label>
+    }
+
+    <div class="flex gap-2 pt-1">
+      <button
+        type="button"
+        (click)="onOpenChange(false)"
+        class="flex-1 rounded-2xl border border-border py-2.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
+      >
+        {{ cadastrado() ? "fechar" : "cancelar" }}
+      </button>
+      <button
+        type="submit"
+        class="flex-1 rounded-2xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+      >
+        {{ item() ? "salvar" : "adicionar" }}
+      </button>
+    </div>
+  </form>
+</app-dialog>
