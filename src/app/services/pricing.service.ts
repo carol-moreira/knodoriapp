@@ -8,13 +8,17 @@
  *
  * Cada calculadora é debounced (padrão 350 ms) para evitar chamadas excessivas
  * enquanto o usuário digita. As taxas nunca chegam ao navegador: o servidor
- * (server/worker.ts) devolve apenas os valores finais em centavos.
+ * (backend node no render, rota /api/pricing) devolve apenas os valores finais em centavos.
+ * a base da url vem de environment.api_url (dev: localhost:3000/api, prod: api.knodori.com.br/api).
  */
 
 import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { DestroyRef, Injectable, inject, signal, type Signal } from "@angular/core";
 import { firstValueFrom } from "rxjs";
 import type { PricingInput, PricingResult } from "@/lib/pricing";
+import { environment } from "../../environments/environment";
+
+const api_url = environment.api_url;
 
 export interface PricingCalculator {
   /**
@@ -38,7 +42,7 @@ export class PricingService {
 
   /** Chamada direta ao servidor (sem debounce). */
   calcularPreco(input: PricingInput): Promise<PricingResult> {
-    return firstValueFrom(this.http.post<PricingResult>("/api/pricing", input));
+    return firstValueFrom(this.http.post<PricingResult>(`${api_url}/pricing`, input));
   }
 
   /**

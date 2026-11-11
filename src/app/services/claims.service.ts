@@ -19,6 +19,7 @@ import type { Comprovante } from "@/lib/comprovante";
 import { MOCK_JOINERS } from "@/lib/gom-types";
 import type { TipoNotificacao } from "@/lib/notificacoes-types";
 import { AuthService } from "./auth.service";
+import { BancoItensService } from "./banco-itens.service";
 import { CegsService } from "./cegs.service";
 import { ComunidadeService } from "./comunidade.service";
 import { AssinaturaService } from "./assinatura.service";
@@ -26,11 +27,20 @@ import { NotificacoesService } from "./notificacoes.service";
 
 export interface NovoItem {
   codigo: string;
+  /** Item do banco que está sendo atrelado (só no cadastro). */
+  bancoId?: string;
   nome: string;
   valor: number;
   avaria?: boolean;
   avariaNota?: string;
   abandonado?: boolean;
+}
+
+/** Um item do banco indo para uma CEG: código do claim e valor naquela CEG. */
+export interface VinculoBanco {
+  bancoId: string;
+  codigo: string;
+  valor: number;
 }
 
 /** Resultado de uma mensagem enviada no chat de claims. */
@@ -57,6 +67,7 @@ export class ClaimsService {
   private readonly comunidade = inject(ComunidadeService);
   private readonly notificacoes = inject(NotificacoesService);
   private readonly assinatura = inject(AssinaturaService);
+  private readonly banco = inject(BancoItensService);
 
   private readonly _itens = signal<CegItem[]>(MOCK_CEG_ITENS);
   private readonly _schedules = signal<CegSchedule[]>(MOCK_CEG_SCHEDULES);
@@ -73,6 +84,11 @@ export class ClaimsService {
   /** CEGs que podem ter rodada de claims (caixas mercari não têm). */
   readonly cegsComClaims = computed(() =>
     this.cegs.cegs().filter((c) => c.tipo !== "CAIXA_MERCARI"),
+  );
+
+  /** CEGs que aceitam itens do banco: abertas e com a rodada ainda não encerrada. */
+  readonly cegsParaAtrelar = computed(() =>
+    this.cegsComClaims().filter((c) => c.status === "ABERTA" && this.estado(c.id) !== "ENCERRADA"),
   );
 
   /** CEGs (com rodada) das comunidades da joiner logada — vitrine e sala de claims dela. */
@@ -172,6 +188,11 @@ export class ClaimsService {
       .sort((a, b) => a.claims[0].joinerNome.localeCompare(b.claims[0].joinerNome, "pt-BR"));
   }
 
+  /** CegItem criado a partir do item do banco (undefined = o item está livre no banco). */
+  itemDoBanco(bancoId: string): CegItem | undefined {
+    return this._itens().find((i) => i.bancoId === bancoId);
+  }
+
   /** Claim confirmado (dono) do item. */
   donoDo(item: CegItem): Claim | undefined {
     return item.claimId ? this.claimPorId(item.claimId) : undefined;
@@ -216,11 +237,14 @@ export class ClaimsService {
   adicionarItem(cegId: string, novo: NovoItem): string | null {
     const erro = this.validarItem(cegId, novo);
     if (erro) return erro;
-    // 🔌 POST /api/gom/cegs/:id/itens
+    // 🔌 POST /api/gom/cegs/:id/itens  { ..., bancoId? }
+    const banco = novo.bancoId ? this.banco.porId(novo.bancoId) : undefined;
+    const ceg = this.cegs.porId(cegId);
     const item: CegItem = {
       id: `it_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
       cegId,
       codigo: novo.codigo.trim(),
+      bancoId: banco?.id,
       nome: novo.nome.trim(),
       valor: novo.valor,
       status: "DISPONIVEL",
@@ -228,11 +252,49 @@ export class ClaimsService {
       avariaNota: novo.avaria ? novo.avariaNota?.trim() || undefined : undefined,
       atualizadoPor: this.assinatura.assinar(
         "ITEM",
-        `cadastrou o item #${novo.codigo.trim()} (${novo.nome.trim()}) por ${brl(novo.valor)} em ${this.cegs.porId(cegId)?.nome ?? "CEG"}`,
+        banco
+          ? `atrelou o item ${banco.codigo} do banco à ${ceg?.codigo ?? "CEG"} (${ceg?.nome ?? ""}) como #${novo.codigo.trim()} por ${brl(novo.valor)}`
+          : `cadastrou o item #${novo.codigo.trim()} (${novo.nome.trim()}) por ${brl(novo.valor)} em ${ceg?.codigo ?? "CEG"} (${ceg?.nome ?? ""})`,
       ),
     };
     this._itens.update((prev) => [...prev, item]);
     this.sincronizarInventario(cegId);
+    return null;
+  }
+
+  /**
+   * Atrela itens do banco à CEG, cada um com o seu código de claim e valor. Tudo ou nada: valida
+   * todos antes de criar. Retorna a mensagem de erro, ou null se atrelou.
+   */
+  atrelarDoBanco(cegId: string, vinculos: VinculoBanco[]): string | null {
+    if (vinculos.length === 0) return "escolha pelo menos um item do banco.";
+    if (!this.cegsParaAtrelar().some((c) => c.id === cegId)) {
+      return "só dá para atrelar itens a CEGs abertas, com a rodada de claims ainda não encerrada.";
+    }
+    const codigos = new Set<string>();
+    for (const v of vinculos) {
+      const banco = this.banco.porId(v.bancoId);
+      if (!banco) return "item do banco não encontrado.";
+      const atual = this.itemDoBanco(banco.id);
+      if (atual) {
+        return `${banco.codigo} já está na ${this.cegs.porId(atual.cegId)?.codigo ?? "outra CEG"}.`;
+      }
+      const erro = this.validarItem(cegId, { codigo: v.codigo, nome: banco.nome, valor: v.valor });
+      if (erro) return `${banco.codigo}: ${erro}`;
+      const codigo = v.codigo.trim().toLowerCase();
+      if (codigos.has(codigo)) return `o código ${v.codigo.trim()} está repetido.`;
+      codigos.add(codigo);
+    }
+    // 🔌 POST /api/gom/cegs/:id/itens/do-banco  [{ bancoId, codigo, valor }] — uma transação
+    for (const v of vinculos) {
+      const banco = this.banco.porId(v.bancoId)!;
+      this.adicionarItem(cegId, {
+        bancoId: banco.id,
+        codigo: v.codigo,
+        nome: banco.nome,
+        valor: v.valor,
+      });
+    }
     return null;
   }
 
@@ -325,12 +387,21 @@ export class ClaimsService {
     );
   }
 
-  /** Só itens sem claims (pendentes ou confirmados) podem ser removidos. */
+  /**
+   * Só itens sem claims (pendentes ou confirmados) podem ser removidos. Item que veio do banco
+   * volta a ficar livre lá (o vínculo é o próprio CegItem).
+   */
   removerItem(id: string): void {
     const item = this._itens().find((i) => i.id === id);
     if (!item || item.status !== "DISPONIVEL") return;
     // 🔌 DELETE /api/gom/cegs/:id/itens/:itemId
-    this.assinatura.assinar("ITEM", `excluiu o item #${item.codigo} (${item.nome})`);
+    const banco = item.bancoId ? this.banco.porId(item.bancoId) : undefined;
+    this.assinatura.assinar(
+      "ITEM",
+      banco
+        ? `tirou o item #${item.codigo} (${item.nome}) da CEG e devolveu ${banco.codigo} ao banco`
+        : `excluiu o item #${item.codigo} (${item.nome})`,
+    );
     this._itens.update((prev) => prev.filter((i) => i.id !== id));
     this.sincronizarInventario(item.cegId);
   }

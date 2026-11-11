@@ -386,6 +386,20 @@
         </button>
         <button
           type="button"
+          (click)="atrelarOpen.set(true)"
+          [disabled]="!aceitaDoBanco()"
+          [title]="
+            aceitaDoBanco()
+              ? 'escolher itens livres do banco de itens'
+              : 'só CEGs abertas, com a rodada não encerrada, recebem itens do banco'
+          "
+          class="flex items-center gap-1.5 rounded-pill border border-border bg-card px-3 py-1.5 text-xs font-medium transition hover:bg-muted disabled:opacity-40 disabled:hover:bg-card"
+        >
+          <svg [appIcon]="icons.Boxes" class="h-3.5 w-3.5"></svg>
+          do banco de itens
+        </button>
+        <button
+          type="button"
           (click)="joinerModal.set({ joinerId: null })"
           class="flex items-center gap-1.5 rounded-pill border border-border bg-card px-3 py-1.5 text-xs font-medium transition hover:bg-muted"
         >
@@ -409,6 +423,9 @@
                 <span class="font-bold">#{{ l.item.codigo }}</span>
                 <div class="min-w-0 flex-1">
                   <p class="font-medium leading-snug">{{ l.item.nome }}</p>
+                  @if (codigoBanco(l.item); as bc) {
+                    <p class="text-[10px] text-muted-foreground">do banco · {{ bc }}</p>
+                  }
                   @if (l.item.avaria || l.item.abandonado) {
                     <div class="mt-1 flex flex-wrap gap-1">
                       @if (l.item.avaria) {
@@ -531,6 +548,9 @@
                   <td class="px-3 py-2.5 font-bold">#{{ l.item.codigo }}</td>
                   <td class="px-3 py-2.5">
                     <p>{{ l.item.nome }}</p>
+                    @if (codigoBanco(l.item); as bc) {
+                      <p class="text-[10px] text-muted-foreground">do banco · {{ bc }}</p>
+                    }
                     @if (l.item.avaria || l.item.abandonado) {
                       <div class="mt-1 flex flex-wrap gap-1">
                         @if (l.item.avaria) {
@@ -665,6 +685,9 @@
 
 @if (itemModal(); as m) {
   <app-item-modal [open]="true" [cegId]="ceg().id" [itemId]="m.id" (closed)="itemModal.set(null)" />
+}
+@if (atrelarOpen()) {
+  <app-atrelar-itens-modal [open]="true" [cegId]="ceg().id" (closed)="atrelarOpen.set(false)" />
 }
 @if (joinerModal(); as m) {
   <app-claims-joiner-modal

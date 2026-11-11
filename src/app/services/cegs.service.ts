@@ -4,6 +4,7 @@ import {
   MOCK_CEGS,
   type CegGOM,
 } from "@/components/gom/gerenciamento-cegs/cegs.model";
+import { proximoCodigo } from "@/lib/banco-itens-types";
 import { AssinaturaService } from "./assinatura.service";
 import { ComunidadeService } from "./comunidade.service";
 
@@ -28,10 +29,24 @@ export class CegsService {
     return this._cegs().find((c) => c.id === id);
   }
 
-  criar(nova: CegGOM): void {
-    // 🔌 POST /api/gom/cegs
-    const atualizadoPor = this.assinatura.assinar("CEG", `criou a CEG ${nova.nome}`);
-    this._cegs.update((prev) => [{ ...nova, atualizadoPor }, ...prev]);
+  /** CEG pelo código legível ("CEG-004"), sem diferenciar maiúsculas. */
+  porCodigo(codigo: string): CegGOM | undefined {
+    const alvo = codigo.trim().toLowerCase();
+    return this._cegs().find((c) => c.codigo.toLowerCase() === alvo);
+  }
+
+  /** Cria a CEG com o próximo código ("CEG-009") e devolve o registro salvo. */
+  criar(nova: Omit<CegGOM, "codigo">): CegGOM {
+    // 🔌 POST /api/gom/cegs — o servidor gera o código (sequência por comunidade)
+    const codigo = proximoCodigo(
+      "CEG",
+      this._cegs().map((c) => c.codigo),
+      3,
+    );
+    const atualizadoPor = this.assinatura.assinar("CEG", `criou a CEG ${codigo} · ${nova.nome}`);
+    const ceg: CegGOM = { ...nova, codigo, atualizadoPor };
+    this._cegs.update((prev) => [ceg, ...prev]);
+    return ceg;
   }
 
   atualizar(id: string, patch: Partial<CegGOM>): void {
@@ -71,7 +86,7 @@ export class CegsService {
     const n = this.caixasMercari().length + 1;
     const prazo = new Date();
     prazo.setDate(prazo.getDate() + 30);
-    const caixa: CegGOM = {
+    const caixa: Omit<CegGOM, "codigo"> = {
       id: `ceg_cx${Date.now()}`,
       comunidadeId: this.comunidade.comunidade().id,
       nome: `caixa mercari ${n}`,
@@ -83,7 +98,6 @@ export class CegsService {
       moeda: "JPY",
       tipo: "CAIXA_MERCARI",
     };
-    this.criar(caixa);
-    return caixa;
+    return this.criar(caixa);
   }
 }

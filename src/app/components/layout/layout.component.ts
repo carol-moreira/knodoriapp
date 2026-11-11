@@ -5,6 +5,7 @@ import { toSignal } from "@angular/core/rxjs-interop";
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from "@angular/router";
 import {
   BarChart2,
+  Boxes,
   Bell,
   Calculator,
   Ellipsis,
@@ -78,6 +79,7 @@ export const NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
     { to: "/gom/cegs", label: "CEGs", icon: Layers },
     { to: "/gom/claims", label: "claims", icon: Hand },
     { to: "/gom/fila", label: "fila mercari", curto: "fila", icon: ShoppingBag },
+    { to: "/gom/itens", label: "banco de itens", curto: "itens", icon: Boxes },
     { to: "/gom/envios", label: "envios", icon: Truck },
     { to: "/gom/financeiro", label: "financeiro", icon: BarChart2 },
     { to: "/gom/joiners", label: "joiners", icon: Users },
