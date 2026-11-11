@@ -1,0 +1,298 @@
+<div class="space-y-5 sm:space-y-6">
+  <!-- Header -->
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <!-- No celular o título já aparece no header -->
+      <h1 class="sr-only text-2xl font-bold tracking-tight sm:not-sr-only">banco de itens</h1>
+      <p class="mt-0.5 text-sm text-muted-foreground">
+        {{ contagem().total }} ite{{ contagem().total !== 1 ? "ns" : "m" }} ·
+        {{ contagem().livres }} livre{{ contagem().livres !== 1 ? "s" : "" }} ({{
+          brl(contagem().valorLivre)
+        }}) · {{ contagem().emCeg }} em CEG
+      </p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <button
+        type="button"
+        (click)="atrelarModal.set({ bancoIds: [] })"
+        [disabled]="contagem().livres === 0 || !podeAtrelar()"
+        [title]="!podeAtrelar() ? 'nenhuma CEG aberta para receber itens' : ''"
+        class="flex h-10 items-center gap-2 rounded-2xl border border-border bg-card px-4 text-sm font-medium transition hover:bg-muted disabled:opacity-40"
+      >
+        <svg [appIcon]="icons.Link2" class="h-4 w-4"></svg>
+        atrelar à CEG
+      </button>
+      <button
+        type="button"
+        (click)="itemModal.set({ id: null })"
+        class="flex h-10 items-center gap-2 rounded-2xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90 active:scale-[0.98]"
+      >
+        <svg [appIcon]="icons.Plus" class="h-4 w-4"></svg>
+        novo item
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtros + busca -->
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div class="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 no-scrollbar sm:mx-0 sm:px-0">
+      @for (f of filtros; track f.value) {
+        <button type="button" (click)="filtro.set(f.value)" [class]="filtroClass(f.value)">
+          {{ f.label }}
+        </button>
+      }
+    </div>
+    <div class="relative sm:w-72">
+      <svg
+        [appIcon]="icons.Search"
+        class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+      ></svg>
+      <input
+        [value]="busca()"
+        (input)="busca.set(val($event))"
+        placeholder="código, nome ou CEG"
+        aria-label="buscar no banco de itens"
+        [class]="INPUT_CLS + ' pl-9'"
+      />
+    </div>
+  </div>
+
+  @if (linhas().length === 0) {
+    <div class="cozy-card flex flex-col items-center justify-center gap-3 py-16 text-center">
+      <svg [appIcon]="icons.Boxes" class="h-8 w-8 text-muted-foreground/40"></svg>
+      <div>
+        <p class="text-sm font-semibold">
+          {{ contagem().total === 0 ? "o banco está vazio" : "nenhum item encontrado" }}
+        </p>
+        <p class="mt-0.5 text-xs text-muted-foreground">
+          @if (contagem().total === 0) {
+            cadastre os itens um a um e depois atrele cada um a uma CEG.
+          } @else {
+            tente outro filtro ou outra busca.
+          }
+        </p>
+      </div>
+    </div>
+  } @else {
+    <!-- Celular: cards -->
+    <ul class="space-y-2 sm:hidden">
+      @for (l of linhas(); track l.item.id) {
+        <li class="cozy-card p-4 text-xs">
+          <div class="flex items-start gap-2">
+            <div class="min-w-0 flex-1">
+              <p class="text-[11px] font-bold text-muted-foreground">{{ l.item.codigo }}</p>
+              <p class="text-sm font-semibold leading-snug">{{ l.item.nome }}</p>
+              @if (l.item.categoria) {
+                <p class="mt-0.5 text-[11px] text-muted-foreground">
+                  {{ ITEM_META[l.item.categoria].emoji }} {{ ITEM_META[l.item.categoria].label }}
+                </p>
+              }
+            </div>
+            <span class="shrink-0 font-semibold tabular-nums">{{ brl(l.item.valor) }}</span>
+          </div>
+
+          <div class="mt-3 flex flex-wrap items-center gap-1.5">
+            @if (l.cegItem; as ci) {
+              <a
+                routerLink="/gom/cegs"
+                class="cozy-pill bg-primary/10 text-[10px] font-semibold text-primary"
+              >
+                {{ l.ceg?.codigo }} · #{{ ci.codigo }}
+              </a>
+              <span [class]="'cozy-pill text-[10px] font-semibold ' + ITEM_STATUS[ci.status].badge">
+                {{ ITEM_STATUS[ci.status].label }}
+              </span>
+              <span class="w-full truncate text-[11px] text-muted-foreground">
+                {{ l.ceg?.nome }}
+              </span>
+            } @else {
+              <span
+                class="cozy-pill bg-lime-50 text-[10px] font-semibold text-lime-700 ring-1 ring-lime-200"
+              >
+                livre no banco
+              </span>
+            }
+          </div>
+
+          <div class="mt-3 flex items-center gap-2 border-t border-border/60 pt-3">
+            @if (l.cegItem) {
+              <button
+                type="button"
+                (click)="desatrelar(l)"
+                [disabled]="!podeDesatrelar(l)"
+                class="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border border-border text-[11px] font-medium text-muted-foreground transition active:bg-muted disabled:opacity-40"
+              >
+                <svg [appIcon]="icons.Unlink" class="h-3.5 w-3.5"></svg>
+                {{ podeDesatrelar(l) ? "tirar da CEG" : "tem claim" }}
+              </button>
+            } @else {
+              <button
+                type="button"
+                (click)="atrelarModal.set({ bancoIds: [l.item.id] })"
+                [disabled]="!podeAtrelar()"
+                class="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary text-[11px] font-semibold text-primary-foreground transition active:opacity-90 disabled:opacity-40"
+              >
+                <svg [appIcon]="icons.Link2" class="h-3.5 w-3.5"></svg>
+                atrelar à CEG
+              </button>
+            }
+            <button
+              type="button"
+              (click)="itemModal.set({ id: l.item.id })"
+              [attr.aria-label]="'editar ' + l.item.codigo"
+              class="grid h-9 w-9 place-items-center rounded-xl border border-border text-muted-foreground active:bg-muted"
+            >
+              <svg [appIcon]="icons.Pencil" class="h-3.5 w-3.5"></svg>
+            </button>
+            @if (!l.cegItem) {
+              <button
+                type="button"
+                (click)="excluir(l)"
+                [attr.aria-label]="'excluir ' + l.item.codigo"
+                class="grid h-9 w-9 place-items-center rounded-xl border border-border text-muted-foreground active:bg-muted active:text-destructive"
+              >
+                <svg [appIcon]="icons.Trash2" class="h-3.5 w-3.5"></svg>
+              </button>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+
+    <!-- Desktop: tabela -->
+    <div class="cozy-card hidden overflow-x-auto sm:block">
+      <table class="w-full text-left text-xs">
+        <thead class="border-b border-border/60 text-[11px] text-muted-foreground">
+          <tr>
+            <th class="px-4 py-3 font-semibold">código</th>
+            <th class="px-4 py-3 font-semibold">item</th>
+            <th class="px-4 py-3 text-right font-semibold">valor base</th>
+            <th class="px-4 py-3 font-semibold">onde está</th>
+            <th class="px-4 py-3"><span class="sr-only">ações</span></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-border/60">
+          @for (l of linhas(); track l.item.id) {
+            <tr class="align-top">
+              <td class="whitespace-nowrap px-4 py-3 font-bold">{{ l.item.codigo }}</td>
+              <td class="px-4 py-3">
+                <p class="font-medium">{{ l.item.nome }}</p>
+                @if (l.item.categoria || l.item.notas) {
+                  <p class="mt-0.5 text-[11px] text-muted-foreground">
+                    @if (l.item.categoria) {
+                      {{ ITEM_META[l.item.categoria].emoji }}
+                      {{ ITEM_META[l.item.categoria].label }}
+                    }
+                    @if (l.item.categoria && l.item.notas) {
+                      ·
+                    }
+                    {{ l.item.notas }}
+                  </p>
+                }
+                @if (l.item.atualizadoPor; as por) {
+                  <p class="mt-1 text-[10px] text-muted-foreground">
+                    <app-assinatura [por]="por" acao="por" />
+                  </p>
+                }
+              </td>
+              <td class="whitespace-nowrap px-4 py-3 text-right font-semibold tabular-nums">
+                {{ brl(l.item.valor) }}
+              </td>
+              <td class="px-4 py-3">
+                @if (l.cegItem; as ci) {
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <a
+                      routerLink="/gom/cegs"
+                      class="cozy-pill bg-primary/10 text-[10px] font-semibold text-primary hover:underline"
+                    >
+                      {{ l.ceg?.codigo }} · #{{ ci.codigo }}
+                    </a>
+                    <span
+                      [class]="
+                        'cozy-pill text-[10px] font-semibold ' + ITEM_STATUS[ci.status].badge
+                      "
+                    >
+                      {{ ITEM_STATUS[ci.status].label }}
+                    </span>
+                  </div>
+                  <p class="mt-1 text-[11px] text-muted-foreground">
+                    {{ l.ceg?.nome }}
+                    @if (ci.valor !== l.item.valor) {
+                      · {{ brl(ci.valor) }} na CEG
+                    }
+                  </p>
+                } @else {
+                  <span
+                    class="cozy-pill bg-lime-50 text-[10px] font-semibold text-lime-700 ring-1 ring-lime-200"
+                  >
+                    livre no banco
+                  </span>
+                }
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex justify-end gap-1.5">
+                  @if (l.cegItem) {
+                    <button
+                      type="button"
+                      (click)="desatrelar(l)"
+                      [disabled]="!podeDesatrelar(l)"
+                      [title]="
+                        podeDesatrelar(l)
+                          ? 'tirar da CEG e devolver ao banco'
+                          : 'itens com claim não saem da CEG'
+                      "
+                      class="flex h-8 items-center gap-1 rounded-lg border border-border px-2.5 text-[11px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:hover:bg-transparent"
+                    >
+                      <svg [appIcon]="icons.Unlink" class="h-3.5 w-3.5"></svg>
+                      tirar da CEG
+                    </button>
+                  } @else {
+                    <button
+                      type="button"
+                      (click)="atrelarModal.set({ bancoIds: [l.item.id] })"
+                      [disabled]="!podeAtrelar()"
+                      class="flex h-8 items-center gap-1 rounded-lg bg-primary px-2.5 text-[11px] font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
+                    >
+                      <svg [appIcon]="icons.Link2" class="h-3.5 w-3.5"></svg>
+                      atrelar
+                    </button>
+                  }
+                  <button
+                    type="button"
+                    (click)="itemModal.set({ id: l.item.id })"
+                    [attr.aria-label]="'editar ' + l.item.codigo"
+                    class="grid h-8 w-8 place-items-center rounded-lg border border-border text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                  >
+                    <svg [appIcon]="icons.Pencil" class="h-3.5 w-3.5"></svg>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="excluir(l)"
+                    [disabled]="!!l.cegItem"
+                    [title]="l.cegItem ? 'tire o item da CEG antes de excluir' : ''"
+                    [attr.aria-label]="'excluir ' + l.item.codigo"
+                    class="grid h-8 w-8 place-items-center rounded-lg border border-border text-muted-foreground transition hover:text-destructive disabled:opacity-30 disabled:hover:text-muted-foreground"
+                  >
+                    <svg [appIcon]="icons.Trash2" class="h-3.5 w-3.5"></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<!-- Modais fora do container espaçado -->
+@if (itemModal(); as m) {
+  <app-item-banco-modal [open]="true" [itemId]="m.id" (closed)="itemModal.set(null)" />
+}
+@if (atrelarModal(); as m) {
+  <app-atrelar-itens-modal
+    [open]="true"
+    [bancoIds]="m.bancoIds"
+    (closed)="atrelarModal.set(null)"
+  />
+}

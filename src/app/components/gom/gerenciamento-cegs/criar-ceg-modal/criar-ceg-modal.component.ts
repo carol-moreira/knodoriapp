@@ -171,7 +171,7 @@ export class CriarCegModalComponent {
     this.erro.set(erro ?? "");
     if (erro) return;
 
-    const ceg: CegGOM = {
+    const nova: Omit<CegGOM, "codigo"> = {
       id: `ceg_${Date.now()}`,
       comunidadeId: this.auth.user()?.comunidadeId ?? this.comunidade.comunidade().id,
       nome: this.nome().trim(),
@@ -183,7 +183,7 @@ export class CriarCegModalComponent {
       qtdItens: 0,
     };
     // 🔌 POST /api/gom/cegs { ...ceg, itens, agenda } — uma transação só no servidor
-    this.cegs.criar(ceg);
+    const ceg = this.cegs.criar(nova);
     for (const i of this.itensPreenchidos()) {
       this.claims.adicionarItem(ceg.id, { codigo: i.codigo, nome: i.nome, valor: i.valor });
     }
